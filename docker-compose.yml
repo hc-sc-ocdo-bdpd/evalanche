@@ -1,0 +1,8 @@
+services:
+  evalanche:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    working_dir: /app
