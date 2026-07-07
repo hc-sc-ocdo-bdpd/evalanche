@@ -9,6 +9,7 @@ from tqdm.auto import tqdm
 from evalanche.config import load_config
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
+from evalanche.metadata import save_run_metadata
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
@@ -37,6 +38,14 @@ def run_judge(config_path: str) -> None:
 
     save_results(results, config.run.output_path)
     summary_path = save_model_summary(results, config.run.output_path)
+    metadata_path = save_run_metadata(
+        config_path=config_path,
+        config=config,
+        cases=cases,
+        results=results,
+        case_results_path=config.run.output_path,
+        model_summary_path=summary_path,
+    )
 
     print_summary(results)
     print_model_leaderboard(results)
@@ -44,6 +53,7 @@ def run_judge(config_path: str) -> None:
 
     print(f"\nSaved case results to: {config.run.output_path}")
     print(f"Saved model summary to: {summary_path}")
+    print(f"Saved run metadata to: {metadata_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
