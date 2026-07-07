@@ -42,6 +42,15 @@ def resolve_env_vars(value: Any) -> Any:
     return value
 
 
+def load_yaml(path: str | Path) -> dict[str, Any]:
+    config_path = Path(path)
+
+    with config_path.open("r", encoding="utf-8") as f:
+        raw = yaml.safe_load(f)
+
+    return resolve_env_vars(raw)
+
+
 class RunConfig(BaseModel):
     name: str
     input_path: Path
@@ -96,11 +105,47 @@ class EvalConfig(BaseModel):
         return criteria
 
 
+class PromptConfig(BaseModel):
+    system: str = "You are a helpful assistant."
+    template: str = "{input}"
+
+
+class GenerationSettingsConfig(BaseModel):
+    continue_on_error: bool = True
+    max_completion_tokens: int | None = None
+
+
+class GenerationConfig(BaseModel):
+    run: RunConfig
+    candidate_models_path: Path
+    prompt: PromptConfig = Field(default_factory=PromptConfig)
+    generation: GenerationSettingsConfig = Field(
+        default_factory=GenerationSettingsConfig
+    )
+
+
+class CandidateModelConfig(BaseModel):
+    name: str
+    model: str
+    temperature: float = 0
+    max_retries: int = 3
+    max_completion_tokens: int | None = None
+
+
+class CandidateModelsConfig(BaseModel):
+    models: list[CandidateModelConfig] = Field(min_length=1)
+
+
 def load_config(path: str | Path) -> EvalConfig:
-    config_path = Path(path)
-
-    with config_path.open("r", encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
-
-    resolved = resolve_env_vars(raw)
+    resolved = load_yaml(path)
     return EvalConfig.model_validate(resolved)
+
+
+def load_generation_config(path: str | Path) -> GenerationConfig:
+    resolved = load_yaml(path)
+    return GenerationConfig.model_validate(resolved)
+
+
+def load_candidate_models(path: str | Path) -> CandidateModelsConfig:
+    resolved = load_yaml(path)
+    return CandidateModelsConfig.model_validate(resolved)

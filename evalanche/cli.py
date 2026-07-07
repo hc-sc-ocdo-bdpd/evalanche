@@ -6,7 +6,8 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.auto import tqdm
 
-from evalanche.config import load_config
+from evalanche.config import load_config, load_generation_config
+from evalanche.generation import generate_outputs
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
 from evalanche.metadata import save_run_metadata
@@ -17,6 +18,25 @@ from evalanche.reporting import (
     print_summary,
     save_model_summary,
 )
+
+
+def run_generate(config_path: str) -> None:
+    load_dotenv()
+
+    config = load_generation_config(config_path)
+    outputs, output_path, metadata_path = generate_outputs(
+        config=config,
+        config_path=config_path,
+    )
+
+    success_count = int((outputs["generation_status"] == "success").sum())
+    error_count = int((outputs["generation_status"] == "error").sum())
+
+    print(f"\nGenerated outputs: {len(outputs)}")
+    print(f"Successful generations: {success_count}")
+    print(f"Failed generations: {error_count}")
+    print(f"Saved generated outputs to: {output_path}")
+    print(f"Saved generation metadata to: {metadata_path}")
 
 
 def run_judge(config_path: str) -> None:
@@ -72,6 +92,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    generate_parser = subparsers.add_parser("generate")
+    generate_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a generation YAML config.",
+    )
+
     judge_parser = subparsers.add_parser("judge")
     judge_parser.add_argument(
         "--config",
@@ -86,7 +113,9 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "judge":
+    if args.command == "generate":
+        run_generate(args.config)
+    elif args.command == "judge":
         run_judge(args.config)
     else:
         raise ValueError(f"Unknown command: {args.command}")

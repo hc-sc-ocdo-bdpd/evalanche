@@ -1,0 +1,7 @@
+case_id,input,expected_output
+case_001,"Classify the sentiment of this message as positive, neutral, or negative: The shipment arrived two days late and the box was damaged.","negative"
+case_002,"Extract the due date from this sentence. Return only the date in YYYY-MM-DD format: The completed form must be submitted by 2026-03-15.","2026-03-15"
+case_003,"Rewrite this sentence in plain language: Applicants are required to provide documentation prior to the stated deadline.","Applicants must provide documents before the deadline."
+case_004,"Answer the arithmetic question. Return only the number: A package contains 8 boxes. Each box contains 6 items. How many items are there in total?","48"
+case_005,"Classify the request as one of: refund, technical_support, account_update. Request: I was charged twice for my order and need the extra charge reversed.","refund"
+case_006,"Extract the name and amount from this sentence as JSON with keys name and amount: Jordan paid 42.50 for the permit.","{""name"": ""Jordan"", ""amount"": 42.50}"

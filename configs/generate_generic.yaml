@@ -1,0 +1,16 @@
+run:
+  name: generic_generation_first_slice
+  input_path: data/examples/generic_cases.csv
+  output_path: data/generated/generic_generated_outputs.csv
+
+candidate_models_path: configs/candidate_models.yaml
+
+prompt:
+  system: >
+    You are a careful assistant. Follow the user's instruction exactly.
+    Return only the answer unless the user asks for explanation.
+  template: "{input}"
+
+generation:
+  continue_on_error: true
+  max_completion_tokens:
