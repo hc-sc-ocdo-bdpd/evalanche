@@ -10,6 +10,7 @@ from evalanche.config import load_config
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
 from evalanche.metadata import save_run_metadata
+from evalanche.recommendation import save_recommendation_report
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
@@ -37,7 +38,9 @@ def run_judge(config_path: str) -> None:
     )
 
     save_results(results, config.run.output_path)
+
     summary_path = save_model_summary(results, config.run.output_path)
+
     metadata_path = save_run_metadata(
         config_path=config_path,
         config=config,
@@ -47,6 +50,14 @@ def run_judge(config_path: str) -> None:
         model_summary_path=summary_path,
     )
 
+    recommendation_path = save_recommendation_report(
+        config=config,
+        results=results,
+        case_results_path=config.run.output_path,
+        model_summary_path=summary_path,
+        metadata_path=metadata_path,
+    )
+
     print_summary(results)
     print_model_leaderboard(results)
     print_failures(results)
@@ -54,6 +65,7 @@ def run_judge(config_path: str) -> None:
     print(f"\nSaved case results to: {config.run.output_path}")
     print(f"Saved model summary to: {summary_path}")
     print(f"Saved run metadata to: {metadata_path}")
+    print(f"Saved recommendation report to: {recommendation_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
