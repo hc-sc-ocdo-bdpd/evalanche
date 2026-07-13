@@ -134,6 +134,20 @@ class CandidateModelConfig(BaseModel):
 
 class CandidateModelsConfig(BaseModel):
     models: list[CandidateModelConfig] = Field(min_length=1)
+    
+
+class DeterministicMetricsSettingsConfig(BaseModel):
+    case_sensitive: bool = False
+    trim_whitespace: bool = True
+    collapse_whitespace: bool = True
+    use_json_when_expected_json: bool = True
+
+
+class MetricsConfig(BaseModel):
+    run: RunConfig
+    metrics: DeterministicMetricsSettingsConfig = Field(
+        default_factory=DeterministicMetricsSettingsConfig
+    )
 
 
 def load_config(path: str | Path) -> EvalConfig:
@@ -149,3 +163,8 @@ def load_generation_config(path: str | Path) -> GenerationConfig:
 def load_candidate_models(path: str | Path) -> CandidateModelsConfig:
     resolved = load_yaml(path)
     return CandidateModelsConfig.model_validate(resolved)
+
+
+def load_metrics_config(path: str | Path) -> MetricsConfig:
+    resolved = load_yaml(path)
+    return MetricsConfig.model_validate(resolved)

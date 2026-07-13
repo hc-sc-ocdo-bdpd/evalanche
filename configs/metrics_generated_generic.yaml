@@ -1,0 +1,10 @@
+run:
+  name: metrics_generated_generic_first_slice
+  input_path: data/generated/generic_generated_outputs.csv
+  output_path: results/metrics_generated_generic_first_slice_results.csv
+
+metrics:
+  case_sensitive: false
+  trim_whitespace: true
+  collapse_whitespace: true
+  use_json_when_expected_json: true
