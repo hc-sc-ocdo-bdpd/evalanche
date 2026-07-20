@@ -4,6 +4,8 @@ import pytest
 from pydantic import ValidationError
 
 from evalanche.config import (
+    CandidateModelConfig,
+    CandidateModelsConfig,
     CriterionConfig,
     EvalConfig,
     JudgeConfig,
@@ -112,4 +114,38 @@ def test_eval_config_rejects_duplicate_criterion_names() -> None:
                     description="Duplicate correctness",
                 ),
             ],
+        )
+        
+        
+
+def test_candidate_model_name_is_trimmed() -> None:
+    candidate = CandidateModelConfig(
+        name=" model_a ",
+        model="azure/deployment-a",
+    )
+
+    assert candidate.name == "model_a"
+
+
+def test_candidate_model_name_cannot_be_blank() -> None:
+    with pytest.raises(ValidationError, match="cannot be blank"):
+        CandidateModelConfig(
+            name="   ",
+            model="azure/deployment-a",
+        )
+
+
+def test_candidate_model_names_must_be_unique() -> None:
+    with pytest.raises(ValidationError, match="names must be unique"):
+        CandidateModelsConfig(
+            models=[
+                CandidateModelConfig(
+                    name="model_a",
+                    model="azure/deployment-a",
+                ),
+                CandidateModelConfig(
+                    name=" model_a ",
+                    model="azure/deployment-b",
+                ),
+            ]
         )

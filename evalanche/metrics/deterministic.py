@@ -13,6 +13,7 @@ from rich.table import Table
 
 from evalanche import __version__
 from evalanche.config import MetricsConfig
+from evalanche.identity import validate_evaluation_keys
 from evalanche.routing import (
     DETERMINISTIC_EVALUATION_TYPES,
     EXACT,
@@ -63,7 +64,12 @@ def load_metric_cases(path: str | Path) -> pd.DataFrame:
             f"Metrics input is missing required columns: {sorted(missing)}"
         )
 
-    return validate_evaluation_types(
+    df = validate_evaluation_types(
+        df,
+        source_name=str(input_path),
+    )
+
+    return validate_evaluation_keys(
         df,
         source_name=str(input_path),
     )

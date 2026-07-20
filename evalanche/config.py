@@ -137,10 +137,27 @@ class CandidateModelConfig(BaseModel):
     temperature: float = 0
     max_retries: int = 3
     max_completion_tokens: int | None = None
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("candidate model name cannot be blank")
+        return normalized
 
 
 class CandidateModelsConfig(BaseModel):
     models: list[CandidateModelConfig] = Field(min_length=1)
+    @field_validator("models")
+    @classmethod
+    def validate_unique_names(
+        cls,
+        models: list[CandidateModelConfig],
+        ) -> list[CandidateModelConfig]:
+        names = [model.name for model in models]
+        if len(names) != len(set(names)):
+            raise ValueError("candidate model names must be unique")
+        return models
     
 
 class DeterministicMetricsSettingsConfig(BaseModel):

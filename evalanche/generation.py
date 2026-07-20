@@ -15,6 +15,7 @@ from evalanche.config import (
     GenerationConfig,
     load_candidate_models,
 )
+from evalanche.identity import validate_generation_case_ids
 from evalanche.llm import LLMClient
 from evalanche.routing import validate_evaluation_types
 
@@ -65,7 +66,12 @@ def load_generation_cases(path: str | Path) -> pd.DataFrame:
             f"{sorted(missing_columns)}"
         )
 
-    return validate_evaluation_types(
+    cases = validate_evaluation_types(
+        cases,
+        source_name=str(input_path),
+    )
+
+    return validate_generation_case_ids(
         cases,
         source_name=str(input_path),
     )

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from evalanche.identity import validate_evaluation_keys
 from evalanche.routing import JUDGE, validate_evaluation_types
 
 
@@ -34,7 +35,12 @@ def load_eval_cases(path: str | Path) -> pd.DataFrame:
     if "evaluation_type" not in df.columns:
         df["evaluation_type"] = JUDGE
 
-    return validate_evaluation_types(
+    df = validate_evaluation_types(
+        df,
+        source_name=str(input_path),
+    )
+
+    return validate_evaluation_keys(
         df,
         source_name=str(input_path),
     )
