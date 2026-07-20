@@ -1,16 +1,8 @@
 from pathlib import Path
-import sys
-import types
 from typing import Any
 
 import pandas as pd
 import pytest
-
-# Importing LiteLLM initializes network clients. This test exercises CLI routing,
-# not the provider SDK, so replace that boundary before importing evalanche.cli.
-litellm_stub = types.ModuleType("litellm")
-litellm_stub.completion = lambda *args, **kwargs: None
-sys.modules["litellm"] = litellm_stub
 
 import evalanche.cli as cli
 from evalanche.config import (

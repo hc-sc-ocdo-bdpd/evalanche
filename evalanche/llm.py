@@ -1,11 +1,21 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from typing import Any
 
-from litellm import completion
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+
+JsonValidator = Callable[[dict[str, Any]], None]
+
+
+def _completion(**kwargs: Any) -> Any:
+    # Keep provider initialization at the actual network boundary. This makes
+    # offline commands and unit tests independent of LiteLLM client startup.
+    from litellm import completion
+
+    return completion(**kwargs)
 
 class LLMClient:
     def __init__(
@@ -18,14 +28,18 @@ class LLMClient:
         self.temperature = temperature
         self.max_retries = max_retries
 
-    def complete_json(self, messages: list[dict[str, str]]) -> dict[str, Any]:
+    def complete_json(
+        self,
+        messages: list[dict[str, str]],
+        validator: JsonValidator | None = None,
+    ) -> dict[str, Any]:
         retrying_call = retry(
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
             reraise=True,
         )(self._single_complete_json_call)
 
-        return retrying_call(messages)
+        return retrying_call(messages, validator)
 
     def complete_text(
         self,
@@ -43,16 +57,17 @@ class LLMClient:
     def _single_complete_json_call(
         self,
         messages: list[dict[str, str]],
+        validator: JsonValidator | None = None,
     ) -> dict[str, Any]:
         try:
-            response = completion(
+            response = _completion(
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
                 response_format={"type": "json_object"},
             )
         except Exception:
-            response = completion(
+            response = _completion(
                 model=self.model,
                 messages=messages,
                 temperature=self.temperature,
@@ -60,6 +75,10 @@ class LLMClient:
 
         content = response.choices[0].message.content
         parsed = _parse_json_content(content)
+
+        if validator is not None:
+            validator(parsed)
+
         parsed["_usage"] = _usage_to_dict(response)
 
         return parsed
@@ -78,7 +97,7 @@ class LLMClient:
         if max_completion_tokens is not None:
             kwargs["max_completion_tokens"] = max_completion_tokens
 
-        response = completion(**kwargs)
+        response = _completion(**kwargs)
         content = response.choices[0].message.content or ""
 
         return {

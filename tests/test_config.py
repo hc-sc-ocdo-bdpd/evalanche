@@ -65,3 +65,51 @@ def test_eval_config_rejects_non_positive_total_criterion_weight() -> None:
                 )
             ],
         )
+        
+
+
+@pytest.mark.parametrize(
+    ("score_min", "score_max"),
+    [(5, 5), (5, 4)],
+)
+def test_score_max_must_be_greater_than_score_min(
+    score_min: int,
+    score_max: int,
+) -> None:
+    with pytest.raises(ValidationError, match="score_max"):
+        ScoringConfig(score_min=score_min, score_max=score_max)
+
+
+def test_criterion_weight_cannot_be_negative() -> None:
+    with pytest.raises(ValidationError, match="greater than or equal to 0"):
+        CriterionConfig(
+            name="correctness",
+            weight=-1,
+            description="Correctness",
+        )
+
+
+def test_eval_config_rejects_duplicate_criterion_names() -> None:
+    with pytest.raises(ValidationError, match="criterion names must be unique"):
+        EvalConfig(
+            run=RunConfig(
+                name="test",
+                input_path=Path("input.csv"),
+                output_path=Path("output.csv"),
+            ),
+            judge=JudgeConfig(model="azure/judge"),
+            task=TaskConfig(name="test", description="Test task"),
+            scoring=ScoringConfig(),
+            criteria=[
+                CriterionConfig(
+                    name="correctness",
+                    weight=1,
+                    description="Correctness",
+                ),
+                CriterionConfig(
+                    name="correctness",
+                    weight=1,
+                    description="Duplicate correctness",
+                ),
+            ],
+        )

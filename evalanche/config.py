@@ -6,8 +6,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
-
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 _ENV_PATTERN = re.compile(r"\$\{([^}:]+)(:-([^}]*))?\}")
 
@@ -79,11 +78,16 @@ class ScoringConfig(BaseModel):
         if not 0 <= value <= 1:
             raise ValueError("pass_threshold must be between 0 and 1")
         return value
+    @model_validator(mode="after")
+    def validate_score_range(self) -> "ScoringConfig":
+        if self.score_max <= self.score_min:
+            raise ValueError("score_max must be greater than score_min")
+        return self
 
-
+    
 class CriterionConfig(BaseModel):
     name: str
-    weight: float
+    weight: float = Field(ge=0, allow_inf_nan=False)
     description: str
 
 
@@ -101,7 +105,10 @@ class EvalConfig(BaseModel):
 
         if total <= 0:
             raise ValueError("criteria weights must sum to a positive number")
-
+        
+        names = [criterion.name for criterion in criteria]
+        if len(names) != len(set(names)):
+            raise ValueError("criterion names must be unique")
         return criteria
 
 

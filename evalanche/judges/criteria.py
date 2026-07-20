@@ -6,6 +6,7 @@ from typing import Any
 import pandas as pd
 
 from evalanche.config import EvalConfig
+from evalanche.judges.validation import validate_judge_response
 from evalanche.llm import LLMClient
 
 
@@ -28,7 +29,15 @@ class CriteriaJudge:
 
     def judge_case(self, row: dict[str, Any]) -> dict[str, Any]:
         messages = self._build_messages(row)
-        result = self.client.complete_json(messages)
+        result = self.client.complete_json(
+            messages,
+            validator=self._validate_response,
+        )
+
+        # Validate again at the consumer boundary. The LLM client validates
+        # inside its retry loop, while this check protects against any future
+        # client implementation that does not apply the callback.
+        self._validate_response(result)
 
         usage = result.pop("_usage", {})
 
@@ -84,6 +93,9 @@ class CriteriaJudge:
             return 0.0
 
         return weighted_total / weight_total
+    
+    def _validate_response(self, response: dict[str, Any]) -> None:
+        validate_judge_response(response, self.config)   
 
     def _build_messages(self, row: dict[str, Any]) -> list[dict[str, str]]:
         criteria_text = "\n".join(
@@ -92,6 +104,16 @@ class CriteriaJudge:
                 for c in self.config.criteria
             ]
         )
+        response_example = {
+            "criteria": {
+                criterion.name: {
+                    "score": self.config.scoring.score_min,
+                    "reason": "brief reason",
+                }
+                for criterion in self.config.criteria
+            },
+            "overall_reason": "brief overall reason",
+        }
 
         system = f"""
 You are an expert evaluator of language model outputs.
@@ -108,21 +130,15 @@ Scoring:
 - Use the expected output as the reference answer.
 - Penalize unsupported claims, contradictions, and missing important information.
 - Be strict but fair.
+- Include every configured criterion exactly once.
+- Do not add or rename criteria.
 - Return only valid JSON.
 
 Criteria:
 {criteria_text}
 
 Return JSON in this exact structure:
-{{
-  "criteria": {{
-    "criterion_name": {{
-      "score": 0,
-      "reason": "brief reason"
-    }}
-  }},
-  "overall_reason": "brief overall reason"
-}}
+{json.dumps(response_example, indent=2)}
 """.strip()
 
         user = f"""
