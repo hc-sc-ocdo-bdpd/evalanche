@@ -13,6 +13,12 @@ from rich.table import Table
 
 from evalanche import __version__
 from evalanche.config import MetricsConfig
+from evalanche.routing import (
+    DETERMINISTIC_EVALUATION_TYPES,
+    EXACT,
+    JSON,
+    validate_evaluation_types,
+)
 
 
 console = Console()
@@ -22,6 +28,7 @@ REQUIRED_METRIC_COLUMNS = {
     "case_id",
     "input",
     "expected_output",
+    "evaluation_type",
     "model_name",
     "model_output",
 }
@@ -56,7 +63,10 @@ def load_metric_cases(path: str | Path) -> pd.DataFrame:
             f"Metrics input is missing required columns: {sorted(missing)}"
         )
 
-    return df
+    return validate_evaluation_types(
+        df,
+        source_name=str(input_path),
+    )
 
 
 def normalize_text(
@@ -84,10 +94,7 @@ def normalize_text(
 
 
 def try_parse_json(value: Any) -> tuple[bool, Any]:
-    if pd.isna(value):
-        return False, None
-
-    if not isinstance(value, str):
+    if pd.isna(value) or not isinstance(value, str):
         return False, None
 
     text = value.strip()
@@ -103,7 +110,7 @@ def try_parse_json(value: Any) -> tuple[bool, Any]:
 
     try:
         return True, json.loads(text)
-    except Exception:
+    except (TypeError, json.JSONDecodeError):
         return False, None
 
 
@@ -116,7 +123,10 @@ def canonical_json(value: Any) -> str:
     )
 
 
-def compare_json_fields(expected: Any, output: Any) -> tuple[int | None, int | None, float | None]:
+def compare_json_fields(
+    expected: Any,
+    output: Any,
+) -> tuple[int | None, int | None, float | None]:
     if not isinstance(expected, dict) or not isinstance(output, dict):
         return None, None, None
 
@@ -125,25 +135,62 @@ def compare_json_fields(expected: Any, output: Any) -> tuple[int | None, int | N
     if not expected_keys:
         return 0, 0, None
 
-    matching = 0
-
-    for key in expected_keys:
-        if key not in output:
-            continue
-
-        if output[key] == expected[key]:
-            matching += 1
+    matching = sum(
+        1
+        for key in expected_keys
+        if key in output and output[key] == expected[key]
+    )
 
     total = len(expected_keys)
+
     return total, matching, matching / total
 
 
-def score_row(row: dict[str, Any], config: MetricsConfig) -> dict[str, Any]:
-    expected_raw = row["expected_output"]
-    output_raw = row["model_output"]
+def _empty_metric_values() -> dict[str, Any]:
+    return {
+        "exact_match": None,
+        "normalized_exact_match": None,
+        "expected_is_json": None,
+        "output_is_json": None,
+        "json_exact_match": None,
+        "json_expected_field_count": None,
+        "json_matching_field_count": None,
+        "json_field_match_rate": None,
+    }
 
-    expected_text = "" if pd.isna(expected_raw) else str(expected_raw)
-    output_text = "" if pd.isna(output_raw) else str(output_raw)
+
+def score_row(
+    row: dict[str, Any],
+    config: MetricsConfig,
+) -> dict[str, Any]:
+    evaluation_type = row["evaluation_type"]
+
+    base_result: dict[str, Any] = {
+        "case_id": row["case_id"],
+        "model_name": row["model_name"],
+        "evaluation_type": evaluation_type,
+    }
+
+    if evaluation_type not in DETERMINISTIC_EVALUATION_TYPES:
+        return {
+            **base_result,
+            "metric_applicable": False,
+            "metric_status": "skipped",
+            "metric_passed": None,
+            **_empty_metric_values(),
+        }
+
+    expected_text = (
+        ""
+        if pd.isna(row["expected_output"])
+        else str(row["expected_output"])
+    )
+
+    output_text = (
+        ""
+        if pd.isna(row["model_output"])
+        else str(row["model_output"])
+    )
 
     exact_match = output_text == expected_text
 
@@ -161,42 +208,65 @@ def score_row(row: dict[str, Any], config: MetricsConfig) -> dict[str, Any]:
         collapse_whitespace=config.metrics.collapse_whitespace,
     )
 
-    normalized_exact_match = output_normalized == expected_normalized
+    normalized_exact_match = (
+        output_normalized == expected_normalized
+    )
+
+    if evaluation_type == EXACT:
+        return {
+            **base_result,
+            "metric_applicable": True,
+            "metric_status": "evaluated",
+            "metric_passed": normalized_exact_match,
+            "exact_match": exact_match,
+            "normalized_exact_match": normalized_exact_match,
+            "expected_is_json": None,
+            "output_is_json": None,
+            "json_exact_match": None,
+            "json_expected_field_count": None,
+            "json_matching_field_count": None,
+            "json_field_match_rate": None,
+        }
 
     expected_is_json, expected_json = try_parse_json(expected_text)
     output_is_json, output_json = try_parse_json(output_text)
 
-    json_exact_match: bool | None = None
+    if not expected_is_json:
+        raise ValueError(
+            f"Case {row['case_id']} has evaluation_type=json, "
+            "but expected_output is not valid JSON."
+        )
+
+    json_exact_match = False
     json_expected_field_count: int | None = None
     json_matching_field_count: int | None = None
     json_field_match_rate: float | None = None
 
-    if expected_is_json:
-        if output_is_json:
-            json_exact_match = canonical_json(output_json) == canonical_json(expected_json)
-            (
-                json_expected_field_count,
-                json_matching_field_count,
-                json_field_match_rate,
-            ) = compare_json_fields(expected_json, output_json)
-        else:
-            json_exact_match = False
-            if isinstance(expected_json, dict):
-                json_expected_field_count = len(expected_json)
-                json_matching_field_count = 0
-                json_field_match_rate = 0.0
+    if output_is_json:
+        json_exact_match = (
+            canonical_json(output_json)
+            == canonical_json(expected_json)
+        )
 
-    if expected_is_json and config.metrics.use_json_when_expected_json:
-        metric_passed = bool(output_is_json and json_exact_match)
-    else:
-        metric_passed = bool(normalized_exact_match)
+        (
+            json_expected_field_count,
+            json_matching_field_count,
+            json_field_match_rate,
+        ) = compare_json_fields(expected_json, output_json)
+    elif isinstance(expected_json, dict):
+        json_expected_field_count = len(expected_json)
+        json_matching_field_count = 0
+        json_field_match_rate = 0.0
 
     return {
-        "case_id": row["case_id"],
-        "model_name": row["model_name"],
+        **base_result,
+        "metric_applicable": True,
+        "metric_status": "evaluated",
+        "metric_passed": bool(
+            output_is_json and json_exact_match
+        ),
         "exact_match": exact_match,
         "normalized_exact_match": normalized_exact_match,
-        "metric_passed": metric_passed,
         "expected_is_json": expected_is_json,
         "output_is_json": output_is_json,
         "json_exact_match": json_exact_match,
@@ -206,40 +276,66 @@ def score_row(row: dict[str, Any], config: MetricsConfig) -> dict[str, Any]:
     }
 
 
+def _safe_rate(series: pd.Series) -> float | None:
+    values = series.dropna()
+
+    if values.empty:
+        return None
+
+    return float(values.astype(float).mean())
+
+
 def build_metrics_summary(results: pd.DataFrame) -> pd.DataFrame:
     if results.empty:
         return pd.DataFrame()
 
-    aggregations = {
-        "case_id": "count",
-        "metric_passed": "mean",
-        "exact_match": "mean",
-        "normalized_exact_match": "mean",
-        "expected_is_json": "sum",
-        "output_is_json": "sum",
-    }
+    records: list[dict[str, Any]] = []
 
-    if "json_field_match_rate" in results.columns:
-        aggregations["json_field_match_rate"] = "mean"
+    for model_name, group in results.groupby(
+        "model_name",
+        dropna=False,
+    ):
+        evaluated = group[group["metric_applicable"] == True]
+        skipped = group[group["metric_applicable"] == False]
 
-    summary = (
-        results
-        .groupby("model_name", dropna=False)
-        .agg(aggregations)
-        .reset_index()
-    )
+        exact_cases = evaluated[
+            evaluated["evaluation_type"] == EXACT
+        ]
 
-    summary = summary.rename(
-        columns={
-            "case_id": "cases",
-            "metric_passed": "metric_pass_rate",
-            "exact_match": "exact_match_rate",
-            "normalized_exact_match": "normalized_exact_match_rate",
-            "expected_is_json": "expected_json_cases",
-            "output_is_json": "valid_json_outputs",
-            "json_field_match_rate": "average_json_field_match_rate",
-        }
-    )
+        json_cases = evaluated[
+            evaluated["evaluation_type"] == JSON
+        ]
+
+        records.append(
+            {
+                "model_name": model_name,
+                "cases": int(len(group)),
+                "evaluated_cases": int(len(evaluated)),
+                "skipped_cases": int(len(skipped)),
+                "exact_cases": int(len(exact_cases)),
+                "json_cases": int(len(json_cases)),
+                "metric_pass_rate": _safe_rate(
+                    evaluated["metric_passed"]
+                ),
+                "exact_match_rate": _safe_rate(
+                    exact_cases["exact_match"]
+                ),
+                "normalized_exact_match_rate": _safe_rate(
+                    exact_cases["normalized_exact_match"]
+                ),
+                "valid_json_rate": _safe_rate(
+                    json_cases["output_is_json"]
+                ),
+                "json_exact_match_rate": _safe_rate(
+                    json_cases["json_exact_match"]
+                ),
+                "average_json_field_match_rate": _safe_rate(
+                    json_cases["json_field_match_rate"]
+                ),
+            }
+        )
+
+    summary = pd.DataFrame(records)
 
     summary["rank"] = (
         summary["metric_pass_rate"]
@@ -247,32 +343,42 @@ def build_metrics_summary(results: pd.DataFrame) -> pd.DataFrame:
         .astype(int)
     )
 
-    ordered_cols = [
+    ordered_columns = [
         "rank",
         "model_name",
         "cases",
+        "evaluated_cases",
+        "skipped_cases",
+        "exact_cases",
+        "json_cases",
         "metric_pass_rate",
         "exact_match_rate",
         "normalized_exact_match_rate",
-        "expected_json_cases",
-        "valid_json_outputs",
+        "valid_json_rate",
+        "json_exact_match_rate",
         "average_json_field_match_rate",
     ]
 
-    existing_ordered_cols = [col for col in ordered_cols if col in summary.columns]
-    remaining_cols = [col for col in summary.columns if col not in existing_ordered_cols]
+    summary = summary[ordered_columns]
 
-    summary = summary[existing_ordered_cols + remaining_cols]
-    summary = summary.sort_values(["rank", "model_name"], ascending=[True, True])
+    return summary.sort_values(
+        ["rank", "model_name"],
+        ascending=[True, True],
+    )
 
-    return summary
 
-
-def save_metrics_summary(results: pd.DataFrame, output_path: str | Path) -> Path:
+def save_metrics_summary(
+    results: pd.DataFrame,
+    output_path: str | Path,
+) -> Path:
     output_path = Path(output_path)
-    summary_path = output_path.with_name(output_path.stem + "_metrics_summary.csv")
+
+    summary_path = output_path.with_name(
+        output_path.stem + "_metrics_summary.csv"
+    )
 
     summary = build_metrics_summary(results)
+
     summary_path.parent.mkdir(parents=True, exist_ok=True)
     summary.to_csv(summary_path, index=False)
 
@@ -289,12 +395,23 @@ def save_metrics_metadata(
     summary_path: str | Path,
 ) -> Path:
     output_path = Path(output_path)
-    metadata_path = output_path.with_name(output_path.stem + "_metrics_metadata.json")
+
+    metadata_path = output_path.with_name(
+        output_path.stem + "_metrics_metadata.json"
+    )
 
     summary = build_metrics_summary(results)
 
+    evaluated = results[
+        results["metric_applicable"] == True
+    ]
+
+    skipped = results[
+        results["metric_applicable"] == False
+    ]
+
     metadata = {
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "evalanche_version": __version__,
         "run": {
@@ -313,32 +430,39 @@ def save_metrics_metadata(
         "metrics": {
             "case_sensitive": config.metrics.case_sensitive,
             "trim_whitespace": config.metrics.trim_whitespace,
-            "collapse_whitespace": config.metrics.collapse_whitespace,
-            "use_json_when_expected_json": config.metrics.use_json_when_expected_json,
+            "collapse_whitespace": (
+                config.metrics.collapse_whitespace
+            ),
+        },
+        "routing": {
+            "supported_evaluation_types": [
+                "exact",
+                "json",
+                "judge",
+            ],
+            "deterministic_evaluation_types": [
+                "exact",
+                "json",
+            ],
         },
         "input_data": {
             "rows": int(len(inputs)),
             "columns": list(inputs.columns),
             "case_count": int(inputs["case_id"].nunique()),
             "model_count": int(inputs["model_name"].nunique()),
-            "model_names": sorted(inputs["model_name"].astype(str).unique().tolist()),
+            "model_names": sorted(
+                inputs["model_name"]
+                .astype(str)
+                .unique()
+                .tolist()
+            ),
         },
         "results": {
             "rows": int(len(results)),
-            "metric_pass_rate": (
-                float(results["metric_passed"].mean())
-                if len(results) > 0
-                else None
-            ),
-            "exact_match_rate": (
-                float(results["exact_match"].mean())
-                if len(results) > 0
-                else None
-            ),
-            "normalized_exact_match_rate": (
-                float(results["normalized_exact_match"].mean())
-                if len(results) > 0
-                else None
+            "evaluated_rows": int(len(evaluated)),
+            "skipped_rows": int(len(skipped)),
+            "metric_pass_rate": _safe_rate(
+                evaluated["metric_passed"]
             ),
         },
         "model_summary": (
@@ -347,74 +471,128 @@ def save_metrics_metadata(
             else []
         ),
         "limitations": [
-            "Deterministic metrics are strict and may mark semantically equivalent outputs as incorrect.",
-            "Exact-match metrics are most appropriate for classification, extraction, JSON, numeric, and constrained-output tasks.",
-            "Open-ended generation tasks should also use rubric-based evaluation or human review.",
+            "Deterministic metrics are only applied to cases explicitly routed to exact or json evaluation.",
+            "Exact matching can reject semantically equivalent wording and should only be used for constrained outputs.",
+            "Cases routed to judge evaluation are intentionally skipped by this command.",
         ],
     }
 
     with metadata_path.open("w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2, ensure_ascii=False)
+        json.dump(
+            metadata,
+            f,
+            indent=2,
+            ensure_ascii=False,
+        )
 
     return metadata_path
 
 
 def print_metrics_summary(summary: pd.DataFrame) -> None:
     if summary.empty:
-        console.print("[bold red]No metrics summary to display.[/bold red]")
+        console.print(
+            "[bold red]No metrics summary to display.[/bold red]"
+        )
         return
 
     table = Table(title="Deterministic Metrics Summary")
+
     table.add_column("Rank")
     table.add_column("Model")
-    table.add_column("Cases")
+    table.add_column("Evaluated")
+    table.add_column("Skipped")
     table.add_column("Pass rate")
     table.add_column("Exact")
-    table.add_column("Normalized exact")
-    table.add_column("JSON field match")
+    table.add_column("JSON exact")
+    table.add_column("JSON fields")
 
     for _, row in summary.iterrows():
-        json_field_match = row.get("average_json_field_match_rate")
-
         table.add_row(
             str(row["rank"]),
             str(row["model_name"]),
-            str(row["cases"]),
-            f"{row['metric_pass_rate']:.1%}",
-            f"{row['exact_match_rate']:.1%}",
-            f"{row['normalized_exact_match_rate']:.1%}",
-            "N/A" if pd.isna(json_field_match) else f"{json_field_match:.1%}",
+            str(row["evaluated_cases"]),
+            str(row["skipped_cases"]),
+            (
+                "N/A"
+                if pd.isna(row["metric_pass_rate"])
+                else f"{row['metric_pass_rate']:.1%}"
+            ),
+            (
+                "N/A"
+                if pd.isna(
+                    row["normalized_exact_match_rate"]
+                )
+                else (
+                    f"{row['normalized_exact_match_rate']:.1%}"
+                )
+            ),
+            (
+                "N/A"
+                if pd.isna(row["json_exact_match_rate"])
+                else f"{row['json_exact_match_rate']:.1%}"
+            ),
+            (
+                "N/A"
+                if pd.isna(
+                    row["average_json_field_match_rate"]
+                )
+                else (
+                    f"{row['average_json_field_match_rate']:.1%}"
+                )
+            ),
         )
 
     console.print(table)
 
 
-def print_metric_failures(results: pd.DataFrame, max_rows: int = 10) -> None:
-    failures = results[results["metric_passed"] == False].copy()
+def print_metric_failures(
+    results: pd.DataFrame,
+    max_rows: int = 10,
+) -> None:
+    failures = results[
+        (results["metric_applicable"] == True)
+        & (results["metric_passed"] == False)
+    ].copy()
 
     if failures.empty:
-        console.print("[bold green]No deterministic metric failures.[/bold green]")
+        console.print(
+            "[bold green]"
+            "No deterministic metric failures."
+            "[/bold green]"
+        )
         return
 
-    table = Table(title=f"Metric Failures, showing up to {max_rows}")
+    table = Table(
+        title=f"Metric Failures, showing up to {max_rows}"
+    )
+
     table.add_column("case_id")
     table.add_column("model_name")
+    table.add_column("type")
     table.add_column("exact")
-    table.add_column("normalized")
     table.add_column("json_exact")
     table.add_column("json_field_match")
 
     for _, row in failures.head(max_rows).iterrows():
-        json_exact = row.get("json_exact_match")
-        json_field_match = row.get("json_field_match_rate")
-
         table.add_row(
             str(row["case_id"]),
             str(row["model_name"]),
-            str(row["exact_match"]),
-            str(row["normalized_exact_match"]),
-            "N/A" if pd.isna(json_exact) else str(json_exact),
-            "N/A" if pd.isna(json_field_match) else f"{json_field_match:.1%}",
+            str(row["evaluation_type"]),
+            (
+                "N/A"
+                if pd.isna(row["normalized_exact_match"])
+                else str(row["normalized_exact_match"])
+            ),
+            (
+                "N/A"
+                if pd.isna(row["json_exact_match"])
+                else str(row["json_exact_match"])
+            ),
+            (
+                "N/A"
+                if pd.isna(row["json_field_match_rate"])
+                else f"{row['json_field_match_rate']:.1%}"
+            ),
         )
 
     console.print(table)
@@ -436,7 +614,11 @@ def run_deterministic_metrics(
 
     results = inputs.merge(
         metric_results,
-        on=["case_id", "model_name"],
+        on=[
+            "case_id",
+            "model_name",
+            "evaluation_type",
+        ],
         how="left",
     )
 
@@ -444,7 +626,10 @@ def run_deterministic_metrics(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results.to_csv(output_path, index=False)
 
-    summary_path = save_metrics_summary(results, output_path)
+    summary_path = save_metrics_summary(
+        results,
+        output_path,
+    )
 
     metadata_path = save_metrics_metadata(
         config_path=config_path,
@@ -456,7 +641,18 @@ def run_deterministic_metrics(
     )
 
     summary = build_metrics_summary(results)
+
     print_metrics_summary(summary)
     print_metric_failures(results)
+
+    skipped_count = int(
+        (results["metric_applicable"] == False).sum()
+    )
+
+    if skipped_count:
+        console.print(
+            f"\nSkipped {skipped_count} case(s) routed "
+            "to LLM judge evaluation."
+        )
 
     return results, output_path, summary_path, metadata_path

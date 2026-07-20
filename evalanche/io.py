@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from evalanche.routing import JUDGE, validate_evaluation_types
+
 
 REQUIRED_COLUMNS = {
     "case_id",
@@ -28,7 +30,14 @@ def load_eval_cases(path: str | Path) -> pd.DataFrame:
             f"Input file is missing required columns: {sorted(missing)}"
         )
 
-    return df
+    # Backwards compatibility for older manually created judge datasets.
+    if "evaluation_type" not in df.columns:
+        df["evaluation_type"] = JUDGE
+
+    return validate_evaluation_types(
+        df,
+        source_name=str(input_path),
+    )
 
 
 def save_results(df: pd.DataFrame, path: str | Path) -> None:

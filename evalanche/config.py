@@ -140,7 +140,6 @@ class DeterministicMetricsSettingsConfig(BaseModel):
     case_sensitive: bool = False
     trim_whitespace: bool = True
     collapse_whitespace: bool = True
-    use_json_when_expected_json: bool = True
 
 
 class MetricsConfig(BaseModel):

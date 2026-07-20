@@ -16,12 +16,14 @@ from evalanche.config import (
     load_candidate_models,
 )
 from evalanche.llm import LLMClient
+from evalanche.routing import validate_evaluation_types
 
 
 REQUIRED_GENERATION_COLUMNS = {
     "case_id",
     "input",
     "expected_output",
+    "evaluation_type",
 }
 
 
@@ -38,8 +40,8 @@ def sha256_file(path: str | Path) -> str | None:
 
     digest = hashlib.sha256()
 
-    with file_path.open("rb") as f:
-        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+    with file_path.open("rb") as file:
+        for chunk in iter(lambda: file.read(1024 * 1024), b""):
             digest.update(chunk)
 
     return digest.hexdigest()
@@ -49,30 +51,44 @@ def load_generation_cases(path: str | Path) -> pd.DataFrame:
     input_path = Path(path)
 
     if not input_path.exists():
-        raise FileNotFoundError(f"Generation input file not found: {input_path}")
-
-    df = pd.read_csv(input_path)
-
-    missing = REQUIRED_GENERATION_COLUMNS - set(df.columns)
-    if missing:
-        raise ValueError(
-            f"Generation input is missing required columns: {sorted(missing)}"
+        raise FileNotFoundError(
+            f"Generation input file not found: {input_path}"
         )
 
-    return df
+    cases = pd.read_csv(input_path)
+
+    missing_columns = REQUIRED_GENERATION_COLUMNS - set(cases.columns)
+
+    if missing_columns:
+        raise ValueError(
+            "Generation input is missing required columns: "
+            f"{sorted(missing_columns)}"
+        )
+
+    return validate_evaluation_types(
+        cases,
+        source_name=str(input_path),
+    )
 
 
-def render_prompt(template: str, row: dict[str, Any]) -> str:
+def render_prompt(
+    template: str,
+    row: dict[str, Any],
+) -> str:
     values = SafeFormatDict(
         {
             key: "" if pd.isna(value) else str(value)
             for key, value in row.items()
         }
     )
+
     return template.format_map(values)
 
 
-def build_messages(config: GenerationConfig, row: dict[str, Any]) -> list[dict[str, str]]:
+def build_messages(
+    config: GenerationConfig,
+    row: dict[str, Any],
+) -> list[dict[str, str]]:
     return [
         {
             "role": "system",
@@ -80,7 +96,10 @@ def build_messages(config: GenerationConfig, row: dict[str, Any]) -> list[dict[s
         },
         {
             "role": "user",
-            "content": render_prompt(config.prompt.template, row),
+            "content": render_prompt(
+                config.prompt.template,
+                row,
+            ),
         },
     ]
 
@@ -113,21 +132,32 @@ def generate_one(
     finished_at = datetime.now(timezone.utc)
     usage = response.get("usage", {})
 
-    return {
-        "case_id": row["case_id"],
-        "input": row["input"],
-        "expected_output": row["expected_output"],
-        "model_name": candidate.name,
-        "candidate_model": candidate.model,
-        "model_output": response.get("content", ""),
-        "generation_status": "success",
-        "generation_error": "",
-        "generated_at_utc": finished_at.isoformat(),
-        "generation_seconds": (finished_at - started_at).total_seconds(),
-        "generation_prompt_tokens": usage.get("prompt_tokens"),
-        "generation_completion_tokens": usage.get("completion_tokens"),
-        "generation_total_tokens": usage.get("total_tokens"),
-    }
+    record = dict(row)
+
+    record.update(
+        {
+            "model_name": candidate.name,
+            "candidate_model": candidate.model,
+            "model_output": response.get("content", ""),
+            "generation_status": "success",
+            "generation_error": "",
+            "generated_at_utc": finished_at.isoformat(),
+            "generation_seconds": (
+                finished_at - started_at
+            ).total_seconds(),
+            "generation_prompt_tokens": usage.get(
+                "prompt_tokens"
+            ),
+            "generation_completion_tokens": usage.get(
+                "completion_tokens"
+            ),
+            "generation_total_tokens": usage.get(
+                "total_tokens"
+            ),
+        }
+    )
+
+    return record
 
 
 def generate_outputs(
@@ -136,40 +166,48 @@ def generate_outputs(
     config_path: str | Path,
 ) -> tuple[pd.DataFrame, Path, Path]:
     cases = load_generation_cases(config.run.input_path)
-    candidates_config = load_candidate_models(config.candidate_models_path)
+
+    candidate_config = load_candidate_models(
+        config.candidate_models_path
+    )
 
     records: list[dict[str, Any]] = []
 
     work_items = [
         (row, candidate)
         for row in cases.to_dict(orient="records")
-        for candidate in candidates_config.models
+        for candidate in candidate_config.models
     ]
 
-    for row, candidate in tqdm(work_items, desc="Generating outputs"):
+    for row, candidate in tqdm(
+        work_items,
+        desc="Generating outputs",
+    ):
         try:
-            records.append(
-                generate_one(
-                    config=config,
-                    candidate=candidate,
-                    row=row,
-                )
+            record = generate_one(
+                config=config,
+                candidate=candidate,
+                row=row,
             )
-        except Exception as exc:
+
+            records.append(record)
+
+        except Exception as error:
             if not config.generation.continue_on_error:
                 raise
 
-            records.append(
+            error_record = dict(row)
+
+            error_record.update(
                 {
-                    "case_id": row["case_id"],
-                    "input": row["input"],
-                    "expected_output": row["expected_output"],
                     "model_name": candidate.name,
                     "candidate_model": candidate.model,
                     "model_output": "",
                     "generation_status": "error",
-                    "generation_error": repr(exc),
-                    "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+                    "generation_error": repr(error),
+                    "generated_at_utc": (
+                        datetime.now(timezone.utc).isoformat()
+                    ),
                     "generation_seconds": None,
                     "generation_prompt_tokens": None,
                     "generation_completion_tokens": None,
@@ -177,16 +215,25 @@ def generate_outputs(
                 }
             )
 
+            records.append(error_record)
+
     outputs = pd.DataFrame(records)
 
     output_path = Path(config.run.output_path)
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    outputs.to_csv(output_path, index=False)
+    output_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    outputs.to_csv(
+        output_path,
+        index=False,
+    )
 
     metadata_path = save_generation_metadata(
         config=config,
         config_path=config_path,
-        candidates=candidates_config.models,
+        candidates=candidate_config.models,
         cases=cases,
         outputs=outputs,
         output_path=output_path,
@@ -205,23 +252,43 @@ def save_generation_metadata(
     output_path: str | Path,
 ) -> Path:
     output_path = Path(output_path)
-    metadata_path = output_path.with_name(output_path.stem + "_generation_metadata.json")
+
+    metadata_path = output_path.with_name(
+        output_path.stem
+        + "_generation_metadata.json"
+    )
+
+    successful_outputs = outputs[
+        outputs["generation_status"] == "success"
+    ]
+
+    failed_outputs = outputs[
+        outputs["generation_status"] == "error"
+    ]
 
     metadata = {
-        "schema_version": "0.1",
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "schema_version": "0.2",
+        "created_at_utc": (
+            datetime.now(timezone.utc).isoformat()
+        ),
         "evalanche_version": __version__,
         "run": {
             "name": config.run.name,
             "config_path": str(config_path),
             "input_path": str(config.run.input_path),
             "output_path": str(output_path),
-            "candidate_models_path": str(config.candidate_models_path),
+            "candidate_models_path": str(
+                config.candidate_models_path
+            ),
         },
         "hashes": {
             "config_sha256": sha256_file(config_path),
-            "input_sha256": sha256_file(config.run.input_path),
-            "candidate_models_sha256": sha256_file(config.candidate_models_path),
+            "input_sha256": sha256_file(
+                config.run.input_path
+            ),
+            "candidate_models_sha256": sha256_file(
+                config.candidate_models_path
+            ),
             "output_sha256": sha256_file(output_path),
         },
         "prompt": {
@@ -229,8 +296,12 @@ def save_generation_metadata(
             "template": config.prompt.template,
         },
         "generation": {
-            "continue_on_error": config.generation.continue_on_error,
-            "max_completion_tokens": config.generation.max_completion_tokens,
+            "continue_on_error": (
+                config.generation.continue_on_error
+            ),
+            "max_completion_tokens": (
+                config.generation.max_completion_tokens
+            ),
         },
         "candidate_models": [
             {
@@ -238,34 +309,92 @@ def save_generation_metadata(
                 "model": candidate.model,
                 "temperature": candidate.temperature,
                 "max_retries": candidate.max_retries,
-                "max_completion_tokens": candidate.max_completion_tokens,
+                "max_completion_tokens": (
+                    candidate.max_completion_tokens
+                ),
             }
             for candidate in candidates
         ],
         "input_data": {
             "rows": int(len(cases)),
             "columns": list(cases.columns),
-            "case_count": int(cases["case_id"].nunique()),
+            "case_count": int(
+                cases["case_id"].nunique()
+            ),
+            "evaluation_types": sorted(
+                cases["evaluation_type"]
+                .astype(str)
+                .unique()
+                .tolist()
+            ),
         },
         "outputs": {
             "rows": int(len(outputs)),
-            "success_count": int((outputs["generation_status"] == "success").sum()),
-            "error_count": int((outputs["generation_status"] == "error").sum()),
-            "models": sorted(outputs["model_name"].astype(str).unique().tolist()),
+            "success_count": int(
+                len(successful_outputs)
+            ),
+            "error_count": int(
+                len(failed_outputs)
+            ),
+            "models": sorted(
+                outputs["model_name"]
+                .astype(str)
+                .unique()
+                .tolist()
+            ),
             "total_tokens": (
-                int(outputs["generation_total_tokens"].fillna(0).sum())
-                if "generation_total_tokens" in outputs.columns
+                int(
+                    outputs[
+                        "generation_total_tokens"
+                    ]
+                    .fillna(0)
+                    .sum()
+                )
+                if "generation_total_tokens"
+                in outputs.columns
+                else None
+            ),
+            "average_generation_seconds": (
+                float(
+                    successful_outputs[
+                        "generation_seconds"
+                    ].mean()
+                )
+                if not successful_outputs.empty
                 else None
             ),
         },
         "limitations": [
-            "Generated outputs are specific to the candidate models, prompts, inputs, and API configuration used in this run.",
-            "Generation should be saved and inspected before judging when running important evaluations.",
-            "If the judge model and candidate model are the same, results should be interpreted with extra caution.",
+            (
+                "Generated outputs are specific to the "
+                "candidate models, prompts, inputs, and "
+                "API configuration used in this run."
+            ),
+            (
+                "Generated outputs should be inspected "
+                "before important evaluations."
+            ),
+            (
+                "Using the same model as both candidate "
+                "and judge may introduce evaluation bias."
+            ),
         ],
     }
 
-    with metadata_path.open("w", encoding="utf-8") as f:
-        json.dump(metadata, f, indent=2, ensure_ascii=False)
+    metadata_path.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    with metadata_path.open(
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            metadata,
+            file,
+            indent=2,
+            ensure_ascii=False,
+        )
 
     return metadata_path

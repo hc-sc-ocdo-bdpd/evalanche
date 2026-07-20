@@ -23,6 +23,7 @@ from evalanche.reporting import (
     print_summary,
     save_model_summary,
 )
+from evalanche.routing import JUDGE
 
 
 def run_generate(config_path: str) -> None:
@@ -65,13 +66,30 @@ def run_judge(config_path: str) -> None:
     config = load_config(config_path)
     cases = load_eval_cases(config.run.input_path)
 
+    judge_cases = cases[
+        cases["evaluation_type"] == JUDGE
+    ].copy()
+
+    skipped_count = len(cases) - len(judge_cases)
+
+    if judge_cases.empty:
+        print(
+            "No cases were routed to LLM judge evaluation. "
+            "Nothing to judge."
+        )
+        return
+
     judge = CriteriaJudge(config)
 
     records = []
-    for row in tqdm(cases.to_dict(orient="records"), desc="Judging cases"):
+
+    for row in tqdm(
+        judge_cases.to_dict(orient="records"),
+        desc="Judging cases",
+    ):
         records.append(judge.judge_case(row))
 
-    results = cases.merge(
+    results = judge_cases.merge(
         pd.DataFrame(records),
         on=["case_id", "model_name"],
         how="left",
@@ -101,6 +119,12 @@ def run_judge(config_path: str) -> None:
     print_summary(results)
     print_model_leaderboard(results)
     print_failures(results)
+    
+    if skipped_count:
+        print(
+            f"\nSkipped {skipped_count} case(s) routed "
+            "to deterministic evaluation."
+        )
 
     print(f"\nSaved case results to: {config.run.output_path}")
     print(f"Saved model summary to: {summary_path}")

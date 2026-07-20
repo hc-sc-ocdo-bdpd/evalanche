@@ -7,4 +7,3 @@ metrics:
   case_sensitive: false
   trim_whitespace: true
   collapse_whitespace: true
-  use_json_when_expected_json: true
