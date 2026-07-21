@@ -121,7 +121,7 @@ def run_judge(config_path: str) -> None:
     print_summary(results)
     print_model_leaderboard(results)
     print_failures(results)
-    
+
     if skipped_count:
         print(
             f"\nSkipped {skipped_count} case(s) routed "
@@ -132,7 +132,8 @@ def run_judge(config_path: str) -> None:
     print(f"Saved model summary to: {summary_path}")
     print(f"Saved run metadata to: {metadata_path}")
     print(f"Saved recommendation report to: {recommendation_path}")
-    
+
+
 def run_combined_evaluation(config_path: str) -> None:
     load_dotenv()
 
@@ -143,6 +144,7 @@ def run_combined_evaluation(config_path: str) -> None:
         output_path,
         summary_path,
         comparison_path,
+        selection_path,
         metadata_path,
         report_path,
     ) = run_evaluation(
@@ -155,16 +157,20 @@ def run_combined_evaluation(config_path: str) -> None:
     print(
         "Saved combined pairwise comparisons to: "
         f"{comparison_path}"
-        )
+    )
+    print(
+        "Saved combined model selection to: "
+        f"{selection_path}"
+    )
     print(f"Saved combined run metadata to: {metadata_path}")
     print(f"Saved combined recommendation to: {report_path}")
-    
+
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
+
     evaluate_parser = subparsers.add_parser("evaluate")
     evaluate_parser.add_argument(
         "--config",

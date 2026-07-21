@@ -26,6 +26,22 @@ scoring:
   score_max: 5
   pass_threshold: 0.75
 
+selection:
+  enabled: true
+  minimum_score_margin: 0.02
+  weights:
+    quality: 0.70
+    cost: 0.00
+    latency: 0.15
+    reliability: 0.15
+  constraints:
+    require_model_profile: false
+    minimum_pass_rate: 0.75
+    maximum_p95_latency_seconds: 10
+    maximum_generation_failure_rate: 0.05
+    required_capabilities: []
+  model_profiles: []
+
 criteria:
   - name: correctness
     weight: 0.70

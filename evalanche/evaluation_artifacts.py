@@ -12,6 +12,9 @@ from evalanche import __version__
 from evalanche.config import EvaluationConfig
 from evalanche.metadata import sha256_file
 from evalanche.operational import summarize_operations
+from evalanche.selection import (
+    build_recommendation_decision,
+)
 from evalanche.statistics import (
     CONFIDENCE_LEVEL,
     SIGNIFICANCE_LEVEL,
@@ -63,6 +66,18 @@ def _format_cost(
         coverage_text = _format_percent(coverage)
         return f"Unknown ({coverage_text} coverage)"
     return f"${float(value):.6f} USD"
+
+
+def _format_usd(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "N/A"
+    return f"${float(value):.6f} USD"
+
+
+def _format_declared_bool(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "Not declared"
+    return "Yes" if bool(value) else "No"
 
 
 def _numeric_mean_or_none(series: pd.Series) -> float | None:
@@ -121,7 +136,7 @@ def _leaderboard_markdown(summary: pd.DataFrame) -> str:
                     str(row["unscored_cases"]),
                     _format_percent(row["pass_rate"]),
                     (
-                        f"{_format_percent(row['pass_rate_ci_low'])}–"
+                        f"{_format_percent(row['pass_rate_ci_low'])}-"
                         f"{_format_percent(row['pass_rate_ci_high'])}"
                     ),
                     _format_decimal(row["average_score"]),
@@ -151,7 +166,7 @@ def _pairwise_markdown(comparisons: pd.DataFrame) -> str:
         "Model B",
         "Paired cases",
         "Excluded cases",
-        "Pass-rate difference (A − B)",
+        "Pass-rate difference (A - B)",
         "A-only passes",
         "B-only passes",
         "Holm-adjusted p-value",
@@ -264,6 +279,122 @@ def _stage_operations_markdown(
     return "\n".join(rows)
 
 
+def _selection_policy_markdown(config: EvaluationConfig) -> str:
+    selection = config.selection
+    if not selection.enabled:
+        return (
+            "_Constraint-aware selection is disabled. The result uses the "
+            "quality-only statistical recommendation._"
+        )
+
+    constraints = selection.constraints
+    required_capabilities = (
+        ", ".join(constraints.required_capabilities)
+        if constraints.required_capabilities
+        else "None"
+    )
+
+    def optional_percent(value: Any) -> str:
+        return _format_percent(value) if value is not None else "Not set"
+
+    def optional_seconds(value: Any) -> str:
+        return _format_seconds(value) if value is not None else "Not set"
+
+    def optional_cost(value: Any) -> str:
+        return (
+            f"${float(value):.6f} USD"
+            if value is not None
+            else "Not set"
+        )
+
+    return "\n".join(
+        [
+            "Hard requirements are applied before weighted scoring. A model "
+            "with missing required evidence remains unknown rather than "
+            "passing or failing the requirement.",
+            "",
+            f"- Minimum pass rate: "
+            f"{optional_percent(constraints.minimum_pass_rate)}",
+            f"- Minimum 95% pass-rate lower bound: "
+            f"{optional_percent(constraints.minimum_pass_rate_ci_low)}",
+            f"- Maximum average request cost: "
+            f"{optional_cost(constraints.maximum_average_cost_usd)}",
+            f"- Maximum p95 generation latency: "
+            f"{optional_seconds(constraints.maximum_p95_latency_seconds)}",
+            f"- Maximum generation failure rate: "
+            f"{optional_percent(constraints.maximum_generation_failure_rate)}",
+            f"- Required capabilities: {required_capabilities}",
+            "- Require a model profile for every candidate: "
+            f"{selection.constraints.require_model_profile}",
+            f"- Minimum decision-score margin: "
+            f"{selection.minimum_score_margin:.3f}",
+            "- Weights: "
+            f"quality={selection.weights.quality:g}, "
+            f"cost={selection.weights.cost:g}, "
+            f"latency={selection.weights.latency:g}, "
+            f"reliability={selection.weights.reliability:g}",
+        ]
+    )
+
+
+def _selection_markdown(selection: pd.DataFrame) -> str:
+    if selection.empty:
+        return "_No constraint-aware model-selection table was produced._"
+
+    columns = [
+        "Model",
+        "Status",
+        "Rank",
+        "Decision score",
+        "Pass rate",
+        "Average cost/request",
+        "p95 latency",
+        "Generation failure rate",
+        "Available",
+        "Capabilities",
+        "Recommended",
+        "Reasons",
+    ]
+    rows = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join(["---"] * len(columns)) + " |",
+    ]
+
+    for _, row in selection.iterrows():
+        reasons = "; ".join(
+            value
+            for value in (
+                str(row["constraint_failures"]).strip(),
+                str(row["missing_evidence"]).strip(),
+            )
+            if value and value.lower() != "nan"
+        )
+        rows.append(
+            "| "
+            + " | ".join(
+                [
+                    _escape_markdown(row["model_name"]),
+                    _escape_markdown(row["selection_status"]),
+                    _format_integer(row["selection_rank"]),
+                    _format_decimal(row["decision_score"]),
+                    _format_percent(row["pass_rate"]),
+                    _format_usd(row["generation_average_cost_usd"]),
+                    _format_seconds(row["generation_p95_seconds"]),
+                    _format_percent(row["generation_failure_rate"]),
+                    _format_declared_bool(row["available"]),
+                    _escape_markdown(
+                        row["capabilities"] or "None declared"
+                    ),
+                    "Yes" if bool(row["recommended"]) else "No",
+                    _escape_markdown(reasons or "None"),
+                ]
+            )
+            + " |"
+        )
+
+    return "\n".join(rows)
+
+
 def _failures_markdown(
     results: pd.DataFrame,
     max_rows: int = 10,
@@ -305,134 +436,10 @@ def _failures_markdown(
     return "\n".join(rows)
 
 
-def _recommendation_details(
+def _quality_recommendation_text(
     summary: pd.DataFrame,
-    comparisons: pd.DataFrame,
-) -> dict[str, Any]:
-    if summary.empty:
-        return {
-            "status": "no_results",
-            "top_ranked_models": [],
-            "observed_leader": None,
-            "recommended_model": None,
-            "not_distinguished_from": [],
-        }
-
-    unscored_cases = (
-        int(summary["unscored_cases"].sum())
-        if "unscored_cases" in summary.columns
-        else 0
-    )
-    if unscored_cases:
-        ranked = summary[summary["rank"].notna()]
-        top_models: list[str] = []
-        if not ranked.empty:
-            top_rank = ranked["rank"].min()
-            top_models = (
-                ranked.loc[
-                    ranked["rank"] == top_rank,
-                    "model_name",
-                ]
-                .astype(str)
-                .tolist()
-            )
-
-        return {
-            "status": "incomplete_evaluation",
-            "top_ranked_models": top_models,
-            "observed_leader": (
-                top_models[0]
-                if len(top_models) == 1
-                else None
-            ),
-            "recommended_model": None,
-            "not_distinguished_from": [],
-            "unscored_cases": unscored_cases,
-        }
-
-    top_rank = summary["rank"].min()
-    top_models = (
-        summary.loc[
-            summary["rank"] == top_rank,
-            "model_name",
-        ]
-        .astype(str)
-        .tolist()
-    )
-
-    if len(summary) == 1:
-        return {
-            "status": "single_model",
-            "top_ranked_models": top_models,
-            "observed_leader": top_models[0],
-            "recommended_model": None,
-            "not_distinguished_from": [],
-        }
-
-    if len(top_models) > 1:
-        return {
-            "status": "observed_tie",
-            "top_ranked_models": top_models,
-            "observed_leader": None,
-            "recommended_model": None,
-            "not_distinguished_from": top_models,
-        }
-
-    observed_leader = top_models[0]
-    other_models = sorted(
-        set(summary["model_name"].astype(str))
-        - {observed_leader}
-    )
-    not_distinguished_from: list[str] = []
-
-    for other_model in other_models:
-        matching = comparisons[
-            (
-                (comparisons["model_a"] == observed_leader)
-                & (comparisons["model_b"] == other_model)
-            )
-            | (
-                (comparisons["model_a"] == other_model)
-                & (comparisons["model_b"] == observed_leader)
-            )
-        ]
-
-        if (
-            len(matching) != 1
-            or matching.iloc[0]["clear_winner"]
-            != observed_leader
-        ):
-            not_distinguished_from.append(other_model)
-
-    if not_distinguished_from:
-        return {
-            "status": "insufficient_evidence",
-            "top_ranked_models": top_models,
-            "observed_leader": observed_leader,
-            "recommended_model": None,
-            "not_distinguished_from": (
-                not_distinguished_from
-            ),
-        }
-
-    return {
-        "status": "clear_leader",
-        "top_ranked_models": top_models,
-        "observed_leader": observed_leader,
-        "recommended_model": observed_leader,
-        "not_distinguished_from": [],
-    }
-
-
-def _recommendation_text(
-    summary: pd.DataFrame,
-    comparisons: pd.DataFrame,
+    details: dict[str, Any],
 ) -> str:
-    details = _recommendation_details(
-        summary,
-        comparisons,
-    )
-
     if summary.empty:
         return (
             "**Comparative recommendation:** Not available. "
@@ -458,7 +465,7 @@ def _recommendation_text(
             f"{model['cases']} cases "
             f"({_format_percent(model['pass_rate'])}; "
             f"95% interval "
-            f"{_format_percent(model['pass_rate_ci_low'])}–"
+            f"{_format_percent(model['pass_rate_ci_low'])}-"
             f"{_format_percent(model['pass_rate_ci_high'])}), "
             "but at least two candidate models are required "
             "for a model comparison."
@@ -517,15 +524,161 @@ def _recommendation_text(
     )
 
 
+def _selection_reasons(
+    selection: pd.DataFrame,
+    model_names: list[str],
+) -> str:
+    selected = selection[
+        selection["model_name"].astype(str).isin(model_names)
+    ]
+    reasons: list[str] = []
+    for _, row in selected.iterrows():
+        detail = str(row["constraint_failures"]).strip()
+        missing = str(row["missing_evidence"]).strip()
+        combined = "; ".join(
+            value
+            for value in (detail, missing)
+            if value and value.lower() != "nan"
+        )
+        reasons.append(
+            f"`{row['model_name']}`: {combined or 'no reason recorded'}"
+        )
+    return "; ".join(reasons)
+
+
+def _constraint_recommendation_text(
+    config: EvaluationConfig,
+    summary: pd.DataFrame,
+    selection: pd.DataFrame,
+    decision: dict[str, Any],
+) -> str:
+    status = decision["status"]
+
+    if status in {"no_results", "incomplete_evaluation"}:
+        return _quality_recommendation_text(summary, decision)
+
+    if status == "single_model":
+        model_name = decision.get("observed_leader")
+        matching = selection[
+            selection["model_name"].astype(str) == str(model_name)
+        ]
+        policy_status = (
+            str(matching.iloc[0]["selection_status"])
+            if not matching.empty
+            else "not assessed"
+        )
+        return (
+            "**Constraint-aware recommendation:** Not available.\n\n"
+            f"Only `{model_name}` was evaluated. Its policy status was "
+            f"`{policy_status}`, but at least two candidate models are "
+            "required for a comparative selection."
+        )
+
+    if status == "insufficient_operational_data":
+        unknown = decision["unknown_models"]
+        return (
+            "**Constraint-aware recommendation:** Not available.\n\n"
+            "Required evidence is missing for one or more candidates: "
+            f"{_selection_reasons(selection, unknown)}. Missing evidence "
+            "is not treated as a passed requirement."
+        )
+
+    if status == "no_eligible_models":
+        ineligible = decision["ineligible_models"]
+        return (
+            "**Constraint-aware recommendation:** No eligible model.\n\n"
+            "Every evaluated candidate failed at least one configured "
+            f"requirement: {_selection_reasons(selection, ineligible)}."
+        )
+
+    if status == "policy_tie":
+        names = ", ".join(
+            f"`{name}`" for name in decision["top_ranked_models"]
+        )
+        return (
+            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            f"{names} tied on the configured weighted decision score."
+        )
+
+    if status == "insufficient_policy_margin":
+        leader = decision["top_ranked_models"][0]
+        return (
+            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            f"`{leader}` had the highest decision score, but its margin "
+            f"of {decision['score_margin']:.3f} was below the configured "
+            f"minimum of {config.selection.minimum_score_margin:.3f}."
+        )
+
+    if status == "insufficient_quality_evidence":
+        leader = decision["top_ranked_models"][0]
+        return (
+            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            f"`{leader}` had the highest quality-only decision score, but "
+            "the corrected paired evidence did not clearly distinguish it "
+            "from every other eligible model."
+        )
+
+    recommended = str(decision["recommended_model"])
+    score = float(decision["top_selection_score"])
+    if status == "sole_eligible_model":
+        explanation = (
+            "It was the only evaluated candidate that satisfied every "
+            "configured requirement with complete required evidence."
+        )
+    elif status == "quality_leader":
+        explanation = (
+            "It satisfied every configured requirement and the corrected "
+            "paired quality evidence distinguished it from every other "
+            "eligible model."
+        )
+    else:
+        explanation = (
+            "It satisfied every configured requirement and had the highest "
+            "weighted decision score among eligible models"
+            f", with a margin of {decision['score_margin']:.3f}."
+        )
+
+    return (
+        f"**Constraint-aware recommendation:** `{recommended}`\n\n"
+        f"Its configured decision score was {score:.3f}. {explanation} "
+        "This is a task-specific policy result, not a claim that it is the "
+        "best model in general."
+    )
+
+
+def _recommendation_text(
+    config: EvaluationConfig,
+    summary: pd.DataFrame,
+    comparisons: pd.DataFrame,
+    selection: pd.DataFrame,
+) -> str:
+    decision = build_recommendation_decision(
+        summary,
+        comparisons,
+        selection,
+        config.selection,
+    )
+    if decision["mode"] == "quality_only":
+        return _quality_recommendation_text(summary, decision)
+    return _constraint_recommendation_text(
+        config,
+        summary,
+        selection,
+        decision,
+    )
+
+
 def build_evaluation_report(
     *,
     config: EvaluationConfig,
     results: pd.DataFrame,
     summary: pd.DataFrame,
     comparisons: pd.DataFrame,
+    selection: pd.DataFrame,
     case_results_path: str | Path,
     summary_path: str | Path,
     comparison_path: str | Path,
+    selection_path: str | Path,
     metadata_path: str | Path,
 ) -> str:
     source_counts = results[
@@ -548,7 +701,7 @@ def build_evaluation_report(
 
 ## Result
 
-{_recommendation_text(summary, comparisons)}
+{_recommendation_text(config, summary, comparisons, selection)}
 
 ## Evaluation Scope
 
@@ -579,6 +732,14 @@ The exact paired test compares where one model passed and the other failed.
 Holm correction limits false positives when several model pairs are tested.
 
 {_pairwise_markdown(comparisons)}
+
+## Model Selection Policy
+
+{_selection_policy_markdown(config)}
+
+### Eligibility and Decision Scores
+
+{_selection_markdown(selection)}
 
 ## Operational Performance
 
@@ -615,6 +776,7 @@ reported total; otherwise the report shows the available coverage.
 - Case results: `{case_results_path}`
 - Model summary: `{summary_path}`
 - Pairwise comparisons: `{comparison_path}`
+- Model selection: `{selection_path}`
 - Run metadata: `{metadata_path}`
 
 ## Limitations
@@ -630,8 +792,10 @@ reported total; otherwise the report shows the available coverage.
   retries, and sequential execution. They are not production service-level
   guarantees.
 - Missing token or cost metadata is reported as unknown, not zero.
-- Cost, latency, privacy, deployment availability, and bilingual requirements
-  are reported as evidence but are not yet decision constraints in ranking.
+- Selection weights, thresholds, and capabilities express configured policy
+  choices. They are not empirical facts and should be reviewed by the client.
+- Weighted operational components use point estimates from this run and do not
+  include uncertainty intervals.
 - A small or unrepresentative test set can produce unstable rankings.
 """
 
@@ -642,9 +806,11 @@ def save_evaluation_report(
     results: pd.DataFrame,
     summary: pd.DataFrame,
     comparisons: pd.DataFrame,
+    selection: pd.DataFrame,
     case_results_path: str | Path,
     summary_path: str | Path,
     comparison_path: str | Path,
+    selection_path: str | Path,
     metadata_path: str | Path,
 ) -> Path:
     case_results_path = Path(case_results_path)
@@ -658,9 +824,11 @@ def save_evaluation_report(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=selection,
         case_results_path=case_results_path,
         summary_path=summary_path,
         comparison_path=comparison_path,
+        selection_path=selection_path,
         metadata_path=metadata_path,
     )
     report_path.write_text(
@@ -679,22 +847,26 @@ def build_evaluation_metadata(
     results: pd.DataFrame,
     summary: pd.DataFrame,
     comparisons: pd.DataFrame,
+    selection: pd.DataFrame,
     case_results_path: str | Path,
     summary_path: str | Path,
     comparison_path: str | Path,
+    selection_path: str | Path,
     report_path: str | Path,
 ) -> dict[str, Any]:
     source_counts = results[
         "evaluation_source"
     ].value_counts()
-    recommendation = _recommendation_details(
+    recommendation = build_recommendation_decision(
         summary,
         comparisons,
+        selection,
+        config.selection,
     )
     operations = summarize_operations(results)
 
     return {
-        "schema_version": "0.5",
+        "schema_version": "0.6",
         "created_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -718,6 +890,7 @@ def build_evaluation_metadata(
             "pairwise_comparisons_path": str(
                 comparison_path
             ),
+            "model_selection_path": str(selection_path),
             "recommendation_path": str(report_path),
         },
         "hashes": {
@@ -737,6 +910,9 @@ def build_evaluation_metadata(
             ),
             "pairwise_comparisons_sha256": sha256_file(
                 comparison_path
+            ),
+            "model_selection_sha256": sha256_file(
+                selection_path
             ),
             "recommendation_sha256": sha256_file(
                 report_path
@@ -837,6 +1013,9 @@ def build_evaluation_metadata(
             ],
         },
         "operations": operations,
+        "selection_policy": config.selection.model_dump(
+            mode="json"
+        ),
         "statistics": {
             "confidence_level": CONFIDENCE_LEVEL,
             "pass_rate_interval": "wilson_score",
@@ -861,7 +1040,6 @@ def build_evaluation_metadata(
                 >= 2
             ),
             **recommendation,
-            "ranking_measure": "overall_pass_rate",
         },
         "model_summary": json.loads(
             summary.to_json(orient="records")
@@ -870,6 +1048,9 @@ def build_evaluation_metadata(
             comparisons.to_json(
                 orient="records"
             )
+        ),
+        "model_selection": json.loads(
+            selection.to_json(orient="records")
         ),
         "limitations": [
             (
@@ -896,8 +1077,12 @@ def build_evaluation_metadata(
                 "Missing token and cost metadata is unknown, not zero."
             ),
             (
-                "Operational constraints are reported but are not yet "
-                "part of the ranking."
+                "Selection weights, thresholds, and capabilities are "
+                "configured policy choices."
+            ),
+            (
+                "Weighted operational components use point estimates "
+                "without uncertainty intervals."
             ),
         ],
     }
@@ -911,9 +1096,11 @@ def save_evaluation_metadata(
     results: pd.DataFrame,
     summary: pd.DataFrame,
     comparisons: pd.DataFrame,
+    selection: pd.DataFrame,
     case_results_path: str | Path,
     summary_path: str | Path,
     comparison_path: str | Path,
+    selection_path: str | Path,
     report_path: str | Path,
 ) -> Path:
     case_results_path = Path(case_results_path)
@@ -929,9 +1116,11 @@ def save_evaluation_metadata(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=selection,
         case_results_path=case_results_path,
         summary_path=summary_path,
         comparison_path=comparison_path,
+        selection_path=selection_path,
         report_path=report_path,
     )
     metadata_path.write_text(

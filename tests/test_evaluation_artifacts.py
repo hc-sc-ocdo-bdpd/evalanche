@@ -9,6 +9,9 @@ from evalanche.config import (
     JudgeConfig,
     RunConfig,
     ScoringConfig,
+    SelectionConfig,
+    SelectionConstraintsConfig,
+    SelectionWeightsConfig,
     TaskConfig,
 )
 from evalanche.evaluation import (
@@ -20,6 +23,11 @@ from evalanche.evaluation_artifacts import (
 )
 from evalanche.statistics import (
     build_pairwise_comparisons,
+)
+from evalanche.selection import (
+    build_model_selection,
+    build_recommendation_decision,
+    mark_recommended_model,
 )
 
 
@@ -90,9 +98,11 @@ def test_single_model_report_does_not_claim_comparative_winner(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=pd.DataFrame(),
         case_results_path="results.csv",
         summary_path="summary.csv",
         comparison_path="comparisons.csv",
+        selection_path="selection.csv",
         metadata_path="metadata.json",
     )
 
@@ -120,9 +130,11 @@ def test_small_multiple_model_report_does_not_overclaim_winner(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=pd.DataFrame(),
         case_results_path="results.csv",
         summary_path="summary.csv",
         comparison_path="comparisons.csv",
+        selection_path="selection.csv",
         metadata_path="metadata.json",
     )
 
@@ -178,9 +190,11 @@ def test_report_can_name_evidence_supported_leader(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=pd.DataFrame(),
         case_results_path="results.csv",
         summary_path="summary.csv",
         comparison_path="comparisons.csv",
+        selection_path="selection.csv",
         metadata_path="metadata.json",
     )
 
@@ -231,9 +245,11 @@ def test_report_does_not_treat_judge_error_as_model_failure(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=pd.DataFrame(),
         case_results_path="results.csv",
         summary_path="summary.csv",
         comparison_path="comparisons.csv",
+        selection_path="selection.csv",
         metadata_path="metadata.json",
     )
 
@@ -304,9 +320,11 @@ def test_report_includes_generation_and_judge_operations(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=pd.DataFrame(),
         case_results_path="results.csv",
         summary_path="summary.csv",
         comparison_path="comparisons.csv",
+        selection_path="selection.csv",
         metadata_path="metadata.json",
     )
 
@@ -317,6 +335,79 @@ def test_report_includes_generation_and_judge_operations(
     assert "### LLM Judge" in report
     assert "2.00 s" in report
     assert "$0.004000 USD" in report
+
+
+def test_report_can_apply_constraint_aware_selection(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    config.selection = SelectionConfig(
+        enabled=True,
+        minimum_score_margin=0.01,
+        weights=SelectionWeightsConfig(
+            quality=0.4,
+            latency=0.6,
+        ),
+        constraints=SelectionConstraintsConfig(
+            maximum_p95_latency_seconds=10.0,
+        ),
+    )
+    results = pd.DataFrame(
+        [
+            {
+                "case_id": "case_001",
+                "model_name": "model_a",
+                "evaluation_type": "exact",
+                "evaluation_source": "deterministic",
+                "final_passed": True,
+                "final_score": 1.0,
+                "evaluation_reason": "Matched.",
+                "generation_status": "success",
+                "generation_seconds": 9.0,
+                "judge_status": "not_requested",
+            },
+            {
+                "case_id": "case_001",
+                "model_name": "model_b",
+                "evaluation_type": "exact",
+                "evaluation_source": "deterministic",
+                "final_passed": True,
+                "final_score": 1.0,
+                "evaluation_reason": "Matched.",
+                "generation_status": "success",
+                "generation_seconds": 1.0,
+                "judge_status": "not_requested",
+            },
+        ]
+    )
+    summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(results)
+    selection = build_model_selection(summary, config.selection)
+    decision = build_recommendation_decision(
+        summary,
+        comparisons,
+        selection,
+        config.selection,
+    )
+    selection = mark_recommended_model(selection, decision)
+
+    report = build_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        comparisons=comparisons,
+        selection=selection,
+        case_results_path="results.csv",
+        summary_path="summary.csv",
+        comparison_path="comparisons.csv",
+        selection_path="selection.csv",
+        metadata_path="metadata.json",
+    )
+
+    assert "Constraint-aware recommendation:** `model_b`" in report
+    assert "## Model Selection Policy" in report
+    assert "weighted decision score" in report
+    assert "| model_b | eligible | 1 |" in report
 
 
 def test_run_evaluation_writes_reproducible_artifacts(
@@ -359,6 +450,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
         results_path,
         summary_path,
         comparison_path,
+        selection_path,
         metadata_path,
         report_path,
     ) = run_evaluation(
@@ -370,6 +462,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert results_path.exists()
     assert summary_path.exists()
     assert comparison_path.exists()
+    assert selection_path.exists()
     assert metadata_path.exists()
     assert report_path.exists()
 
@@ -379,7 +472,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
         )
     )
 
-    assert metadata["schema_version"] == "0.5"
+    assert metadata["schema_version"] == "0.6"
     assert (
         metadata["results"]["deterministic_rows"]
         == 2
@@ -421,6 +514,10 @@ def test_run_evaluation_writes_reproducible_artifacts(
             "pairwise_comparisons_sha256"
         ]
     ) == 64
+    assert len(
+        metadata["hashes"]["model_selection_sha256"]
+    ) == 64
+    assert metadata["selection_policy"]["enabled"] is False
 
     report = report_path.read_text(
         encoding="utf-8"
@@ -432,3 +529,63 @@ def test_run_evaluation_writes_reproducible_artifacts(
     )
     assert "Deterministic rows:** 2" in report
     assert "## Operational Performance" in report
+
+
+def test_run_evaluation_records_enabled_selection_policy(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    config.selection = SelectionConfig(
+        enabled=True,
+        constraints=SelectionConstraintsConfig(
+            minimum_pass_rate=0.5,
+        ),
+    )
+    pd.DataFrame(
+        [
+            {
+                "case_id": "case_001",
+                "input": "Return negative.",
+                "expected_output": "negative",
+                "evaluation_type": "exact",
+                "model_name": "model_a",
+                "model_output": "negative",
+            },
+            {
+                "case_id": "case_001",
+                "input": "Return negative.",
+                "expected_output": "negative",
+                "evaluation_type": "exact",
+                "model_name": "model_b",
+                "model_output": "neutral",
+            },
+        ]
+    ).to_csv(config.run.input_path, index=False)
+    config_path = tmp_path / "config.yaml"
+    config_path.write_text(
+        "selection:\n  enabled: true\n",
+        encoding="utf-8",
+    )
+
+    (
+        _,
+        _,
+        _,
+        _,
+        selection_path,
+        metadata_path,
+        report_path,
+    ) = run_evaluation(config, config_path=config_path)
+
+    selection = pd.read_csv(selection_path).set_index("model_name")
+    assert selection.loc["model_a", "selection_status"] == "eligible"
+    assert bool(selection.loc["model_a", "recommended"]) is True
+    assert selection.loc["model_b", "selection_status"] == "ineligible"
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    assert metadata["selection_policy"]["enabled"] is True
+    assert metadata["recommendation"]["status"] == "sole_eligible_model"
+    assert metadata["recommendation"]["recommended_model"] == "model_a"
+
+    report = report_path.read_text(encoding="utf-8")
+    assert "Constraint-aware recommendation:** `model_a`" in report

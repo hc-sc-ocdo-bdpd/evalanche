@@ -9,8 +9,12 @@ from evalanche.config import (
     CriterionConfig,
     EvalConfig,
     JudgeConfig,
+    ModelProfileConfig,
     RunConfig,
     ScoringConfig,
+    SelectionConfig,
+    SelectionConstraintsConfig,
+    SelectionWeightsConfig,
     TaskConfig,
     resolve_env_vars,
 )
@@ -67,7 +71,6 @@ def test_eval_config_rejects_non_positive_total_criterion_weight() -> None:
                 )
             ],
         )
-        
 
 
 @pytest.mark.parametrize(
@@ -115,8 +118,6 @@ def test_eval_config_rejects_duplicate_criterion_names() -> None:
                 ),
             ],
         )
-        
-        
 
 def test_candidate_model_name_is_trimmed() -> None:
     candidate = CandidateModelConfig(
@@ -148,4 +149,75 @@ def test_candidate_model_names_must_be_unique() -> None:
                     model="azure/deployment-b",
                 ),
             ]
+        )
+
+
+def test_selection_weights_must_have_positive_total() -> None:
+    with pytest.raises(ValidationError, match="positive"):
+        SelectionWeightsConfig(
+            quality=0,
+            cost=0,
+            latency=0,
+            reliability=0,
+        )
+
+
+def test_cost_weight_requires_cost_scale() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="maximum_average_cost_usd",
+    ):
+        SelectionConfig(
+            weights=SelectionWeightsConfig(
+                quality=0.5,
+                cost=0.5,
+            )
+        )
+
+
+def test_latency_weight_requires_latency_scale() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="maximum_p95_latency_seconds",
+    ):
+        SelectionConfig(
+            weights=SelectionWeightsConfig(
+                quality=0.5,
+                latency=0.5,
+            )
+        )
+
+
+def test_selection_capabilities_are_normalized() -> None:
+    constraints = SelectionConstraintsConfig(
+        required_capabilities=[" Bilingual ", "Approved-Hosting"],
+    )
+
+    assert constraints.required_capabilities == [
+        "bilingual",
+        "approved-hosting",
+    ]
+
+
+def test_model_profile_names_must_be_unique() -> None:
+    with pytest.raises(ValidationError, match="profile names"):
+        SelectionConfig(
+            model_profiles=[
+                ModelProfileConfig(name="model_a"),
+                ModelProfileConfig(name="model_a"),
+            ]
+        )
+
+
+def test_selection_rejects_unknown_policy_fields() -> None:
+    with pytest.raises(
+        ValidationError,
+        match="maximum_p95_latncy_seconds",
+    ):
+        SelectionConfig.model_validate(
+            {
+                "constraints": {
+                    "maximum_p95_latncy_seconds": 5,
+                }
+            }
         )

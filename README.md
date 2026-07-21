@@ -35,6 +35,7 @@ Evalanche currently supports:
 9. Producing a plain-language model recommendation report.
 10. Reporting pass-rate uncertainty and paired model comparisons.
 11. Reporting latency, token usage, response cost, and failure rates.
+12. Applying client requirements and weighted model-selection policies.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
 
@@ -43,6 +44,9 @@ The statistical methods and their limitations are documented in
 
 Operational metric definitions and limitations are documented in
 [`docs/operational_metrics.md`](docs/operational_metrics.md).
+
+Constraint-aware recommendation behavior is documented in
+[`docs/model_selection.md`](docs/model_selection.md).
 
 ## Evaluation methods
 
@@ -153,9 +157,12 @@ evalanche/
     io.py
     llm.py
     metadata.py
+    operational.py
     recommendation.py
     reporting.py
     routing.py
+    selection.py
+    statistics.py
 
     judges/
       __init__.py
@@ -486,6 +493,17 @@ run metadata JSON
 recommendation Markdown report
 ```
 
+### Combined evaluation artifacts
+
+```text
+case-level combined results CSV
+model-level summary CSV
+pairwise comparisons CSV
+model-selection CSV
+run metadata JSON
+recommendation Markdown report
+```
+
 Metadata artifacts include information such as:
 
 ```text
@@ -506,6 +524,7 @@ token usage
 average and p95 latency
 generation and judge failure rates
 cost values and metadata coverage
+selection policy, eligibility reasons, and decision scores
 summary results
 known limitations
 ```
@@ -525,7 +544,35 @@ It should not be interpreted as:
 
 > This is the best model in general.
 
-Operational evidence is reported but is not yet used as a ranking constraint.
+Operational evidence affects the decision only when constraint-aware selection
+is enabled in the combined evaluation config.
+
+Combined evaluation configs can enable a `selection` policy that applies hard
+quality, cost, latency, reliability, availability, and capability requirements
+before weighted scoring. Missing evidence remains unknown and blocks a
+recommendation instead of being treated as a pass or zero.
+
+```yaml
+selection:
+  enabled: true
+  minimum_score_margin: 0.02
+  weights:
+    quality: 0.70
+    cost: 0.00
+    latency: 0.15
+    reliability: 0.15
+  constraints:
+    require_model_profile: false
+    minimum_pass_rate: 0.75
+    maximum_p95_latency_seconds: 10
+    maximum_generation_failure_rate: 0.05
+    required_capabilities: []
+  model_profiles: []
+```
+
+Set a positive cost weight only when the config also provides
+`maximum_average_cost_usd`. Cost-based selection remains unavailable when
+provider cost metadata is incomplete.
 
 ## Current command summary
 
@@ -571,13 +618,13 @@ Each iteration should:
 
 Near-term planned work:
 
-1. Add automated tests for routing, normalization, JSON comparison, configuration validation, and leaderboard calculations.
-2. Combine deterministic and judge results into one task-aware case result.
-3. Produce one combined model leaderboard and recommendation.
-4. Add an end-to-end run command while preserving the separate commands.
-5. Add cost, latency, token, and generation reliability comparisons.
-6. Compare multiple real candidate models.
-7. Add research-backed evaluation method documentation.
+1. Define a versioned dataset manifest for reproducible benchmarks.
+2. Download and normalize Health Canada's Drug Product Database data.
+3. Select and record the first 40-product pilot sample.
+4. Download and connect English and French product monographs.
+5. Turn the source documents into reviewed benchmark cases.
+6. Add bilingual structured-extraction metrics and field-level accuracy.
+7. Compare multiple real candidate models on the reviewed pilot benchmark.
 
 Longer-term work may include:
 
@@ -587,9 +634,7 @@ Longer-term work may include:
 - numeric tolerance
 - date equivalence
 - list and set comparison
-- bilingual evaluation
 - human and judge agreement analysis
-- pairwise model comparison
 - RAG evaluation
 - retrieval metrics
 - agent and tool-use evaluation
@@ -633,8 +678,9 @@ Current limitations include:
 - Multiple-run variability is not yet measured.
 - Human calibration is not yet implemented.
 - Judge bias testing is not yet implemented.
-- Cost, latency, privacy, availability, and other operational constraints are
-  not yet part of recommendation ranking.
+- Selection weights and thresholds are policy choices that require client
+  approval.
+- Capability and availability declarations must be independently verified.
 
 ## Project status
 
@@ -648,8 +694,9 @@ test cases
 -> deterministic or LLM judge evaluation
 -> model-level summaries
 -> reproducibility metadata
+-> constraint-aware model selection
 -> recommendation artifacts
 ```
 
-The next major capability will apply quality, cost, latency, reliability, and
-deployment constraints to model selection.
+The next major capability will define a versioned dataset manifest so benchmark
+inputs and sampling decisions can be reproduced exactly.

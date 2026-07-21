@@ -23,6 +23,12 @@ from evalanche.llm import operational_from_error
 from evalanche.metrics.deterministic import score_row
 from evalanche.operational import summarize_stage
 from evalanche.routing import EXACT, JSON, JUDGE
+from evalanche.selection import (
+    build_model_selection,
+    build_recommendation_decision,
+    mark_recommended_model,
+    save_model_selection,
+)
 from evalanche.statistics import (
     build_pairwise_comparisons,
     save_pairwise_comparisons,
@@ -502,7 +508,7 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
         interval_high = row["pass_rate_ci_high"]
         average_score = row["average_score"]
         interval = (
-            f"{interval_low:.1%}–{interval_high:.1%}"
+            f"{interval_low:.1%}-{interval_high:.1%}"
             if pd.notna(interval_low) and pd.notna(interval_high)
             else "N/A"
         )
@@ -532,7 +538,7 @@ def run_evaluation(
     config: EvaluationConfig,
     *,
     config_path: str | Path | None = None,
-) -> tuple[pd.DataFrame, Path, Path, Path, Path, Path]:
+) -> tuple[pd.DataFrame, Path, Path, Path, Path, Path, Path]:
     cases = load_eval_cases(config.run.input_path)
     results = evaluate_cases(cases, config)
     output_path = Path(config.run.output_path)
@@ -548,6 +554,22 @@ def run_evaluation(
         output_path,
     )
 
+    selection = build_model_selection(
+        summary,
+        config.selection,
+    )
+    decision = build_recommendation_decision(
+        summary,
+        comparisons,
+        selection,
+        config.selection,
+    )
+    selection = mark_recommended_model(selection, decision)
+    selection_path = save_model_selection(
+        selection,
+        output_path,
+    )
+
     metadata_path = output_path.with_name(
         output_path.stem + "_run_metadata.json"
     )
@@ -556,9 +578,11 @@ def run_evaluation(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=selection,
         case_results_path=output_path,
         summary_path=summary_path,
         comparison_path=comparison_path,
+        selection_path=selection_path,
         metadata_path=metadata_path,
     )
     metadata_path = save_evaluation_metadata(
@@ -568,9 +592,11 @@ def run_evaluation(
         results=results,
         summary=summary,
         comparisons=comparisons,
+        selection=selection,
         case_results_path=output_path,
         summary_path=summary_path,
         comparison_path=comparison_path,
+        selection_path=selection_path,
         report_path=report_path,
     )
 
@@ -581,6 +607,7 @@ def run_evaluation(
         output_path,
         summary_path,
         comparison_path,
+        selection_path,
         metadata_path,
         report_path,
     )

@@ -1,7 +1,7 @@
 # Operational metrics
 
-Evalanche records operational evidence alongside output quality so model
-comparisons can eventually account for speed, cost, and reliability.
+Evalanche records operational evidence alongside output quality so an enabled
+selection policy can account for speed, cost, and reliability.
 
 ## Request latency
 
@@ -60,3 +60,6 @@ Operational evidence can vary with region, network path, provider load, cold
 starts, concurrency, rate limits, and retry policy. Benchmark reports should
 retain the run metadata and should not generalize one run into a production
 availability or latency commitment.
+
+See [`model_selection.md`](model_selection.md) for the rules that determine
+when these metrics can affect a recommendation.
