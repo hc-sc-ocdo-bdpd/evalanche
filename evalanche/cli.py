@@ -8,9 +8,11 @@ from tqdm.auto import tqdm
 
 from evalanche.config import (
     load_config,
+    load_evaluation_config,
     load_generation_config,
     load_metrics_config,
 )
+from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
@@ -130,11 +132,27 @@ def run_judge(config_path: str) -> None:
     print(f"Saved model summary to: {summary_path}")
     print(f"Saved run metadata to: {metadata_path}")
     print(f"Saved recommendation report to: {recommendation_path}")
+    
+def run_combined_evaluation(config_path: str) -> None:
+    load_dotenv()
+
+    config = load_evaluation_config(config_path)
+    _, output_path, summary_path = run_evaluation(config)
+
+    print(f"\nSaved combined case results to: {output_path}")
+    print(f"Saved combined model summary to: {summary_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    
+    evaluate_parser = subparsers.add_parser("evaluate")
+    evaluate_parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to a combined evaluation YAML config.",
+    )
 
     generate_parser = subparsers.add_parser("generate")
     generate_parser.add_argument(
@@ -170,6 +188,8 @@ def main() -> None:
         run_metrics(args.config)
     elif args.command == "judge":
         run_judge(args.config)
+    elif args.command == "evaluate":
+        run_combined_evaluation(args.config)
     else:
         raise ValueError(f"Unknown command: {args.command}")
 

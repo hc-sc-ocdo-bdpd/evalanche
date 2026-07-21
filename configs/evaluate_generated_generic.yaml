@@ -1,0 +1,47 @@
+run:
+  name: evaluate_generated_generic_first_slice
+  input_path: data/generated/generic_generated_outputs.csv
+  output_path: results/evaluate_generated_generic_results.csv
+
+metrics:
+  case_sensitive: false
+  trim_whitespace: true
+  collapse_whitespace: true
+
+judge:
+  model: ${JUDGE_MODEL:-azure/gpt-5.4-mini}
+  temperature: 0
+  max_retries: 3
+
+task:
+  name: generated_generic_instruction_following
+  description: >
+    Evaluate whether the candidate model output satisfies the user instruction
+    and matches the expected output. The input is self-contained. Do not assume
+    any external private context.
+
+scoring:
+  score_min: 0
+  score_max: 5
+  pass_threshold: 0.75
+
+criteria:
+  - name: correctness
+    weight: 0.70
+    description: >
+      The output is semantically correct relative to the instruction and
+      expected output. Do not heavily penalize formatting issues here unless
+      the formatting changes the meaning. Format problems should primarily be
+      scored under format_following.
+
+  - name: completeness
+    weight: 0.20
+    description: >
+      The output includes all required information. Do not penalize minor
+      wording or formatting differences here if the required information is
+      present.
+
+  - name: format_following
+    weight: 0.10
+    description: >
+      The output follows the requested format, label set, or structure.

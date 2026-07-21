@@ -171,6 +171,11 @@ class MetricsConfig(BaseModel):
     metrics: DeterministicMetricsSettingsConfig = Field(
         default_factory=DeterministicMetricsSettingsConfig
     )
+    
+class EvaluationConfig(EvalConfig):
+    metrics: DeterministicMetricsSettingsConfig = Field(
+        default_factory=DeterministicMetricsSettingsConfig
+    )
 
 
 def load_config(path: str | Path) -> EvalConfig:
@@ -191,3 +196,7 @@ def load_candidate_models(path: str | Path) -> CandidateModelsConfig:
 def load_metrics_config(path: str | Path) -> MetricsConfig:
     resolved = load_yaml(path)
     return MetricsConfig.model_validate(resolved)
+
+def load_evaluation_config(path: str | Path) -> EvaluationConfig:
+    resolved = load_yaml(path)
+    return EvaluationConfig.model_validate(resolved)

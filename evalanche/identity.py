@@ -122,3 +122,35 @@ def validate_evaluation_keys(
         )
 
     return validated
+
+
+
+def validate_balanced_model_coverage(
+    cases: pd.DataFrame,
+    *,
+    source_name: str,
+) -> None:
+    if cases.empty:
+        return
+
+    case_sets = {
+        str(model_name): set(group["case_id"].astype(str))
+        for model_name, group in cases.groupby("model_name", sort=True)
+    }
+
+    all_case_ids = set().union(*case_sets.values())
+    incomplete_models: list[str] = []
+
+    for model_name, model_case_ids in case_sets.items():
+        missing_ids = sorted(all_case_ids - model_case_ids)
+        if missing_ids:
+            incomplete_models.append(
+                f"{model_name!r} is missing {missing_ids[:10]}"
+            )
+
+    if incomplete_models:
+        raise ValueError(
+            f"{source_name} does not evaluate every model on the same "
+            "case set: "
+            + "; ".join(incomplete_models)
+        )
