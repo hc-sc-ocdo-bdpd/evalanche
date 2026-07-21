@@ -1,0 +1,205 @@
+registry_version: 1
+updated_date: "2026-07-21"
+owner: "Mission Evalanche"
+
+decision:
+  primary_benchmark: dpd_product_monograph_extraction
+  rationale: >-
+    Product monographs provide authentic bilingual Health Canada documents,
+    while DPD supplies objective structured reference values that can be scored
+    deterministically with limited manual annotation.
+  implementation_gate:
+    - stable_case_schema
+    - stable_combined_evaluation_result
+    - stable_dataset_manifest_contract
+
+sources:
+  - id: dpd
+    name: Drug Product Database
+    priority: primary
+    official_documentation: https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/what-data-extract-drug-product-database.html
+    api_documentation: https://health-products.canada.ca/api/documentation/dpd-documentation-en.html
+    access:
+      formats: [utf8_text_zip, json, xml]
+      update_cadence: nightly
+      snapshot_required: true
+    benchmark_roles:
+      - sampling_frame
+      - structured_reference_labels
+    reference_fields:
+      - din
+      - brand_name
+      - active_ingredient
+      - strength
+      - strength_unit
+      - dosage_form
+      - route
+      - schedule
+      - product_status
+      - company
+    readiness:
+      source_identified: true
+      access_verified: true
+      benchmark_role_defined: true
+      limitations_documented: true
+      normalization_contract_defined: true
+    implementation:
+      parser_mode: explicit_schema_header_none
+      join_key: DRUG_CODE
+      output_format: parquet
+      validation:
+        - expected_column_count
+        - unique_primary_keys_where_applicable
+        - valid_join_coverage
+        - nonblank_reference_fields
+        - row_counts_and_hashes_in_manifest
+
+  - id: product_monographs
+    name: Health Canada-authorized product monographs
+    priority: primary
+    official_documentation: https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/applications-submissions/guidance-documents/product-monograph/frequently-asked-questions-product-monographs-posted-health-canada-website.html
+    access:
+      method: dpd_online_query
+      formats: [pdf]
+      languages: [en, fr]
+      bulk_download: false
+      snapshot_required: true
+    benchmark_roles:
+      - source_document
+      - bilingual_extraction
+      - bilingual_consistency
+    eligibility:
+      product_type: human_drug
+      statuses: [marketed]
+      requires_dpd_reference: true
+      requires_english_monograph: true
+      requires_french_monograph_for_bilingual_cases: true
+      pilot_excludes_image_only_pdf: true
+    readiness:
+      source_identified: true
+      access_verified: true
+      benchmark_role_defined: true
+      eligibility_defined: true
+      manifest_contract_defined: true
+    manifest_fields:
+      - source
+      - drug_code
+      - din
+      - brand_name
+      - language
+      - document_url
+      - relative_path
+      - retrieved_at_utc
+      - source_modified_date
+      - byte_size
+      - sha256
+      - extraction_status
+      - page_count
+
+  - id: recalls_safety_alerts
+    name: Recalls and Safety Alerts
+    priority: secondary
+    official_url: https://recalls-rappels.canada.ca/en
+    access:
+      formats: [csv, json]
+      languages: [en, fr]
+      update_cadence: daily
+      bilingual_link_key: NID
+      snapshot_required: true
+    benchmark_roles:
+      - classification
+      - constrained_summarization
+      - structured_extraction
+    readiness:
+      source_identified: true
+      access_verified: true
+      benchmark_role_defined: true
+      bilingual_pairing_defined: true
+      limitations_documented: true
+    sequence: after_primary_benchmark
+
+  - id: summary_reports
+    name: Summary Reports API
+    priority: secondary
+    official_documentation: https://health-products.canada.ca/api/documentation/summary-report-documentation-en.html
+    access:
+      formats: [json, xml]
+      languages: [en, fr]
+      snapshot_required: true
+    document_families:
+      - summary_safety_review
+      - summary_basis_of_decision
+      - regulatory_decision_summary
+    benchmark_roles:
+      - grounded_summarization
+      - structured_extraction
+    readiness:
+      source_identified: true
+      access_verified: true
+      benchmark_role_defined: true
+      document_families_separated: true
+      limitations_documented: true
+    sequence: after_primary_benchmark
+
+  - id: canada_vigilance
+    name: Canada Vigilance adverse reaction data
+    priority: backlog
+    official_url: https://www.canada.ca/en/health-canada/services/drugs-health-products/medeffect-canada/adverse-reaction-database.html
+    interpretation_guidance: https://www.canada.ca/en/health-canada/services/drugs-health-products/medeffect-canada/adverse-reaction-database/interpretation-suspected-adverse-reaction-data.html
+    access:
+      formats: [compressed_ascii_text]
+      snapshot_required: true
+    permitted_benchmark_roles:
+      - structured_extraction
+      - signal_triage_research
+    prohibited_interpretations:
+      - causal_ground_truth
+      - incidence_estimation
+      - direct_product_safety_ranking
+    known_limitations:
+      - suspected_associations_only
+      - under_reporting
+      - reporting_bias
+      - incomplete_information
+      - possible_duplicates
+      - unknown_exposure_denominator
+    readiness:
+      source_identified: true
+      access_verified: true
+      benchmark_boundaries_defined: true
+      limitations_documented: true
+    sequence: backlog_only
+
+  - id: notice_of_compliance
+    name: Notice of Compliance database
+    priority: supporting
+    official_overview: https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/applications-submissions/guidance-documents/drug-and-medical-device-databases.html
+    access:
+      update_cadence: nightly
+      coverage_start: "1994-01-01"
+      snapshot_required: true
+    benchmark_roles:
+      - authorization_metadata
+      - supporting_regulatory_context
+    readiness:
+      source_identified: true
+      benchmark_role_defined: true
+      not_required_for_primary_benchmark: true
+    sequence: supporting_only
+
+release_policy:
+  immutable_versioned_snapshots: true
+  silent_source_refreshes: false
+  required_manifest_fields:
+    - source_id
+    - source_url
+    - retrieved_at_utc
+    - source_modified_date
+    - relative_path
+    - byte_size
+    - sha256
+    - language
+    - record_count
+    - parser_schema_version
+    - validation_status
+    - validation_error_count
