@@ -21,6 +21,11 @@ from evalanche.io import load_eval_cases
 from evalanche.judges import CriteriaJudge
 from evalanche.metrics.deterministic import score_row
 from evalanche.routing import EXACT, JSON, JUDGE
+from evalanche.statistics import (
+    build_pairwise_comparisons,
+    save_pairwise_comparisons,
+    wilson_score_interval,
+)
 
 
 console = Console()
@@ -239,24 +244,36 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         deterministic = group[
             group["evaluation_source"] == "deterministic"
         ]
-        judged = group[group["evaluation_source"] == "llm_judge"]
+        judged = group[
+            group["evaluation_source"] == "llm_judge"
+        ]
         generation_errors = group[
             group["evaluation_source"] == "generation_error"
         ]
 
+        passed_cases = int(group["final_passed"].sum())
+        pass_rate_ci_low, pass_rate_ci_high = wilson_score_interval(
+            passed_cases,
+            len(group),
+        )
+
         record: dict[str, Any] = {
             "model_name": model_name,
             "cases": int(len(group)),
-            "passed_cases": int(group["final_passed"].sum()),
+            "passed_cases": passed_cases,
             "failed_cases": int((~group["final_passed"]).sum()),
             "pass_rate": _safe_rate(group["final_passed"]),
+            "pass_rate_ci_low": pass_rate_ci_low,
+            "pass_rate_ci_high": pass_rate_ci_high,
             "average_score": float(group["final_score"].mean()),
             "deterministic_cases": int(len(deterministic)),
             "deterministic_pass_rate": _safe_rate(
                 deterministic["final_passed"]
             ),
             "judge_cases": int(len(judged)),
-            "judge_pass_rate": _safe_rate(judged["final_passed"]),
+            "judge_pass_rate": _safe_rate(
+                judged["final_passed"]
+            ),
             "average_judge_score": (
                 float(judged["final_score"].mean())
                 if not judged.empty
@@ -296,6 +313,8 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         "passed_cases",
         "failed_cases",
         "pass_rate",
+        "pass_rate_ci_low",
+        "pass_rate_ci_high",
         "average_score",
         "deterministic_cases",
         "deterministic_pass_rate",
@@ -342,6 +361,7 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
     table.add_column("Model")
     table.add_column("Passed")
     table.add_column("Pass rate")
+    table.add_column("95% range")
     table.add_column("Avg score")
     table.add_column("Generation errors")
 
@@ -351,6 +371,8 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
             str(row["model_name"]),
             f"{row['passed_cases']}/{row['cases']}",
             f"{row['pass_rate']:.1%}",
+            f"{row['pass_rate_ci_low']:.1%}–",
+            f"{row['pass_rate_ci_high']:.1%}"
             f"{row['average_score']:.3f}",
             str(row["generation_errors"]),
         )
@@ -362,10 +384,9 @@ def run_evaluation(
     config: EvaluationConfig,
     *,
     config_path: str | Path | None = None,
-) -> tuple[pd.DataFrame, Path, Path, Path, Path]:
+) -> tuple[pd.DataFrame, Path, Path, Path, Path, Path]:
     cases = load_eval_cases(config.run.input_path)
     results = evaluate_cases(cases, config)
-
     output_path = Path(config.run.output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     results.to_csv(output_path, index=False)
@@ -373,27 +394,35 @@ def run_evaluation(
     summary_path = save_evaluation_summary(results, output_path)
     summary = build_evaluation_summary(results)
 
+    comparisons = build_pairwise_comparisons(results)
+    comparison_path = save_pairwise_comparisons(
+        comparisons,
+        output_path,
+    )
+
     metadata_path = output_path.with_name(
         output_path.stem + "_run_metadata.json"
     )
-
     report_path = save_evaluation_report(
         config=config,
         results=results,
         summary=summary,
+        comparisons=comparisons,
         case_results_path=output_path,
         summary_path=summary_path,
+        comparison_path=comparison_path,
         metadata_path=metadata_path,
     )
-
     metadata_path = save_evaluation_metadata(
         config_path=config_path,
         config=config,
         cases=cases,
         results=results,
         summary=summary,
+        comparisons=comparisons,
         case_results_path=output_path,
         summary_path=summary_path,
+        comparison_path=comparison_path,
         report_path=report_path,
     )
 
@@ -403,6 +432,7 @@ def run_evaluation(
         results,
         output_path,
         summary_path,
+        comparison_path,
         metadata_path,
         report_path,
     )

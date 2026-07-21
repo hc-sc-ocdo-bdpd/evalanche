@@ -142,6 +142,7 @@ def run_combined_evaluation(config_path: str) -> None:
         _,
         output_path,
         summary_path,
+        comparison_path,
         metadata_path,
         report_path,
     ) = run_evaluation(
@@ -151,8 +152,13 @@ def run_combined_evaluation(config_path: str) -> None:
 
     print(f"\nSaved combined case results to: {output_path}")
     print(f"Saved combined model summary to: {summary_path}")
+    print(
+        "Saved combined pairwise comparisons to: "
+        f"{comparison_path}"
+        )
     print(f"Saved combined run metadata to: {metadata_path}")
     print(f"Saved combined recommendation to: {report_path}")
+    
 
 
 def build_parser() -> argparse.ArgumentParser:

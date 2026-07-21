@@ -33,8 +33,12 @@ Evalanche currently supports:
 7. Producing model leaderboards.
 8. Saving reproducibility metadata.
 9. Producing a plain-language model recommendation report.
+10. Reporting pass-rate uncertainty and paired model comparisons.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
+
+The statistical methods and their limitations are documented in
+[`docs/statistical_methods.md`](docs/statistical_methods.md).
 
 ## Evaluation methods
 

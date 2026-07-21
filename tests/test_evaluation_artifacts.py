@@ -15,7 +15,12 @@ from evalanche.evaluation import (
     build_evaluation_summary,
     run_evaluation,
 )
-from evalanche.evaluation_artifacts import build_evaluation_report
+from evalanche.evaluation_artifacts import (
+    build_evaluation_report,
+)
+from evalanche.statistics import (
+    build_pairwise_comparisons,
+)
 
 
 def make_config(tmp_path: Path) -> EvaluationConfig:
@@ -25,7 +30,9 @@ def make_config(tmp_path: Path) -> EvaluationConfig:
             input_path=tmp_path / "inputs.csv",
             output_path=tmp_path / "results.csv",
         ),
-        judge=JudgeConfig(model="azure/test-judge"),
+        judge=JudgeConfig(
+            model="azure/test-judge"
+        ),
         task=TaskConfig(
             name="classification",
             description="Classify the text.",
@@ -41,7 +48,9 @@ def make_config(tmp_path: Path) -> EvaluationConfig:
     )
 
 
-def make_combined_results(model_names: list[str]) -> pd.DataFrame:
+def make_combined_results(
+    model_names: list[str],
+) -> pd.DataFrame:
     records = []
 
     for model_name in model_names:
@@ -55,7 +64,9 @@ def make_combined_results(model_names: list[str]) -> pd.DataFrame:
                 "final_passed": passed,
                 "final_score": float(passed),
                 "evaluation_reason": (
-                    "Matched." if passed else "Did not match."
+                    "Matched."
+                    if passed
+                    else "Did not match."
                 ),
                 "judge_total_tokens": None,
             }
@@ -70,40 +81,118 @@ def test_single_model_report_does_not_claim_comparative_winner(
     config = make_config(tmp_path)
     results = make_combined_results(["model_a"])
     summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(
+        results
+    )
 
     report = build_evaluation_report(
         config=config,
         results=results,
         summary=summary,
+        comparisons=comparisons,
         case_results_path="results.csv",
         summary_path="summary.csv",
+        comparison_path="comparisons.csv",
         metadata_path="metadata.json",
     )
 
-    assert "Comparative recommendation:** Not available" in report
+    assert (
+        "Comparative recommendation:** Not available"
+        in report
+    )
     assert "Only `model_a` was evaluated" in report
 
 
-def test_multiple_model_report_names_top_ranked_model(
+def test_small_multiple_model_report_does_not_overclaim_winner(
     tmp_path: Path,
 ) -> None:
     config = make_config(tmp_path)
-    results = make_combined_results(["model_a", "model_b"])
+    results = make_combined_results(
+        ["model_a", "model_b"]
+    )
     summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(
+        results
+    )
 
     report = build_evaluation_report(
         config=config,
         results=results,
         summary=summary,
+        comparisons=comparisons,
         case_results_path="results.csv",
         summary_path="summary.csv",
+        comparison_path="comparisons.csv",
         metadata_path="metadata.json",
     )
 
-    assert "Top-ranked model:** `model_a`" in report
-    assert "performed best among the evaluated candidates" in report
+    assert (
+        "Comparative recommendation:** "
+        "No clear winner yet"
+        in report
+    )
+    assert (
+        "`model_a` had the highest observed result"
+        in report
+    )
     assert "model_b" in report
     assert "Did not match." in report
+    assert "No clear difference" in report
+
+
+def test_report_can_name_evidence_supported_leader(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    records = []
+
+    for index in range(6):
+        for model_name, passed in (
+            ("model_a", True),
+            ("model_b", False),
+        ):
+            records.append(
+                {
+                    "case_id": f"case_{index:03d}",
+                    "model_name": model_name,
+                    "evaluation_type": "exact",
+                    "evaluation_source": (
+                        "deterministic"
+                    ),
+                    "final_passed": passed,
+                    "final_score": float(passed),
+                    "evaluation_reason": (
+                        "Test result."
+                    ),
+                    "judge_total_tokens": None,
+                }
+            )
+
+    results = pd.DataFrame(records)
+    summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(
+        results
+    )
+    report = build_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        comparisons=comparisons,
+        case_results_path="results.csv",
+        summary_path="summary.csv",
+        comparison_path="comparisons.csv",
+        metadata_path="metadata.json",
+    )
+
+    assert (
+        "Evidence-supported leader:** `model_a`"
+        in report
+    )
+    assert (
+        "clearly outperformed each other "
+        "evaluated model"
+        in report
+    )
 
 
 def test_run_evaluation_writes_reproducible_artifacts(
@@ -130,15 +219,22 @@ def test_run_evaluation_writes_reproducible_artifacts(
                 "model_output": "neutral",
             },
         ]
-    ).to_csv(config.run.input_path, index=False)
+    ).to_csv(
+        config.run.input_path,
+        index=False,
+    )
 
     config_path = tmp_path / "config.yaml"
-    config_path.write_text("run: artifact-test\n", encoding="utf-8")
+    config_path.write_text(
+        "run: artifact-test\n",
+        encoding="utf-8",
+    )
 
     (
         results,
         results_path,
         summary_path,
+        comparison_path,
         metadata_path,
         report_path,
     ) = run_evaluation(
@@ -149,23 +245,59 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert len(results) == 2
     assert results_path.exists()
     assert summary_path.exists()
+    assert comparison_path.exists()
     assert metadata_path.exists()
     assert report_path.exists()
 
     metadata = json.loads(
-        metadata_path.read_text(encoding="utf-8")
+        metadata_path.read_text(
+            encoding="utf-8"
+        )
     )
 
-    assert metadata["schema_version"] == "0.3"
-    assert metadata["results"]["deterministic_rows"] == 2
+    assert metadata["schema_version"] == "0.4"
+    assert (
+        metadata["results"]["deterministic_rows"]
+        == 2
+    )
     assert metadata["results"]["judge_rows"] == 0
-    assert metadata["recommendation"]["comparative"] is True
-    assert metadata["recommendation"]["top_ranked_models"] == [
-        "model_a"
-    ]
-    assert len(metadata["hashes"]["config_sha256"]) == 64
-    assert len(metadata["hashes"]["input_sha256"]) == 64
+    assert (
+        metadata["recommendation"]["comparative"]
+        is True
+    )
+    assert metadata["recommendation"][
+        "top_ranked_models"
+    ] == ["model_a"]
+    assert metadata["recommendation"]["status"] == (
+        "insufficient_evidence"
+    )
+    assert metadata["recommendation"][
+        "recommended_model"
+    ] is None
+    assert metadata["statistics"][
+        "pass_rate_interval"
+    ] == "wilson_score"
+    assert metadata["statistics"]["paired_test"] == (
+        "two_sided_exact_mcnemar"
+    )
+    assert len(
+        metadata["hashes"]["config_sha256"]
+    ) == 64
+    assert len(
+        metadata["hashes"]["input_sha256"]
+    ) == 64
+    assert len(
+        metadata["hashes"][
+            "pairwise_comparisons_sha256"
+        ]
+    ) == 64
 
-    report = report_path.read_text(encoding="utf-8")
-    assert "Top-ranked model:** `model_a`" in report
+    report = report_path.read_text(
+        encoding="utf-8"
+    )
+    assert (
+        "Comparative recommendation:** "
+        "No clear winner yet"
+        in report
+    )
     assert "Deterministic rows:** 2" in report
