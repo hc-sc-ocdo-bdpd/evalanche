@@ -60,6 +60,7 @@ class JudgeConfig(BaseModel):
     model: str
     temperature: float = 0
     max_retries: int = 3
+    continue_on_error: bool = False
 
 
 class TaskConfig(BaseModel):

@@ -126,6 +126,12 @@ class StubJudge:
             "prompt_tokens": 10,
             "completion_tokens": 5,
             "total_tokens": 15,
+            "latency_seconds": 1.5,
+            "api_seconds": 1.25,
+            "attempts": 1,
+            "failed_attempts": 0,
+            "cost_usd": 0.001,
+            "cost_source": "litellm_response_metadata",
             "correctness_score": correctness,
             "correctness_reason": reason,
             "completeness_score": correctness,
@@ -214,6 +220,50 @@ def test_combined_summary_ranks_by_pass_rate() -> None:
     )
     assert model_a["deterministic_cases"] == 2
     assert model_a["judge_cases"] == 1
+    assert model_a["judge_requests"] == 1
+    assert model_a["judge_errors"] == 0
+    assert model_a["judge_failure_rate"] == 0.0
+    assert model_a["judge_average_seconds"] == 1.5
+    assert model_a["judge_total_tokens"] == 15
+    assert model_a["judge_cost_usd"] == 0.001
+
+
+def test_judge_error_is_unscored_and_reported_as_operational_failure() -> None:
+    config = make_config()
+    config.judge.continue_on_error = True
+
+    class PartlyFailingJudge(StubJudge):
+        def judge_case(
+            self,
+            row: dict[str, Any],
+        ) -> dict[str, Any]:
+            if row["model_name"] == "model_a":
+                raise RuntimeError("judge unavailable")
+            return super().judge_case(row)
+
+    results = evaluate_cases(
+        make_cases(),
+        config,
+        judge=PartlyFailingJudge(),
+    )
+
+    failed_judge = results.query(
+        "case_id == 'case_judge' and model_name == 'model_a'"
+    ).iloc[0]
+    assert failed_judge["evaluation_source"] == "judge_error"
+    assert failed_judge["judge_status"] == "error"
+    assert pd.isna(failed_judge["final_score"])
+    assert pd.isna(failed_judge["final_passed"])
+
+    summary = build_evaluation_summary(results)
+    model_a = summary.query("model_name == 'model_a'").iloc[0]
+    assert model_a["cases"] == 3
+    assert model_a["scored_cases"] == 2
+    assert model_a["unscored_cases"] == 1
+    assert model_a["failed_cases"] == 1
+    assert model_a["judge_requests"] == 1
+    assert model_a["judge_errors"] == 1
+    assert model_a["judge_failure_rate"] == 1.0
 
 
 def test_combined_evaluation_requires_same_cases_for_every_model() -> None:

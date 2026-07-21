@@ -195,6 +195,130 @@ def test_report_can_name_evidence_supported_leader(
     )
 
 
+def test_report_does_not_treat_judge_error_as_model_failure(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    results = pd.DataFrame(
+        [
+            {
+                "case_id": "case_001",
+                "model_name": "model_a",
+                "evaluation_type": "judge",
+                "evaluation_source": "judge_error",
+                "final_passed": None,
+                "final_score": None,
+                "evaluation_reason": "Judge failed.",
+                "judge_status": "error",
+            },
+            {
+                "case_id": "case_001",
+                "model_name": "model_b",
+                "evaluation_type": "judge",
+                "evaluation_source": "llm_judge",
+                "final_passed": True,
+                "final_score": 1.0,
+                "evaluation_reason": "Passed.",
+                "judge_status": "success",
+            },
+        ]
+    )
+    summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(results)
+
+    report = build_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        comparisons=comparisons,
+        case_results_path="results.csv",
+        summary_path="summary.csv",
+        comparison_path="comparisons.csv",
+        metadata_path="metadata.json",
+    )
+
+    assert "Comparative recommendation:** Not available" in report
+    assert "judge failed" in report.lower()
+    assert "not counted as candidate-model failures" in report
+
+
+def test_report_includes_generation_and_judge_operations(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    results = pd.DataFrame(
+        [
+            {
+                "case_id": "case_exact",
+                "model_name": "model_a",
+                "evaluation_type": "exact",
+                "evaluation_source": "deterministic",
+                "final_passed": True,
+                "final_score": 1.0,
+                "evaluation_reason": "Matched.",
+                "generation_status": "success",
+                "generation_seconds": 1.0,
+                "generation_prompt_tokens": 10,
+                "generation_completion_tokens": 2,
+                "generation_total_tokens": 12,
+                "generation_cost_usd": 0.001,
+                "generation_cost_source": (
+                    "litellm_response_metadata"
+                ),
+                "judge_status": "not_requested",
+            },
+            {
+                "case_id": "case_judge",
+                "model_name": "model_a",
+                "evaluation_type": "judge",
+                "evaluation_source": "llm_judge",
+                "final_passed": True,
+                "final_score": 0.8,
+                "evaluation_reason": "Good.",
+                "generation_status": "success",
+                "generation_seconds": 3.0,
+                "generation_prompt_tokens": 20,
+                "generation_completion_tokens": 4,
+                "generation_total_tokens": 24,
+                "generation_cost_usd": 0.002,
+                "generation_cost_source": (
+                    "litellm_response_metadata"
+                ),
+                "judge_status": "success",
+                "judge_seconds": 2.0,
+                "judge_prompt_tokens": 30,
+                "judge_completion_tokens": 10,
+                "judge_total_tokens": 40,
+                "judge_cost_usd": 0.004,
+                "judge_cost_source": (
+                    "litellm_response_metadata"
+                ),
+            },
+        ]
+    )
+    summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(results)
+
+    report = build_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        comparisons=comparisons,
+        case_results_path="results.csv",
+        summary_path="summary.csv",
+        comparison_path="comparisons.csv",
+        metadata_path="metadata.json",
+    )
+
+    assert "### Candidate Generation" in report
+    assert "2.90 s" in report
+    assert "36" in report
+    assert "$0.003000 USD" in report
+    assert "### LLM Judge" in report
+    assert "2.00 s" in report
+    assert "$0.004000 USD" in report
+
+
 def test_run_evaluation_writes_reproducible_artifacts(
     tmp_path: Path,
 ) -> None:
@@ -255,12 +379,13 @@ def test_run_evaluation_writes_reproducible_artifacts(
         )
     )
 
-    assert metadata["schema_version"] == "0.4"
+    assert metadata["schema_version"] == "0.5"
     assert (
         metadata["results"]["deterministic_rows"]
         == 2
     )
     assert metadata["results"]["judge_rows"] == 0
+    assert metadata["results"]["judge_errors"] == 0
     assert (
         metadata["recommendation"]["comparative"]
         is True
@@ -283,6 +408,11 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert len(
         metadata["hashes"]["config_sha256"]
     ) == 64
+    assert metadata["operations"]["generation"]["requests"] == 0
+    assert metadata["operations"]["judge"]["requests"] == 0
+    assert metadata["operations"]["cost_policy"] == (
+        "litellm_response_metadata_only"
+    )
     assert len(
         metadata["hashes"]["input_sha256"]
     ) == 64
@@ -301,3 +431,4 @@ def test_run_evaluation_writes_reproducible_artifacts(
         in report
     )
     assert "Deterministic rows:** 2" in report
+    assert "## Operational Performance" in report

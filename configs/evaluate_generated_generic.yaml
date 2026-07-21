@@ -12,6 +12,7 @@ judge:
   model: ${JUDGE_MODEL:-azure/gpt-5.4-mini}
   temperature: 0
   max_retries: 3
+  continue_on_error: true
 
 task:
   name: generated_generic_instruction_following

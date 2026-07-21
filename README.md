@@ -34,11 +34,15 @@ Evalanche currently supports:
 8. Saving reproducibility metadata.
 9. Producing a plain-language model recommendation report.
 10. Reporting pass-rate uncertainty and paired model comparisons.
+11. Reporting latency, token usage, response cost, and failure rates.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
 
 The statistical methods and their limitations are documented in
 [`docs/statistical_methods.md`](docs/statistical_methods.md).
+
+Operational metric definitions and limitations are documented in
+[`docs/operational_metrics.md`](docs/operational_metrics.md).
 
 ## Evaluation methods
 
@@ -315,7 +319,7 @@ The generation command:
 2. Loads the candidate model configuration.
 3. Calls every candidate model for every test case.
 4. Saves the model outputs.
-5. Records latency and token usage.
+5. Records end-to-end latency, token usage, retry attempts, and reported cost.
 6. Records generation failures without necessarily stopping the run.
 7. Writes generation metadata.
 
@@ -403,6 +407,7 @@ overall_reason
 criterion scores
 criterion reasons
 judge token usage
+judge latency, retry attempts, and reported cost
 raw judge result
 ```
 
@@ -498,13 +503,17 @@ pass threshold
 case counts
 model counts
 token usage
+average and p95 latency
+generation and judge failure rates
+cost values and metadata coverage
 summary results
 known limitations
 ```
 
 ## Model recommendation reports
 
-Judge runs currently produce a recommendation report based on the judge leaderboard.
+Combined evaluation runs produce a task-aware report using deterministic and
+judge evidence, uncertainty intervals, paired tests, and operational evidence.
 
 The recommendation is intentionally task-specific.
 
@@ -516,7 +525,7 @@ It should not be interpreted as:
 
 > This is the best model in general.
 
-A later iteration will combine deterministic and judge evidence into one task-aware model recommendation.
+Operational evidence is reported but is not yet used as a ranking constraint.
 
 ## Current command summary
 
@@ -618,12 +627,14 @@ Current limitations include:
 - Deterministic exact matching can reject semantically equivalent answers.
 - JSON comparison currently uses strict key and value equality.
 - Open-ended judge results depend on the selected judge model and rubric.
-- The current recommendation report is based only on judge-evaluated cases.
-- Cost estimates are not yet implemented.
+- Cost remains unknown when LiteLLM does not supply response-cost metadata.
+- Operational measurements from one sequential run are not production
+  service-level guarantees.
 - Multiple-run variability is not yet measured.
 - Human calibration is not yet implemented.
 - Judge bias testing is not yet implemented.
-- Combined task-aware recommendations are not yet implemented.
+- Cost, latency, privacy, availability, and other operational constraints are
+  not yet part of recommendation ranking.
 
 ## Project status
 
@@ -640,4 +651,5 @@ test cases
 -> recommendation artifacts
 ```
 
-The next major capability will combine routed evaluation results into one scientifically defensible model comparison.
+The next major capability will apply quality, cost, latency, reliability, and
+deployment constraints to model selection.

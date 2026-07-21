@@ -19,7 +19,9 @@ from evalanche.identity import (
 )
 from evalanche.io import load_eval_cases
 from evalanche.judges import CriteriaJudge
+from evalanche.llm import operational_from_error
 from evalanche.metrics.deterministic import score_row
+from evalanche.operational import summarize_stage
 from evalanche.routing import EXACT, JSON, JUDGE
 from evalanche.statistics import (
     build_pairwise_comparisons,
@@ -75,6 +77,32 @@ def _deterministic_score(metric: dict[str, Any]) -> float:
     return float(bool(metric["metric_passed"]))
 
 
+def _judge_error_result(
+    row: dict[str, Any],
+    error: BaseException,
+) -> dict[str, Any]:
+    operational = operational_from_error(error)
+    return {
+        "case_id": row["case_id"],
+        "model_name": row["model_name"],
+        "_status": "error",
+        "error": repr(error),
+        "prompt_tokens": operational.get("prompt_tokens"),
+        "completion_tokens": operational.get(
+            "completion_tokens"
+        ),
+        "total_tokens": operational.get("total_tokens"),
+        "latency_seconds": operational.get(
+            "latency_seconds"
+        ),
+        "api_seconds": operational.get("api_seconds"),
+        "attempts": operational.get("attempts"),
+        "failed_attempts": operational.get("failed_attempts"),
+        "cost_usd": operational.get("cost_usd"),
+        "cost_source": operational.get("cost_source"),
+    }
+
+
 def evaluate_cases(
     cases: pd.DataFrame,
     config: EvaluationConfig,
@@ -117,7 +145,14 @@ def evaluate_cases(
         active_judge = judge or CriteriaJudge(config)
 
         for row in tqdm(judge_rows, desc="Judging cases"):
-            result = active_judge.judge_case(row)
+            try:
+                result = active_judge.judge_case(row)
+                result["_status"] = "success"
+            except Exception as error:
+                if not config.judge.continue_on_error:
+                    raise
+                result = _judge_error_result(row, error)
+
             key = (str(row["case_id"]), str(row["model_name"]))
             judge_results[key] = result
 
@@ -135,9 +170,17 @@ def evaluate_cases(
                 "judge_passed": None,
                 "judge_overall_reason": None,
                 "judge_raw_result": None,
+                "judge_status": "not_requested",
+                "judge_error": "",
+                "judge_seconds": None,
+                "judge_api_seconds": None,
+                "judge_attempts": None,
+                "judge_failed_attempts": None,
                 "judge_prompt_tokens": None,
                 "judge_completion_tokens": None,
                 "judge_total_tokens": None,
+                "judge_cost_usd": None,
+                "judge_cost_source": None,
             }
         )
 
@@ -157,6 +200,11 @@ def evaluate_cases(
 
             record.update(
                 {
+                    "judge_status": (
+                        "skipped_generation_error"
+                        if row["evaluation_type"] == JUDGE
+                        else "not_requested"
+                    ),
                     "evaluation_source": "generation_error",
                     "final_score": 0.0,
                     "final_passed": False,
@@ -185,6 +233,54 @@ def evaluate_cases(
 
             record.update(
                 {
+                    "judge_status": judge_result.get(
+                        "_status",
+                        "success",
+                    ),
+                    "judge_error": judge_result.get("error", ""),
+                    "judge_seconds": judge_result.get(
+                        "latency_seconds"
+                    ),
+                    "judge_api_seconds": judge_result.get(
+                        "api_seconds"
+                    ),
+                    "judge_attempts": judge_result.get("attempts"),
+                    "judge_failed_attempts": judge_result.get(
+                        "failed_attempts"
+                    ),
+                    "judge_prompt_tokens": judge_result.get(
+                        "prompt_tokens"
+                    ),
+                    "judge_completion_tokens": judge_result.get(
+                        "completion_tokens"
+                    ),
+                    "judge_total_tokens": judge_result.get(
+                        "total_tokens"
+                    ),
+                    "judge_cost_usd": judge_result.get("cost_usd"),
+                    "judge_cost_source": judge_result.get(
+                        "cost_source"
+                    ),
+                }
+            )
+
+            if record["judge_status"] == "error":
+                record.update(
+                    {
+                        "evaluation_source": "judge_error",
+                        "final_score": None,
+                        "final_passed": None,
+                        "evaluation_reason": (
+                            "Judge failed: "
+                            f"{judge_result.get('error', 'unknown error')}"
+                        ),
+                    }
+                )
+                combined_records.append(record)
+                continue
+
+            record.update(
+                {
                     "evaluation_source": "llm_judge",
                     "judge_weighted_score": judge_result[
                         "weighted_score"
@@ -195,15 +291,6 @@ def evaluate_cases(
                     ],
                     "judge_raw_result": judge_result.get(
                         "raw_judge_result"
-                    ),
-                    "judge_prompt_tokens": judge_result.get(
-                        "prompt_tokens"
-                    ),
-                    "judge_completion_tokens": judge_result.get(
-                        "completion_tokens"
-                    ),
-                    "judge_total_tokens": judge_result.get(
-                        "total_tokens"
                     ),
                     "final_score": float(
                         judge_result["weighted_score"]
@@ -241,31 +328,54 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
     records: list[dict[str, Any]] = []
 
     for model_name, group in results.groupby("model_name", dropna=False):
+        scored = group[group["final_passed"].notna()]
         deterministic = group[
             group["evaluation_source"] == "deterministic"
         ]
         judged = group[
             group["evaluation_source"] == "llm_judge"
         ]
-        generation_errors = group[
-            group["evaluation_source"] == "generation_error"
-        ]
+        passed_cases = int(
+            scored["final_passed"].astype(bool).sum()
+        )
+        scored_cases = int(len(scored))
 
-        passed_cases = int(group["final_passed"].sum())
-        pass_rate_ci_low, pass_rate_ci_high = wilson_score_interval(
-            passed_cases,
-            len(group),
+        if scored_cases:
+            (
+                pass_rate_ci_low,
+                pass_rate_ci_high,
+            ) = wilson_score_interval(
+                passed_cases,
+                scored_cases,
+            )
+        else:
+            pass_rate_ci_low = None
+            pass_rate_ci_high = None
+
+        generation_operations = summarize_stage(
+            group,
+            "generation",
+        )
+        judge_operations = summarize_stage(
+            group,
+            "judge",
         )
 
         record: dict[str, Any] = {
             "model_name": model_name,
             "cases": int(len(group)),
+            "scored_cases": scored_cases,
+            "unscored_cases": int(len(group) - scored_cases),
             "passed_cases": passed_cases,
-            "failed_cases": int((~group["final_passed"]).sum()),
-            "pass_rate": _safe_rate(group["final_passed"]),
+            "failed_cases": int(scored_cases - passed_cases),
+            "pass_rate": _safe_rate(scored["final_passed"]),
             "pass_rate_ci_low": pass_rate_ci_low,
             "pass_rate_ci_high": pass_rate_ci_high,
-            "average_score": float(group["final_score"].mean()),
+            "average_score": (
+                float(scored["final_score"].mean())
+                if scored_cases
+                else None
+            ),
             "deterministic_cases": int(len(deterministic)),
             "deterministic_pass_rate": _safe_rate(
                 deterministic["final_passed"]
@@ -279,22 +389,19 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
                 if not judged.empty
                 else None
             ),
-            "generation_errors": int(len(generation_errors)),
         }
 
-        if "generation_total_tokens" in group.columns:
-            record["generation_total_tokens"] = int(
-                pd.to_numeric(
-                    group["generation_total_tokens"],
-                    errors="coerce",
-                ).sum()
-            )
-
-        record["judge_total_tokens"] = int(
-            pd.to_numeric(
-                group["judge_total_tokens"],
-                errors="coerce",
-            ).sum()
+        record.update(
+            {
+                f"generation_{key}": value
+                for key, value in generation_operations.items()
+            }
+        )
+        record.update(
+            {
+                f"judge_{key}": value
+                for key, value in judge_operations.items()
+            }
         )
 
         records.append(record)
@@ -303,13 +410,15 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
     summary["rank"] = (
         summary["pass_rate"]
         .rank(method="min", ascending=False)
-        .astype(int)
+        .astype("Int64")
     )
 
     ordered_columns = [
         "rank",
         "model_name",
         "cases",
+        "scored_cases",
+        "unscored_cases",
         "passed_cases",
         "failed_cases",
         "pass_rate",
@@ -321,7 +430,28 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         "judge_cases",
         "judge_pass_rate",
         "average_judge_score",
+        "generation_requests",
+        "generation_successes",
         "generation_errors",
+        "generation_failure_rate",
+        "generation_average_seconds",
+        "generation_p95_seconds",
+        "generation_prompt_tokens",
+        "generation_completion_tokens",
+        "generation_total_tokens",
+        "generation_cost_usd",
+        "generation_cost_coverage",
+        "judge_requests",
+        "judge_successes",
+        "judge_errors",
+        "judge_failure_rate",
+        "judge_average_seconds",
+        "judge_p95_seconds",
+        "judge_prompt_tokens",
+        "judge_completion_tokens",
+        "judge_total_tokens",
+        "judge_cost_usd",
+        "judge_cost_coverage",
     ]
     remaining_columns = [
         column
@@ -363,18 +493,36 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
     table.add_column("Pass rate")
     table.add_column("95% range")
     table.add_column("Avg score")
-    table.add_column("Generation errors")
+    table.add_column("Gen failures")
+    table.add_column("Judge failures")
 
     for _, row in summary.iterrows():
+        pass_rate = row["pass_rate"]
+        interval_low = row["pass_rate_ci_low"]
+        interval_high = row["pass_rate_ci_high"]
+        average_score = row["average_score"]
+        interval = (
+            f"{interval_low:.1%}–{interval_high:.1%}"
+            if pd.notna(interval_low) and pd.notna(interval_high)
+            else "N/A"
+        )
+
         table.add_row(
             str(row["rank"]),
             str(row["model_name"]),
-            f"{row['passed_cases']}/{row['cases']}",
-            f"{row['pass_rate']:.1%}",
-            f"{row['pass_rate_ci_low']:.1%}–",
-            f"{row['pass_rate_ci_high']:.1%}"
-            f"{row['average_score']:.3f}",
-            str(row["generation_errors"]),
+            f"{row['passed_cases']}/{row['scored_cases']}",
+            f"{pass_rate:.1%}" if pd.notna(pass_rate) else "N/A",
+            interval,
+            (
+                f"{average_score:.3f}"
+                if pd.notna(average_score)
+                else "N/A"
+            ),
+            (
+                f"{row['generation_errors']}/"
+                f"{row['generation_requests']}"
+            ),
+            f"{row['judge_errors']}/{row['judge_requests']}",
         )
 
     console.print(table)

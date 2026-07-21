@@ -40,6 +40,7 @@ class CriteriaJudge:
         self._validate_response(result)
 
         usage = result.pop("_usage", {})
+        operational = result.pop("_operational", {})
 
         criterion_scores = result.get("criteria", {})
         normalized_score = self._weighted_normalized_score(criterion_scores)
@@ -55,6 +56,16 @@ class CriteriaJudge:
             "prompt_tokens": usage.get("prompt_tokens"),
             "completion_tokens": usage.get("completion_tokens"),
             "total_tokens": usage.get("total_tokens"),
+            "latency_seconds": operational.get(
+                "latency_seconds"
+            ),
+            "api_seconds": operational.get("api_seconds"),
+            "attempts": operational.get("attempts"),
+            "failed_attempts": operational.get(
+                "failed_attempts"
+            ),
+            "cost_usd": operational.get("cost_usd"),
+            "cost_source": operational.get("cost_source"),
         }
 
         for criterion in self.config.criteria:

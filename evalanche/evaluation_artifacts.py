@@ -11,6 +11,7 @@ import pandas as pd
 from evalanche import __version__
 from evalanche.config import EvaluationConfig
 from evalanche.metadata import sha256_file
+from evalanche.operational import summarize_operations
 from evalanche.statistics import (
     CONFIDENCE_LEVEL,
     SIGNIFICANCE_LEVEL,
@@ -36,6 +37,37 @@ def _format_p_value(value: Any) -> str:
     if numeric < 0.001:
         return "<0.001"
     return f"{numeric:.3f}"
+
+
+def _format_seconds(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "N/A"
+    return f"{float(value):.2f} s"
+
+
+def _format_integer(value: Any) -> str:
+    if value is None or pd.isna(value):
+        return "N/A"
+    return f"{int(value):,}"
+
+
+def _format_cost(
+    value: Any,
+    coverage: Any,
+    requests: Any,
+) -> str:
+    request_count = int(requests or 0)
+    if request_count == 0:
+        return "N/A"
+    if value is None or pd.isna(value):
+        coverage_text = _format_percent(coverage)
+        return f"Unknown ({coverage_text} coverage)"
+    return f"${float(value):.6f} USD"
+
+
+def _numeric_mean_or_none(series: pd.Series) -> float | None:
+    value = pd.to_numeric(series, errors="coerce").mean()
+    return None if pd.isna(value) else float(value)
 
 
 def _escape_markdown(
@@ -64,12 +96,14 @@ def _leaderboard_markdown(summary: pd.DataFrame) -> str:
         "Rank",
         "Model",
         "Passed",
+        "Unscored",
         "Pass rate",
         "95% pass-rate interval",
         "Average score",
         "Deterministic pass rate",
         "Judge pass rate",
         "Generation errors",
+        "Judge errors",
     ]
     rows = [
         "| " + " | ".join(columns) + " |",
@@ -83,7 +117,8 @@ def _leaderboard_markdown(summary: pd.DataFrame) -> str:
                 [
                     str(row["rank"]),
                     _escape_markdown(row["model_name"]),
-                    f"{row['passed_cases']}/{row['cases']}",
+                    f"{row['passed_cases']}/{row['scored_cases']}",
+                    str(row["unscored_cases"]),
                     _format_percent(row["pass_rate"]),
                     (
                         f"{_format_percent(row['pass_rate_ci_low'])}–"
@@ -95,6 +130,7 @@ def _leaderboard_markdown(summary: pd.DataFrame) -> str:
                     ),
                     _format_percent(row["judge_pass_rate"]),
                     str(row["generation_errors"]),
+                    str(row["judge_errors"]),
                 ]
             )
             + " |"
@@ -113,6 +149,8 @@ def _pairwise_markdown(comparisons: pd.DataFrame) -> str:
     columns = [
         "Model A",
         "Model B",
+        "Paired cases",
+        "Excluded cases",
         "Pass-rate difference (A − B)",
         "A-only passes",
         "B-only passes",
@@ -137,13 +175,87 @@ def _pairwise_markdown(comparisons: pd.DataFrame) -> str:
                 [
                     _escape_markdown(row["model_a"]),
                     _escape_markdown(row["model_b"]),
-                    f"{float(row['pass_rate_difference']):+.1%}",
+                    str(row["paired_cases"]),
+                    str(row["excluded_cases"]),
+                    (
+                        f"{float(row['pass_rate_difference']):+.1%}"
+                        if pd.notna(row["pass_rate_difference"])
+                        else "N/A"
+                    ),
                     str(row["model_a_only_passed"]),
                     str(row["model_b_only_passed"]),
                     _format_p_value(
                         row["holm_adjusted_p_value"]
                     ),
                     winner_text,
+                ]
+            )
+            + " |"
+        )
+
+    return "\n".join(rows)
+
+
+def _stage_operations_markdown(
+    summary: pd.DataFrame,
+    prefix: str,
+) -> str:
+    if (
+        summary.empty
+        or f"{prefix}_requests" not in summary.columns
+        or int(summary[f"{prefix}_requests"].sum()) == 0
+    ):
+        return f"_No {prefix} requests were recorded._"
+
+    columns = [
+        "Model",
+        "Requests",
+        "Failures",
+        "Failure rate",
+        "Average latency",
+        "p95 latency",
+        "Input tokens",
+        "Output tokens",
+        "Total tokens",
+        "Reported cost",
+    ]
+    rows = [
+        "| " + " | ".join(columns) + " |",
+        "| " + " | ".join(["---"] * len(columns)) + " |",
+    ]
+
+    for _, row in summary.iterrows():
+        requests = row[f"{prefix}_requests"]
+        rows.append(
+            "| "
+            + " | ".join(
+                [
+                    _escape_markdown(row["model_name"]),
+                    str(requests),
+                    str(row[f"{prefix}_errors"]),
+                    _format_percent(
+                        row[f"{prefix}_failure_rate"]
+                    ),
+                    _format_seconds(
+                        row[f"{prefix}_average_seconds"]
+                    ),
+                    _format_seconds(
+                        row[f"{prefix}_p95_seconds"]
+                    ),
+                    _format_integer(
+                        row[f"{prefix}_prompt_tokens"]
+                    ),
+                    _format_integer(
+                        row[f"{prefix}_completion_tokens"]
+                    ),
+                    _format_integer(
+                        row[f"{prefix}_total_tokens"]
+                    ),
+                    _format_cost(
+                        row[f"{prefix}_cost_usd"],
+                        row[f"{prefix}_cost_coverage"],
+                        requests,
+                    ),
                 ]
             )
             + " |"
@@ -204,6 +316,38 @@ def _recommendation_details(
             "observed_leader": None,
             "recommended_model": None,
             "not_distinguished_from": [],
+        }
+
+    unscored_cases = (
+        int(summary["unscored_cases"].sum())
+        if "unscored_cases" in summary.columns
+        else 0
+    )
+    if unscored_cases:
+        ranked = summary[summary["rank"].notna()]
+        top_models: list[str] = []
+        if not ranked.empty:
+            top_rank = ranked["rank"].min()
+            top_models = (
+                ranked.loc[
+                    ranked["rank"] == top_rank,
+                    "model_name",
+                ]
+                .astype(str)
+                .tolist()
+            )
+
+        return {
+            "status": "incomplete_evaluation",
+            "top_ranked_models": top_models,
+            "observed_leader": (
+                top_models[0]
+                if len(top_models) == 1
+                else None
+            ),
+            "recommended_model": None,
+            "not_distinguished_from": [],
+            "unscored_cases": unscored_cases,
         }
 
     top_rank = summary["rank"].min()
@@ -293,6 +437,16 @@ def _recommendation_text(
         return (
             "**Comparative recommendation:** Not available. "
             "No model results were produced."
+        )
+
+    if details["status"] == "incomplete_evaluation":
+        return (
+            "**Comparative recommendation:** Not available.\n\n"
+            f"{details['unscored_cases']} model result(s) could not be "
+            "scored because the judge failed. Those rows were kept as "
+            "operational failures and were not counted as candidate-model "
+            "failures. Rerun or recover the failed judge calls before "
+            "selecting a model."
         )
 
     if len(summary) == 1:
@@ -386,6 +540,9 @@ def build_evaluation_report(
     generation_errors = int(
         source_counts.get("generation_error", 0)
     )
+    judge_errors = int(
+        source_counts.get("judge_error", 0)
+    )
 
     return f"""# Evalanche Combined Evaluation Report
 
@@ -403,6 +560,7 @@ def build_evaluation_report(
 - **Deterministic rows:** {deterministic_rows}
 - **LLM-judged rows:** {judge_rows}
 - **Generation errors:** {generation_errors}
+- **Judge errors:** {judge_errors}
 - **Judge model:** `{config.judge.model}`
 - **Judge pass threshold:** {_format_percent(config.scoring.pass_threshold)}
 
@@ -422,6 +580,24 @@ Holm correction limits false positives when several model pairs are tested.
 
 {_pairwise_markdown(comparisons)}
 
+## Operational Performance
+
+Latency is measured end to end for each request, including retries and retry
+waits. Average and p95 values describe this run, not guaranteed production
+performance.
+
+### Candidate Generation
+
+{_stage_operations_markdown(summary, "generation")}
+
+### LLM Judge
+
+{_stage_operations_markdown(summary, "judge")}
+
+Token totals include every response observed during retries. Costs are shown
+only when LiteLLM supplied response-cost metadata for every request in the
+reported total; otherwise the report shows the available coverage.
+
 ## Failed Cases
 
 {_failures_markdown(results)}
@@ -431,6 +607,7 @@ Holm correction limits false positives when several model pairs are tested.
 - Exact and JSON cases use deterministic evaluation as the authoritative result.
 - Open-ended judge cases use the configured LLM judge.
 - Generation errors receive a score of zero and are not sent to the judge.
+- Judge errors remain unscored and prevent a comparative recommendation.
 - JSON partial-field scores are diagnostic; only a full expected JSON match passes.
 
 ## Evidence Files
@@ -449,8 +626,12 @@ Holm correction limits false positives when several model pairs are tested.
   cover prompt, generation, or judge variability.
 - The statistical methods assume cases are representative and independent.
   Related or repeated cases require grouped analysis.
+- Operational measurements reflect this run's network path, provider state,
+  retries, and sequential execution. They are not production service-level
+  guarantees.
+- Missing token or cost metadata is reported as unknown, not zero.
 - Cost, latency, privacy, deployment availability, and bilingual requirements
-  are not yet decision constraints in the ranking.
+  are reported as evidence but are not yet decision constraints in ranking.
 - A small or unrepresentative test set can produce unstable rankings.
 """
 
@@ -510,9 +691,10 @@ def build_evaluation_metadata(
         summary,
         comparisons,
     )
+    operations = summarize_operations(results)
 
     return {
-        "schema_version": "0.4",
+        "schema_version": "0.5",
         "created_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -584,6 +766,9 @@ def build_evaluation_metadata(
             "model": config.judge.model,
             "temperature": config.judge.temperature,
             "max_retries": config.judge.max_retries,
+            "continue_on_error": (
+                config.judge.continue_on_error
+            ),
             "score_min": config.scoring.score_min,
             "score_max": config.scoring.score_max,
             "pass_threshold": (
@@ -632,34 +817,26 @@ def build_evaluation_metadata(
                     0,
                 )
             ),
-            "overall_pass_rate": float(
-                results["final_passed"]
-                .astype(float)
-                .mean()
-            ),
-            "average_score": float(
-                results["final_score"].mean()
-            ),
-            "generation_total_tokens": (
-                int(
-                    pd.to_numeric(
-                        results[
-                            "generation_total_tokens"
-                        ],
-                        errors="coerce",
-                    ).sum()
+            "judge_errors": int(
+                source_counts.get(
+                    "judge_error",
+                    0,
                 )
-                if "generation_total_tokens"
-                in results.columns
-                else None
             ),
-            "judge_total_tokens": int(
-                pd.to_numeric(
-                    results["judge_total_tokens"],
-                    errors="coerce",
-                ).sum()
+            "overall_pass_rate": _numeric_mean_or_none(
+                results["final_passed"]
             ),
+            "average_score": _numeric_mean_or_none(
+                results["final_score"]
+            ),
+            "generation_total_tokens": operations[
+                "generation"
+            ]["total_tokens"],
+            "judge_total_tokens": operations["judge"][
+                "total_tokens"
+            ],
         },
+        "operations": operations,
         "statistics": {
             "confidence_level": CONFIDENCE_LEVEL,
             "pass_rate_interval": "wilson_score",
@@ -712,8 +889,15 @@ def build_evaluation_metadata(
                 "representative, independent cases."
             ),
             (
-                "Operational constraints are not "
-                "yet part of the ranking."
+                "Operational metrics describe this run and are not "
+                "production service-level guarantees."
+            ),
+            (
+                "Missing token and cost metadata is unknown, not zero."
+            ),
+            (
+                "Operational constraints are reported but are not yet "
+                "part of the ranking."
             ),
         ],
     }

@@ -141,3 +141,28 @@ def test_pairwise_comparison_rejects_incomplete_case_coverage() -> None:
 
     with pytest.raises(ValueError, match="every model"):
         build_pairwise_comparisons(results)
+
+
+def test_pairwise_comparison_excludes_unscored_judge_outcome() -> None:
+    results = make_results(
+        {
+            "model_a": [True, False],
+            "model_b": [True, True],
+        }
+    )
+    failed_judge = (
+        (results["case_id"] == "case_002")
+        & (results["model_name"] == "model_a")
+    )
+    results["final_passed"] = results["final_passed"].astype(
+        "object"
+    )
+    results.loc[failed_judge, "final_passed"] = None
+    results.loc[failed_judge, "final_score"] = None
+
+    comparison = build_pairwise_comparisons(results).iloc[0]
+
+    assert comparison["paired_cases"] == 1
+    assert comparison["excluded_cases"] == 1
+    assert comparison["both_passed"] == 1
+    assert comparison["pass_rate_difference"] == 0

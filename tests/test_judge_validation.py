@@ -169,6 +169,14 @@ def test_criteria_judge_scores_a_validated_response() -> None:
                 "completion_tokens": 20,
                 "total_tokens": 30,
             }
+            response["_operational"] = {
+                "latency_seconds": 2.5,
+                "api_seconds": 2.0,
+                "attempts": 2,
+                "failed_attempts": 1,
+                "cost_usd": 0.004,
+                "cost_source": "litellm_response_metadata",
+            }
             return response
 
     judge.client = StubClient()
@@ -187,6 +195,10 @@ def test_criteria_judge_scores_a_validated_response() -> None:
     assert result["correctness_score"] == 4
     assert result["completeness_score"] == 2
     assert result["total_tokens"] == 30
+    assert result["latency_seconds"] == 2.5
+    assert result["attempts"] == 2
+    assert result["failed_attempts"] == 1
+    assert result["cost_usd"] == 0.004
 
 
 def test_judge_prompt_names_every_required_criterion() -> None:

@@ -17,6 +17,7 @@ PAIRWISE_COLUMNS = [
     "model_a",
     "model_b",
     "paired_cases",
+    "excluded_cases",
     "model_a_pass_rate",
     "model_b_pass_rate",
     "pass_rate_difference",
@@ -144,6 +145,21 @@ def build_pairwise_comparisons(results: pd.DataFrame) -> pd.DataFrame:
             "pairwise comparisons require one result per case and model"
         )
 
+    coverage_by_case = (
+        results.assign(_present=True)
+        .pivot(
+            index="case_id",
+            columns="model_name",
+            values="_present",
+        )
+    )
+
+    if coverage_by_case.isna().any().any():
+        raise ValueError(
+            "pairwise comparisons require every model to have a result "
+            "for every case"
+        )
+
     pass_by_case = results.pivot(
         index="case_id",
         columns="model_name",
@@ -155,18 +171,22 @@ def build_pairwise_comparisons(results: pd.DataFrame) -> pd.DataFrame:
         values="final_score",
     )
 
-    if pass_by_case.isna().any().any() or score_by_case.isna().any().any():
-        raise ValueError(
-            "pairwise comparisons require every model to have a result "
-            "for every case"
-        )
-
     records: list[dict[str, Any]] = []
     model_names = sorted(pass_by_case.columns.astype(str).tolist())
 
     for model_a, model_b in combinations(model_names, 2):
-        model_a_passed = pass_by_case[model_a].astype(bool)
-        model_b_passed = pass_by_case[model_b].astype(bool)
+        paired_mask = (
+            pass_by_case[model_a].notna()
+            & pass_by_case[model_b].notna()
+            & score_by_case[model_a].notna()
+            & score_by_case[model_b].notna()
+        )
+        model_a_passed = (
+            pass_by_case.loc[paired_mask, model_a].astype(bool)
+        )
+        model_b_passed = (
+            pass_by_case.loc[paired_mask, model_b].astype(bool)
+        )
         model_a_only = int(
             (model_a_passed & ~model_b_passed).sum()
         )
@@ -175,26 +195,57 @@ def build_pairwise_comparisons(results: pd.DataFrame) -> pd.DataFrame:
         )
         both_passed = int((model_a_passed & model_b_passed).sum())
         both_failed = int((~model_a_passed & ~model_b_passed).sum())
-        model_a_rate = float(model_a_passed.mean())
-        model_b_rate = float(model_b_passed.mean())
+        paired_cases = int(len(model_a_passed))
+        model_a_rate = (
+            float(model_a_passed.mean())
+            if paired_cases
+            else None
+        )
+        model_b_rate = (
+            float(model_b_passed.mean())
+            if paired_cases
+            else None
+        )
+        rate_difference = (
+            model_a_rate - model_b_rate
+            if model_a_rate is not None
+            and model_b_rate is not None
+            else None
+        )
+        average_score_difference = (
+            float(
+                (
+                    score_by_case.loc[
+                        paired_mask,
+                        model_a,
+                    ].astype(float)
+                    - score_by_case.loc[
+                        paired_mask,
+                        model_b,
+                    ].astype(float)
+                ).mean()
+            )
+            if paired_cases
+            else None
+        )
 
         records.append(
             {
                 "model_a": model_a,
                 "model_b": model_b,
-                "paired_cases": int(len(model_a_passed)),
+                "paired_cases": paired_cases,
+                "excluded_cases": int(
+                    len(pass_by_case) - paired_cases
+                ),
                 "model_a_pass_rate": model_a_rate,
                 "model_b_pass_rate": model_b_rate,
-                "pass_rate_difference": model_a_rate - model_b_rate,
+                "pass_rate_difference": rate_difference,
                 "model_a_only_passed": model_a_only,
                 "model_b_only_passed": model_b_only,
                 "both_passed": both_passed,
                 "both_failed": both_failed,
-                "average_score_difference": float(
-                    (
-                        score_by_case[model_a].astype(float)
-                        - score_by_case[model_b].astype(float)
-                    ).mean()
+                "average_score_difference": (
+                    average_score_difference
                 ),
                 "exact_mcnemar_p_value": exact_mcnemar_p_value(
                     model_a_only,
@@ -213,6 +264,8 @@ def build_pairwise_comparisons(results: pd.DataFrame) -> pd.DataFrame:
 
     def clear_winner(row: pd.Series) -> str | None:
         if not row["statistically_distinguishable"]:
+            return None
+        if pd.isna(row["pass_rate_difference"]):
             return None
         if row["pass_rate_difference"] > 0:
             return str(row["model_a"])

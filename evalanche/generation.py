@@ -4,6 +4,7 @@ import hashlib
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from time import perf_counter
 from typing import Any
 
 import pandas as pd
@@ -16,7 +17,12 @@ from evalanche.config import (
     load_candidate_models,
 )
 from evalanche.identity import validate_generation_case_ids
-from evalanche.llm import LLMClient
+from evalanche.llm import LLMClient, operational_from_error
+from evalanche.operational import (
+    COST_CURRENCY,
+    COST_POLICY,
+    summarize_stage,
+)
 from evalanche.routing import validate_evaluation_types
 
 
@@ -128,7 +134,7 @@ def generate_one(
         else config.generation.max_completion_tokens
     )
 
-    started_at = datetime.now(timezone.utc)
+    started_at = perf_counter()
 
     response = client.complete_text(
         messages=build_messages(config, row),
@@ -137,6 +143,7 @@ def generate_one(
 
     finished_at = datetime.now(timezone.utc)
     usage = response.get("usage", {})
+    operational = response.get("operational", {})
 
     record = dict(row)
 
@@ -148,9 +155,17 @@ def generate_one(
             "generation_status": "success",
             "generation_error": "",
             "generated_at_utc": finished_at.isoformat(),
-            "generation_seconds": (
-                finished_at - started_at
-            ).total_seconds(),
+            "generation_seconds": operational.get(
+                "latency_seconds",
+                perf_counter() - started_at,
+            ),
+            "generation_api_seconds": operational.get(
+                "api_seconds"
+            ),
+            "generation_attempts": operational.get("attempts"),
+            "generation_failed_attempts": operational.get(
+                "failed_attempts"
+            ),
             "generation_prompt_tokens": usage.get(
                 "prompt_tokens"
             ),
@@ -159,6 +174,10 @@ def generate_one(
             ),
             "generation_total_tokens": usage.get(
                 "total_tokens"
+            ),
+            "generation_cost_usd": operational.get("cost_usd"),
+            "generation_cost_source": operational.get(
+                "cost_source"
             ),
         }
     )
@@ -202,6 +221,7 @@ def generate_outputs(
             if not config.generation.continue_on_error:
                 raise
 
+            operational = operational_from_error(error)
             error_record = dict(row)
 
             error_record.update(
@@ -214,10 +234,33 @@ def generate_outputs(
                     "generated_at_utc": (
                         datetime.now(timezone.utc).isoformat()
                     ),
-                    "generation_seconds": None,
-                    "generation_prompt_tokens": None,
-                    "generation_completion_tokens": None,
-                    "generation_total_tokens": None,
+                    "generation_seconds": operational.get(
+                        "latency_seconds"
+                    ),
+                    "generation_api_seconds": operational.get(
+                        "api_seconds"
+                    ),
+                    "generation_attempts": operational.get(
+                        "attempts"
+                    ),
+                    "generation_failed_attempts": operational.get(
+                        "failed_attempts"
+                    ),
+                    "generation_prompt_tokens": operational.get(
+                        "prompt_tokens"
+                    ),
+                    "generation_completion_tokens": operational.get(
+                        "completion_tokens"
+                    ),
+                    "generation_total_tokens": operational.get(
+                        "total_tokens"
+                    ),
+                    "generation_cost_usd": operational.get(
+                        "cost_usd"
+                    ),
+                    "generation_cost_source": operational.get(
+                        "cost_source"
+                    ),
                 }
             )
 
@@ -271,9 +314,23 @@ def save_generation_metadata(
     failed_outputs = outputs[
         outputs["generation_status"] == "error"
     ]
+    operation_summary = summarize_stage(
+        outputs,
+        "generation",
+    )
+    operations_by_model = {
+        str(model_name): summarize_stage(
+            group,
+            "generation",
+        )
+        for model_name, group in outputs.groupby(
+            "model_name",
+            dropna=False,
+        )
+    }
 
     metadata = {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "created_at_utc": (
             datetime.now(timezone.utc).isoformat()
         ),
@@ -348,27 +405,32 @@ def save_generation_metadata(
                 .unique()
                 .tolist()
             ),
-            "total_tokens": (
-                int(
-                    outputs[
-                        "generation_total_tokens"
-                    ]
-                    .fillna(0)
-                    .sum()
-                )
-                if "generation_total_tokens"
-                in outputs.columns
-                else None
-            ),
-            "average_generation_seconds": (
-                float(
-                    successful_outputs[
-                        "generation_seconds"
-                    ].mean()
-                )
-                if not successful_outputs.empty
-                else None
-            ),
+            "failure_rate": operation_summary[
+                "failure_rate"
+            ],
+            "prompt_tokens": operation_summary[
+                "prompt_tokens"
+            ],
+            "completion_tokens": operation_summary[
+                "completion_tokens"
+            ],
+            "total_tokens": operation_summary["total_tokens"],
+            "average_generation_seconds": operation_summary[
+                "average_seconds"
+            ],
+            "p95_generation_seconds": operation_summary[
+                "p95_seconds"
+            ],
+            "cost_usd": operation_summary["cost_usd"],
+            "cost_coverage": operation_summary[
+                "cost_coverage"
+            ],
+        },
+        "operations": {
+            "cost_currency": COST_CURRENCY,
+            "cost_policy": COST_POLICY,
+            "generation": operation_summary,
+            "by_model": operations_by_model,
         },
         "limitations": [
             (
