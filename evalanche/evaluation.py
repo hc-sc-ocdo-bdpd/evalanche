@@ -9,6 +9,10 @@ from rich.table import Table
 from tqdm.auto import tqdm
 
 from evalanche.config import EvaluationConfig, MetricsConfig
+from evalanche.evaluation_artifacts import (
+    save_evaluation_metadata,
+    save_evaluation_report,
+)
 from evalanche.identity import (
     validate_balanced_model_coverage,
     validate_evaluation_keys,
@@ -263,11 +267,17 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
 
         if "generation_total_tokens" in group.columns:
             record["generation_total_tokens"] = int(
-                group["generation_total_tokens"].fillna(0).sum()
+                pd.to_numeric(
+                    group["generation_total_tokens"],
+                    errors="coerce",
+                ).sum()
             )
 
         record["judge_total_tokens"] = int(
-            group["judge_total_tokens"].fillna(0).sum()
+            pd.to_numeric(
+                group["judge_total_tokens"],
+                errors="coerce",
+            ).sum()
         )
 
         records.append(record)
@@ -350,7 +360,9 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
 
 def run_evaluation(
     config: EvaluationConfig,
-) -> tuple[pd.DataFrame, Path, Path]:
+    *,
+    config_path: str | Path | None = None,
+) -> tuple[pd.DataFrame, Path, Path, Path, Path]:
     cases = load_eval_cases(config.run.input_path)
     results = evaluate_cases(cases, config)
 
@@ -359,6 +371,38 @@ def run_evaluation(
     results.to_csv(output_path, index=False)
 
     summary_path = save_evaluation_summary(results, output_path)
+    summary = build_evaluation_summary(results)
+
+    metadata_path = output_path.with_name(
+        output_path.stem + "_run_metadata.json"
+    )
+
+    report_path = save_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        case_results_path=output_path,
+        summary_path=summary_path,
+        metadata_path=metadata_path,
+    )
+
+    metadata_path = save_evaluation_metadata(
+        config_path=config_path,
+        config=config,
+        cases=cases,
+        results=results,
+        summary=summary,
+        case_results_path=output_path,
+        summary_path=summary_path,
+        report_path=report_path,
+    )
+
     print_evaluation_summary(results)
 
-    return results, output_path, summary_path
+    return (
+        results,
+        output_path,
+        summary_path,
+        metadata_path,
+        report_path,
+    )

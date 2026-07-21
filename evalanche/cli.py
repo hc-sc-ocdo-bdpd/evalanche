@@ -137,10 +137,22 @@ def run_combined_evaluation(config_path: str) -> None:
     load_dotenv()
 
     config = load_evaluation_config(config_path)
-    _, output_path, summary_path = run_evaluation(config)
+
+    (
+        _,
+        output_path,
+        summary_path,
+        metadata_path,
+        report_path,
+    ) = run_evaluation(
+        config,
+        config_path=config_path,
+    )
 
     print(f"\nSaved combined case results to: {output_path}")
     print(f"Saved combined model summary to: {summary_path}")
+    print(f"Saved combined run metadata to: {metadata_path}")
+    print(f"Saved combined recommendation to: {report_path}")
 
 
 def build_parser() -> argparse.ArgumentParser:
