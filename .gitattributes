@@ -1,0 +1,3 @@
+# Dataset manifests record exact byte sizes and SHA-256 hashes. Keep tracked
+# dataset files byte-identical across Windows, macOS, and Linux checkouts.
+/data/** text eol=lf

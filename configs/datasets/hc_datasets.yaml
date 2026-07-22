@@ -13,6 +13,20 @@ decision:
     - stable_combined_evaluation_result
     - stable_dataset_manifest_contract
 
+manifest_contract:
+  schema_version: "1.0"
+  implementation: evalanche/dataset_manifest.py
+  documentation: docs/dataset_manifests.md
+  working_example: configs/datasets/generic_example_manifest.yaml
+  verification_command: >-
+    python -m evalanche.cli verify-dataset
+    --manifest configs/datasets/generic_example_manifest.yaml --root .
+  status:
+    schema_implemented: true
+    file_verifier_implemented: true
+    sampling_and_split_contract_implemented: true
+    hc_release_materialized: false
+
 sources:
   - id: dpd
     name: Drug Product Database
@@ -188,18 +202,43 @@ sources:
     sequence: supporting_only
 
 release_policy:
+  manifest_schema_version: "1.0"
   immutable_versioned_snapshots: true
   silent_source_refreshes: false
   required_manifest_fields:
+    - release_type
+    - file_id
     - source_id
     - source_url
     - retrieved_at_utc
     - source_modified_date
+    - role
     - relative_path
+    - media_type
     - byte_size
     - sha256
     - language
     - record_count
+    - record_count_method
     - parser_schema_version
     - validation_status
     - validation_error_count
+  required_benchmark_sampling_fields:
+    - method
+    - unit
+    - population_description
+    - target_count
+    - membership_file_id
+    - member_id_column
+    - seed
+    - inclusion_criteria
+    - exclusion_criteria
+    - strata
+  required_benchmark_split_fields:
+    - name
+    - purpose
+    - unit
+    - target_count
+    - group_key
+    - selection_policy
+    - member_ids

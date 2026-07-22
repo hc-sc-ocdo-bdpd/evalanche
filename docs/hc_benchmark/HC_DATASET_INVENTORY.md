@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery and benchmark scoping complete
-**Implementation gate:** Stabilize Evalanche's case schema, combined evaluator, and result contract before materializing the HC benchmark datasets.
+**Status:** Dataset discovery, benchmark scoping, and manifest contract complete
+**Implementation gate:** Materialize and validate the first frozen DPD source snapshot using manifest schema `1.0`.
 
 ## Decision
 
@@ -87,17 +87,24 @@ Every materialized source snapshot will have a manifest containing:
 - parser/schema version
 - validation status and error count
 
+The versioned contract, working example, and verification command are
+documented in
+[`docs/dataset_manifests.md`](../dataset_manifests.md). The verifier rejects
+unknown fields, unsafe paths, inconsistent sampling or split records, missing
+files, and mismatched sizes, hashes, or supported record counts.
+
 Benchmark releases are versioned and immutable. Updating a source creates a new benchmark version rather than silently changing existing cases.
 
 ## Sequencing
 
-1. Stabilize the generic Evalanche case schema and combined evaluation result contract.
-2. Normalize a frozen DPD snapshot into validated tables.
+1. Materialize a frozen DPD snapshot and verify its schema `1.0` manifest.
+2. Normalize the DPD snapshot into validated tables.
 3. Build the eligible human-marketed product backbone.
-4. Select the pilot sample and acquire matched English/French monographs.
-5. Audit document-to-DPD alignment and construct deterministic JSON cases.
-6. Run the pilot across candidate models and review error patterns.
-7. Expand only after the pilot demonstrates reliable labels and useful model separation.
+4. Select the pilot sample and record every member and split assignment.
+5. Acquire matched English and French monographs.
+6. Audit document-to-DPD alignment and construct deterministic JSON cases.
+7. Run the pilot across candidate models and review error patterns.
+8. Expand only after the pilot demonstrates reliable labels and useful model separation.
 
 The remaining activities are implementation of this defined plan, not unresolved dataset discovery or an unowned preparation stream.
 

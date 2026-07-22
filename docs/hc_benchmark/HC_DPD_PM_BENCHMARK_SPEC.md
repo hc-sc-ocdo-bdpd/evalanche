@@ -1,6 +1,6 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-**Specification status:** Ready for implementation after core stabilization  
+**Specification status:** Ready for source acquisition and normalization  
 **Benchmark type:** Bilingual structured extraction  
 **Primary scoring:** Deterministic JSON and field-level metrics
 
@@ -167,6 +167,7 @@ A case passes only when the output is valid, schema-compliant JSON and every req
 
 The pilot is ready to run only when:
 
+- the dataset manifest uses schema `1.0` and passes `verify-dataset`
 - all source files have hashes and retrieval metadata
 - all DPD tables pass schema and join validation
 - every case has a traceable source document and DPD record

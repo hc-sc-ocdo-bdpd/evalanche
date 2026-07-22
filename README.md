@@ -36,6 +36,7 @@ Evalanche currently supports:
 10. Reporting pass-rate uncertainty and paired model comparisons.
 11. Reporting latency, token usage, response cost, and failure rates.
 12. Applying client requirements and weighted model-selection policies.
+13. Validating versioned dataset manifests and file integrity.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
 
@@ -47,6 +48,9 @@ Operational metric definitions and limitations are documented in
 
 Constraint-aware recommendation behavior is documented in
 [`docs/model_selection.md`](docs/model_selection.md).
+
+Dataset manifest fields, validation rules, and release workflow are documented
+in [`docs/dataset_manifests.md`](docs/dataset_manifests.md).
 
 ## Evaluation methods
 
@@ -134,6 +138,9 @@ evalanche/
 
   configs/
     candidate_models.yaml
+    datasets/
+      generic_example_manifest.yaml
+      hc_datasets.yaml
     generate_generic.yaml
     judge_generated_generic.yaml
     judge_generic.yaml
@@ -153,6 +160,7 @@ evalanche/
     __init__.py
     cli.py
     config.py
+    dataset_manifest.py
     generation.py
     io.py
     llm.py
@@ -174,6 +182,9 @@ evalanche/
 
   results/
     evaluation outputs are written here
+
+  docs/
+    dataset_manifests.md
 ```
 
 The `data/generated/` and `results/` directories are ignored by Git by default.
@@ -311,6 +322,34 @@ category
 ```
 
 Generation preserves additional input columns in the generated output file.
+
+## Versioned dataset manifests
+
+Dataset manifests freeze the identity and provenance of benchmark inputs. Each
+schema `1.0` manifest records:
+
+- dataset ID, semantic version, release type, status, intended use, and
+  limitations
+- source URLs, UTC retrieval timestamps, and source modification dates
+- repository-relative file paths, byte sizes, SHA-256 hashes, and counts
+- benchmark sampling method, membership file, random seed, criteria, and strata
+- exact benchmark development and held-out member assignments
+- parent version, transformation code version, and transformation lineage
+
+Verify the working synthetic example from the repository root:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/generic_example_manifest.yaml --root .
+```
+
+Optionally add `--output results/generic_example_dataset_verification.json` to
+save an auditable verification report. Invalid YAML, missing files, or metadata
+mismatches make the command exit with status 1.
+
+Source snapshots omit sampling and splits. Benchmark releases require both and
+record every selected member ID. Verification cross-checks those IDs against
+the declared membership file. This command makes no model or provider API
+calls.
 
 ## Generate candidate outputs
 
@@ -469,6 +508,12 @@ Criterion weights are normalized when the weighted score is calculated.
 
 Evalanche writes multiple artifacts so evaluation runs can be inspected and reproduced.
 
+### Dataset verification artifacts
+
+```text
+optional dataset verification JSON
+```
+
 ### Generation artifacts
 
 ```text
@@ -594,6 +639,12 @@ Run the LLM judge:
 docker compose run --rm evalanche python -m evalanche.cli judge --config configs/judge_generated_generic.yaml
 ```
 
+Verify a versioned dataset release:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/generic_example_manifest.yaml --root .
+```
+
 Show CLI help:
 
 ```bash
@@ -618,13 +669,12 @@ Each iteration should:
 
 Near-term planned work:
 
-1. Define a versioned dataset manifest for reproducible benchmarks.
-2. Download and normalize Health Canada's Drug Product Database data.
-3. Select and record the first 40-product pilot sample.
-4. Download and connect English and French product monographs.
-5. Turn the source documents into reviewed benchmark cases.
-6. Add bilingual structured-extraction metrics and field-level accuracy.
-7. Compare multiple real candidate models on the reviewed pilot benchmark.
+1. Download and normalize Health Canada's Drug Product Database data.
+2. Select and record the first 40-product pilot sample.
+3. Download and connect English and French product monographs.
+4. Turn the source documents into reviewed benchmark cases.
+5. Add bilingual structured-extraction metrics and field-level accuracy.
+6. Compare multiple real candidate models on the reviewed pilot benchmark.
 
 Longer-term work may include:
 
@@ -688,6 +738,7 @@ The current implementation demonstrates the core evaluation loop:
 
 ```text
 test cases
+-> verified versioned dataset manifest
 -> candidate model generation
 -> saved outputs
 -> task-aware evaluation routing
@@ -698,5 +749,5 @@ test cases
 -> recommendation artifacts
 ```
 
-The next major capability will define a versioned dataset manifest so benchmark
-inputs and sampling decisions can be reproduced exactly.
+The next major capability will download and normalize a frozen Health Canada
+Drug Product Database snapshot under the versioned manifest contract.

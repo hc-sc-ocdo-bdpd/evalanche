@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from typing import Any
 
 import pandas as pd
 from dotenv import load_dotenv
@@ -11,6 +12,10 @@ from evalanche.config import (
     load_evaluation_config,
     load_generation_config,
     load_metrics_config,
+)
+from evalanche.dataset_manifest import (
+    save_dataset_verification,
+    verify_dataset_manifest_file,
 )
 from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs
@@ -166,6 +171,50 @@ def run_combined_evaluation(config_path: str) -> None:
     print(f"Saved combined recommendation to: {report_path}")
 
 
+def run_verify_dataset(
+    manifest_path: str,
+    *,
+    root_path: str,
+    output_path: str | None = None,
+) -> dict[str, Any]:
+    try:
+        verification = verify_dataset_manifest_file(
+            manifest_path,
+            root_path=root_path,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Dataset manifest validation failed: {error}")
+        raise SystemExit(1) from None
+
+    print(
+        "\nDataset: "
+        f"{verification['dataset_id']} "
+        f"{verification['dataset_version']}"
+    )
+    print(f"Manifest: {verification['manifest_path']}")
+    print(
+        "Verified files: "
+        f"{verification['files_passed']}/"
+        f"{verification['files_checked']}"
+    )
+
+    if output_path is not None:
+        saved_path = save_dataset_verification(
+            verification,
+            output_path,
+        )
+        print(f"Saved verification report to: {saved_path}")
+
+    if not verification["valid"]:
+        print("Status: INVALID")
+        for file_result in verification["files"]:
+            for issue in file_result["issues"]:
+                print(f"- {file_result['file_id']}: {issue}")
+        raise SystemExit(1)
+
+    print("Status: VALID")
+    return verification
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
@@ -199,6 +248,22 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to a judge evaluation YAML config.",
     )
 
+    dataset_parser = subparsers.add_parser("verify-dataset")
+    dataset_parser.add_argument(
+        "--manifest",
+        required=True,
+        help="Path to a versioned dataset manifest YAML file.",
+    )
+    dataset_parser.add_argument(
+        "--root",
+        default=".",
+        help="Root directory used to resolve manifest file paths.",
+    )
+    dataset_parser.add_argument(
+        "--output",
+        help="Optional path for a JSON verification report.",
+    )
+
     return parser
 
 
@@ -214,6 +279,12 @@ def main() -> None:
         run_judge(args.config)
     elif args.command == "evaluate":
         run_combined_evaluation(args.config)
+    elif args.command == "verify-dataset":
+        run_verify_dataset(
+            args.manifest,
+            root_path=args.root,
+            output_path=args.output,
+        )
     else:
         raise ValueError(f"Unknown command: {args.command}")
 
