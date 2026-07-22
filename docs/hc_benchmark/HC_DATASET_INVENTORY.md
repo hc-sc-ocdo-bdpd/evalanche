@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery, benchmark scoping, and manifest contract complete
-**Implementation gate:** Materialize and validate the first frozen DPD source snapshot using manifest schema `1.0`.
+**Status:** Dataset discovery, benchmark scoping, manifest contract, and first DPD source snapshot complete
+**Implementation gate:** Normalize and validate the frozen DPD relational tables without changing the source release.
 
 ## Decision
 
@@ -19,7 +19,7 @@ This order minimizes manual annotation, makes scoring reproducible, and keeps th
 
 | Priority | Source | Access and format | Benchmark role | Readiness decision |
 | --- | --- | --- | --- | --- |
-| Primary | Drug Product Database (DPD) | Nightly database, bulk compressed UTF-8 text extracts, and JSON/XML API | Sampling frame and reference labels for DIN, brand name, active ingredient, strength, dosage form, route, schedule, status, and company | Selected. Source, fields, joins, normalization approach, and evaluation use are defined. |
+| Primary | Drug Product Database (DPD) | Nightly database, bulk compressed UTF-8 text extracts, and JSON/XML API | Sampling frame and reference labels for DIN, brand name, active ingredient, strength, dosage form, route, schedule, status, and company | Selected. The marketed and approved 2026-07-02 archives are frozen and validated as source release `2026.7.2`. |
 | Primary | Health Canada-authorized product monographs | PDF documents accessed through the DPD Online Query, with English and French availability varying by product | Document input for bilingual structured extraction | Selected. Eligibility rules, pilot size, manifest fields, and matching procedure are defined. |
 | Secondary | Recalls and Safety Alerts | Daily English/French CSV and JSON feeds, with records linkable by NID | Bilingual classification, structured extraction, and constrained summarization | Scoped as a separate later task pack. It will not be mixed into the DPD/monograph benchmark. |
 | Secondary | Summary Reports API, including Summary Safety Reviews, Summary Basis of Decision, and Regulatory Decision Summaries | English/French JSON or XML API | Grounded summarization and extraction | Scoped as a later task pack after the primary benchmark. |
@@ -52,6 +52,7 @@ Indications, contraindications, warnings, interactions, adverse reactions, and p
 - Older products may lack a French monograph, and monograph templates vary by age.
 - DPD and monograph values can differ because of timing, scope, naming, or normalization rather than model error.
 - The benchmark therefore freezes both sources to a dated snapshot and manually audits every pilot reference record.
+- The official read-me and published archive differ in some structural details, so source-specific validation records the observed file names and column counts and fails on an unreviewed change.
 
 ### Recalls and Safety Alerts
 
@@ -95,10 +96,17 @@ files, and mismatched sizes, hashes, or supported record counts.
 
 Benchmark releases are versioned and immutable. Updating a source creates a new benchmark version rather than silently changing existing cases.
 
+The first source release is documented in
+[`HC_DPD_SOURCE_SNAPSHOT.md`](HC_DPD_SOURCE_SNAPSHOT.md). Its schema `1.0`
+manifest verifies two unmodified official archives and the generated validation
+report. The release contains 24 relational tables across marketed and approved
+cohorts, with 210,632 table rows in total. This total is not a unique-product
+count.
+
 ## Sequencing
 
-1. Materialize a frozen DPD snapshot and verify its schema `1.0` manifest.
-2. Normalize the DPD snapshot into validated tables.
+1. Complete: materialize DPD source release `2026.7.2` and verify its schema `1.0` manifest.
+2. Next: normalize the DPD snapshot into typed, validated tables.
 3. Build the eligible human-marketed product backbone.
 4. Select the pilot sample and record every member and split assignment.
 5. Acquire matched English and French monographs.

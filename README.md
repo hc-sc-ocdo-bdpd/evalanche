@@ -37,6 +37,7 @@ Evalanche currently supports:
 11. Reporting latency, token usage, reproducible cost estimates, and failure rates.
 12. Applying client requirements and weighted model-selection policies.
 13. Validating versioned dataset manifests and file integrity.
+14. Freezing and source-validating official DPD marketed and approved archives.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
 
@@ -54,6 +55,9 @@ Constraint-aware recommendation behavior is documented in
 
 Dataset manifest fields, validation rules, and release workflow are documented
 in [`docs/dataset_manifests.md`](docs/dataset_manifests.md).
+
+The first Health Canada source release is documented in
+[`docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md`](docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md).
 
 ## Evaluation methods
 
@@ -381,6 +385,24 @@ Source snapshots omit sampling and splits. Benchmark releases require both and
 record every selected member ID. Verification cross-checks those IDs against
 the declared membership file. This command makes no model or provider API
 calls.
+
+Verify the frozen Health Canada DPD source release:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_dpd_2026-07-02_manifest.yaml --root .
+```
+
+To create a later DPD source release, first confirm the official publication
+date and run:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli snapshot-dpd --source-date YYYY-MM-DD --root .
+```
+
+The creation command downloads the official marketed and approved archives,
+requires their HTTP `Last-Modified` dates to match the requested date,
+validates the exact ZIP and CSV structure, records per-member evidence, and
+refuses to overwrite an existing release.
 
 ## Generate candidate outputs
 
@@ -790,5 +812,5 @@ test cases
 -> recommendation artifacts
 ```
 
-The next major capability will download and normalize a frozen Health Canada
-Drug Product Database snapshot under the versioned manifest contract.
+The next major capability will normalize the frozen Health Canada Drug Product
+Database relational tables into typed, validated data for pilot sampling.

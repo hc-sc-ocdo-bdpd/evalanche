@@ -17,6 +17,7 @@ from evalanche.dataset_manifest import (
     save_dataset_verification,
     verify_dataset_manifest_file,
 )
+from evalanche.dpd_snapshot import create_dpd_source_snapshot
 from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs
 from evalanche.io import load_eval_cases, save_results
@@ -216,6 +217,34 @@ def run_verify_dataset(
     return verification
 
 
+def run_snapshot_dpd(
+    *,
+    source_date: str,
+    root_path: str,
+    timeout: float,
+) -> dict[str, Any]:
+    try:
+        result = create_dpd_source_snapshot(
+            root_path=root_path,
+            source_date=source_date,
+            timeout=timeout,
+        )
+    except (OSError, ValueError) as error:
+        print(f"DPD source snapshot failed: {error}")
+        raise SystemExit(1) from None
+
+    print(
+        "\nDataset: "
+        f"{result['dataset_id']} {result['dataset_version']}"
+    )
+    print(f"Source date: {result['source_date']}")
+    print(f"Snapshot: {result['snapshot_path']}")
+    print(f"Manifest: {result['manifest_path']}")
+    print(f"Verified archives: {len(result['archives'])}")
+    print("Status: VALID")
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -264,6 +293,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional path for a JSON verification report.",
     )
 
+    dpd_snapshot_parser = subparsers.add_parser("snapshot-dpd")
+    dpd_snapshot_parser.add_argument(
+        "--source-date",
+        required=True,
+        help=(
+            "Expected official archive date in YYYY-MM-DD format. The "
+            "download fails if HTTP Last-Modified does not match."
+        ),
+    )
+    dpd_snapshot_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root for the snapshot data and manifest.",
+    )
+    dpd_snapshot_parser.add_argument(
+        "--timeout",
+        type=float,
+        default=120.0,
+        help="Per-archive HTTP timeout in seconds.",
+    )
+
     return parser
 
 
@@ -284,6 +334,12 @@ def main() -> None:
             args.manifest,
             root_path=args.root,
             output_path=args.output,
+        )
+    elif args.command == "snapshot-dpd":
+        run_snapshot_dpd(
+            source_date=args.source_date,
+            root_path=args.root,
+            timeout=args.timeout,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

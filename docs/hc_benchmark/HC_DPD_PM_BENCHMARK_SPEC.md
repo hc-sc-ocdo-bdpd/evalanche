@@ -1,6 +1,6 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-**Specification status:** Ready for source acquisition and normalization  
+**Specification status:** Source snapshot complete, ready for normalization  
 **Benchmark type:** Bilingual structured extraction  
 **Primary scoring:** Deterministic JSON and field-level metrics
 
@@ -23,6 +23,11 @@ This design has the strongest contribution-to-effort ratio among the identified 
 - a clear path from a small internal pilot to a publishable public benchmark
 
 ## 3. Pilot composition
+
+The DPD source input is frozen as `hc_dpd_source_snapshot` version `2026.7.2`.
+It contains the official marketed and approved archives published 2026-07-02.
+See [`HC_DPD_SOURCE_SNAPSHOT.md`](HC_DPD_SOURCE_SNAPSHOT.md) for exact hashes,
+row counts, validation evidence, and reproduction instructions.
 
 The first release contains **40 marketed human-drug products**.
 
@@ -111,7 +116,7 @@ Synonym mapping is versioned and limited to defensible equivalences. Fuzzy match
 
 ## 7. Reference-label construction
 
-1. Freeze DPD marketed and approved extracts to a dated, hashed snapshot.
+1. Use frozen DPD marketed and approved source release `2026.7.2`.
 2. Load each table with an explicit schema and `header=None`.
 3. Validate column counts and join coverage.
 4. Join relevant tables using `DRUG_CODE`.

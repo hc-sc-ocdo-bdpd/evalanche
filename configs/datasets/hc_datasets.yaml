@@ -1,5 +1,5 @@
 registry_version: 1
-updated_date: "2026-07-21"
+updated_date: "2026-07-22"
 owner: "Mission Evalanche"
 
 decision:
@@ -25,7 +25,18 @@ manifest_contract:
     schema_implemented: true
     file_verifier_implemented: true
     sampling_and_split_contract_implemented: true
-    hc_release_materialized: false
+    hc_release_materialized: true
+  first_hc_source_snapshot:
+    dataset_id: hc_dpd_source_snapshot
+    version: "2026.7.2"
+    source_date: "2026-07-02"
+    manifest: configs/datasets/hc_dpd_2026-07-02_manifest.yaml
+    validation_report: >-
+      data/hc/dpd/snapshots/2026-07-02/validation.json
+    documentation: >-
+      docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md
+    cohorts: [marketed, approved]
+    status: frozen
 
 sources:
   - id: dpd
@@ -57,10 +68,20 @@ sources:
       benchmark_role_defined: true
       limitations_documented: true
       normalization_contract_defined: true
+      source_snapshot_materialized: true
     implementation:
       parser_mode: explicit_schema_header_none
       join_key: DRUG_CODE
       output_format: parquet
+      source_snapshot:
+        version: "2026.7.2"
+        source_date: "2026-07-02"
+        marketed_archive: >-
+          data/hc/dpd/snapshots/2026-07-02/raw/allfiles.zip
+        approved_archive: >-
+          data/hc/dpd/snapshots/2026-07-02/raw/allfiles_ap.zip
+        parser_schema_version: hc_dpd_utf8_extract/1.0
+        validation_status: passed
       validation:
         - expected_column_count
         - unique_primary_keys_where_applicable

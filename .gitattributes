@@ -1,3 +1,9 @@
 # Dataset manifests record exact byte sizes and SHA-256 hashes. Keep tracked
 # dataset files byte-identical across Windows, macOS, and Linux checkouts.
 /data/** text eol=lf
+
+# Binary source documents must retain their exact downloaded bytes. Later
+# rules override the general text rule above.
+/data/**/*.zip binary !eol
+/data/**/*.pdf binary !eol
+/data/**/*.parquet binary !eol

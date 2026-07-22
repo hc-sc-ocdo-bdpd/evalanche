@@ -1,0 +1,104 @@
+schema_version: '1.0'
+release:
+  dataset_id: hc_dpd_source_snapshot
+  version: 2026.7.2
+  release_type: source_snapshot
+  title: Health Canada Drug Product Database source snapshot
+  description: Immutable official DPD marketed and approved UTF-8 extracts published 2026-07-02.
+  created_at_utc: '2026-07-22T14:36:16Z'
+  status: frozen
+  immutable: true
+  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug Product
+    Database; https://open.canada.ca/en/open-government-licence-canada
+  intended_use: Source data for reproducible Health Canada drug-product normalization, sampling,
+    and benchmark construction.
+  limitations:
+  - The archives contain human, veterinary, disinfectant, and radiopharmaceutical products;
+    downstream filtering is required.
+  - The snapshot contains marketed and approved cohorts only, not cancelled or dormant products.
+  - The source archives do not include product monograph PDF files.
+  - The official download URLs are dynamic; reproducibility depends on the frozen local bytes
+    and hashes.
+  - Record counts sum heterogeneous relational tables and are not counts of unique products.
+  languages:
+  - en
+  - fr
+  task_types:
+  - structured_reference_data
+sources:
+- source_id: hc_dpd_marketed
+  name: Health Canada DPD marketed all-files extract
+  source_url: https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles.zip
+  retrieved_at_utc: '2026-07-22T14:36:16Z'
+  source_modified_date: '2026-07-02'
+  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug Product
+    Database; https://open.canada.ca/en/open-government-licence-canada
+  snapshot_notes: The dynamic official URL was downloaded once and its exact bytes were frozen.
+    HTTP and ZIP validation evidence is in validation.json.
+- source_id: hc_dpd_approved
+  name: Health Canada DPD approved all-files extract
+  source_url: https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles_ap.zip
+  retrieved_at_utc: '2026-07-22T14:36:16Z'
+  source_modified_date: '2026-07-02'
+  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug Product
+    Database; https://open.canada.ca/en/open-government-licence-canada
+  snapshot_notes: The dynamic official URL was downloaded once and its exact bytes were frozen.
+    HTTP and ZIP validation evidence is in validation.json.
+- source_id: evalanche_dpd_snapshot_builder
+  name: Evalanche DPD snapshot builder
+  source_url: https://github.com/hc-sc-ocdo-bdpd/evalanche
+  retrieved_at_utc: '2026-07-22T14:36:16Z'
+  source_modified_date: null
+  license_or_terms: Evalanche repository terms.
+  snapshot_notes: Generated validation.json from the two frozen official archives without
+    modifying their bytes.
+files:
+- file_id: dpd_marketed_archive
+  source_id: hc_dpd_marketed
+  role: raw_dpd_marketed_archive
+  relative_path: data/hc/dpd/snapshots/2026-07-02/raw/allfiles.zip
+  media_type: application/zip
+  language: null
+  byte_size: 1513470
+  sha256: 94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25
+  record_count: 170236
+  record_count_method: declared
+  parser_schema_version: hc_dpd_utf8_extract/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: dpd_approved_archive
+  source_id: hc_dpd_approved
+  role: raw_dpd_approved_archive
+  relative_path: data/hc/dpd/snapshots/2026-07-02/raw/allfiles_ap.zip
+  media_type: application/zip
+  language: null
+  byte_size: 387730
+  sha256: 410fd4da8b01ccfa42a15a4d226830619dd91b777684f505975404ec075ac440
+  record_count: 40396
+  record_count_method: declared
+  parser_schema_version: hc_dpd_utf8_extract/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: dpd_source_validation
+  source_id: evalanche_dpd_snapshot_builder
+  role: source_validation_report
+  relative_path: data/hc/dpd/snapshots/2026-07-02/validation.json
+  media_type: application/json
+  language: null
+  byte_size: 10443
+  sha256: 133fecb5e49e5c8c3659db774482d47d2647484e1e4c55e3df0745a1ea3d7b60
+  record_count: null
+  record_count_method: not_applicable
+  parser_schema_version: hc_dpd_source_validation/1.0
+  validation_status: passed
+  validation_error_count: 0
+lineage:
+  parent_dataset_version: null
+  code_version: evalanche 0.1.0; hc_dpd_snapshot/1.0
+  transformations:
+  - Downloaded the official marketed and approved archives without modifying their bytes.
+  - Required each HTTP Last-Modified date to match the requested source date.
+  - Validated ZIP integrity, exact member sets, member paths, source dates, UTF-8 decoding,
+    CSV structure, and expected column counts.
+  - Recorded archive and member byte sizes, row counts, CRC32 values, and SHA-256 hashes in
+    validation.json.

@@ -1,0 +1,281 @@
+{
+  "validation_schema_version": "1.0",
+  "dataset_id": "hc_dpd_source_snapshot",
+  "dataset_version": "2026.7.2",
+  "source_date": "2026-07-02",
+  "retrieved_at_utc": "2026-07-22T14:36:16Z",
+  "parser_schema_version": "hc_dpd_utf8_extract/1.0",
+  "official_documentation": {
+    "extract_page": "https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/what-data-extract-drug-product-database.html",
+    "readme": "https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/read-file-drug-product-database-data-extract.html",
+    "license": "https://open.canada.ca/en/open-government-licence-canada"
+  },
+  "status": "passed",
+  "validation_error_count": 0,
+  "checks": [
+    "HTTP status is 200 and content type is application/zip.",
+    "The final download URL remains on the trusted www.canada.ca host.",
+    "HTTP Last-Modified date matches the requested source date.",
+    "Archive member names match the expected cohort schema.",
+    "Archive members have safe paths and matching source dates.",
+    "Every member decodes as UTF-8 and parses as strict CSV.",
+    "Every nonblank row has the expected number of columns.",
+    "Archive, member, byte-size, row-count, and hash evidence is recorded."
+  ],
+  "archives": [
+    {
+      "cohort": "marketed",
+      "filename": "allfiles.zip",
+      "source_url": "https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles.zip",
+      "byte_size": 1513470,
+      "sha256": "94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25",
+      "member_count": 12,
+      "record_count": 170236,
+      "members": [
+        {
+          "name": "biosimilar.txt",
+          "byte_size": 7187,
+          "sha256": "a57281b12928a647660762bcf3dea109c6678747d4f9d629f7707d2442da3f51",
+          "crc32": "1b8c441b",
+          "zip_timestamp": "2026-07-02T09:16:24",
+          "column_count": 4,
+          "record_count": 173
+        },
+        {
+          "name": "comp.txt",
+          "byte_size": 2251901,
+          "sha256": "b0921905f78a27c94b5f6e2e9a5dc7a57937ee86688a77f4ccba623d761026c5",
+          "crc32": "3f511f9d",
+          "zip_timestamp": "2026-07-02T09:15:12",
+          "column_count": 18,
+          "record_count": 13538
+        },
+        {
+          "name": "drug.txt",
+          "byte_size": 1631047,
+          "sha256": "a7c528dd59f18d8040229f7aefec32c4c0614a5bcea2a0f1fde0faf9f9553a58",
+          "crc32": "8ad26b22",
+          "zip_timestamp": "2026-07-02T09:15:18",
+          "column_count": 14,
+          "record_count": 13538
+        },
+        {
+          "name": "form.txt",
+          "byte_size": 567086,
+          "sha256": "b3260bc0a11fdb3eba6560696f0800a53337fefb714b1ba4bfc6251574a9bda3",
+          "crc32": "80dd3081",
+          "zip_timestamp": "2026-07-02T09:15:26",
+          "column_count": 4,
+          "record_count": 13834
+        },
+        {
+          "name": "ingred.txt",
+          "byte_size": 2395063,
+          "sha256": "c513621567e5c1934e0f1167be2b95457868dfb6903bdc523d0ed1a00579ba6f",
+          "crc32": "f66471b5",
+          "zip_timestamp": "2026-07-02T09:15:36",
+          "column_count": 15,
+          "record_count": 19701
+        },
+        {
+          "name": "package.txt",
+          "byte_size": 294290,
+          "sha256": "b8b407e3e99c21c3514d4bda4e92b06b0eedaccaeb94e928bcc25f5ab5750fa9",
+          "crc32": "efd30662",
+          "zip_timestamp": "2026-07-02T09:15:38",
+          "column_count": 8,
+          "record_count": 7935
+        },
+        {
+          "name": "pharm.txt",
+          "byte_size": 98942,
+          "sha256": "b5231ee07490ffcb048342a3c11b685671485dc1b165438cda12d876d17ddeeb",
+          "crc32": "03921c56",
+          "zip_timestamp": "2026-07-02T09:15:42",
+          "column_count": 2,
+          "record_count": 6579
+        },
+        {
+          "name": "route.txt",
+          "byte_size": 717972,
+          "sha256": "9b2e649ec5db37195a4fdb5731add4eecaccc89b3cb849eac1f05e3602472b45",
+          "crc32": "dbfd0d36",
+          "zip_timestamp": "2026-07-02T09:15:48",
+          "column_count": 4,
+          "record_count": 16147
+        },
+        {
+          "name": "schedule.txt",
+          "byte_size": 776243,
+          "sha256": "34a0423a6c84b3a52b00ba6b30a29330b563a33f21422b130bde13935531b555",
+          "crc32": "089bb9e1",
+          "zip_timestamp": "2026-07-02T09:15:54",
+          "column_count": 3,
+          "record_count": 14100
+        },
+        {
+          "name": "status.txt",
+          "byte_size": 2903564,
+          "sha256": "6e8e7344fb880a0f69f3b547118056ebd84da722e0bc3c6c27de1b46cdbbe70a",
+          "crc32": "bbc93d19",
+          "zip_timestamp": "2026-07-02T09:16:18",
+          "column_count": 7,
+          "record_count": 49742
+        },
+        {
+          "name": "ther.txt",
+          "byte_size": 558317,
+          "sha256": "89bfbeb3da700783c74ee7a0943743937de57e7815211db7c441157e757680c4",
+          "crc32": "d2cbedfd",
+          "zip_timestamp": "2026-07-02T09:16:24",
+          "column_count": 4,
+          "record_count": 13354
+        },
+        {
+          "name": "vet.txt",
+          "byte_size": 54888,
+          "sha256": "11bb812459e714c0a48178e385fa7703199f691a78cd0f2c25faaacfc1cfa0b0",
+          "crc32": "28135d51",
+          "zip_timestamp": "2026-07-02T09:16:24",
+          "column_count": 4,
+          "record_count": 1595
+        }
+      ],
+      "http": {
+        "content_type": "application/zip",
+        "last_modified": "2026-07-02T15:27:00Z",
+        "response_date": "2026-07-22T14:36:24Z",
+        "final_url": "https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles.zip",
+        "byte_size": 1513470,
+        "sha256": "94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"
+      }
+    },
+    {
+      "cohort": "approved",
+      "filename": "allfiles_ap.zip",
+      "source_url": "https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles_ap.zip",
+      "byte_size": 387730,
+      "sha256": "410fd4da8b01ccfa42a15a4d226830619dd91b777684f505975404ec075ac440",
+      "member_count": 12,
+      "record_count": 40396,
+      "members": [
+        {
+          "name": "biosimilar_ap.txt",
+          "byte_size": 2099,
+          "sha256": "829537b8eeed9071c73adcc520214436979c962952f417cde1be2865fe2b09fd",
+          "crc32": "5287005d",
+          "zip_timestamp": "2026-07-02T09:14:26",
+          "column_count": 4,
+          "record_count": 50
+        },
+        {
+          "name": "comp_ap.txt",
+          "byte_size": 651438,
+          "sha256": "41683a24613954be777170c2af2775b75eb22c295669f041666c767aaa4159d8",
+          "crc32": "cda0e0bb",
+          "zip_timestamp": "2026-07-02T09:13:26",
+          "column_count": 18,
+          "record_count": 3899
+        },
+        {
+          "name": "drug_ap.txt",
+          "byte_size": 496928,
+          "sha256": "e4ae5490dc495cd7ff80e754931ee8ad09907bd512c6127106d2d49cf972df7f",
+          "crc32": "292486f3",
+          "zip_timestamp": "2026-07-02T09:41:38",
+          "column_count": 14,
+          "record_count": 3899
+        },
+        {
+          "name": "form_ap.txt",
+          "byte_size": 163458,
+          "sha256": "55c2cf120026ea2cd4cca31306fe5c47598ed63500c8bf7cc71acb678e391492",
+          "crc32": "96bcdc16",
+          "zip_timestamp": "2026-07-02T09:13:32",
+          "column_count": 4,
+          "record_count": 4029
+        },
+        {
+          "name": "ingred_ap.txt",
+          "byte_size": 689069,
+          "sha256": "6270a8bc2db3c5844b9554ba495fa217298393046716fe08f1581a37e6076cca",
+          "crc32": "56cba4cb",
+          "zip_timestamp": "2026-07-02T09:14:00",
+          "column_count": 15,
+          "record_count": 5870
+        },
+        {
+          "name": "package_ap.txt",
+          "byte_size": 48120,
+          "sha256": "59e58ad0209bb16d2ae1c1722cee9651493ebef7461a31897d99ffe55ae1cb90",
+          "crc32": "efc7381b",
+          "zip_timestamp": "2026-07-02T09:14:02",
+          "column_count": 8,
+          "record_count": 1269
+        },
+        {
+          "name": "pharm_ap.txt",
+          "byte_size": 24189,
+          "sha256": "6d6ffe8f2d1854c754e8530b98013cdba99444d3632b1e5ef122e098b9fabead",
+          "crc32": "c54fc0cc",
+          "zip_timestamp": "2026-07-02T09:14:04",
+          "column_count": 2,
+          "record_count": 1569
+        },
+        {
+          "name": "route_ap.txt",
+          "byte_size": 262131,
+          "sha256": "886693f106693b3e45b6282c72a393a109eabaf662f764ea674c00aa2b75d39b",
+          "crc32": "67a9e0d3",
+          "zip_timestamp": "2026-07-02T09:14:10",
+          "column_count": 4,
+          "record_count": 5147
+        },
+        {
+          "name": "schedule_ap.txt",
+          "byte_size": 229387,
+          "sha256": "7579f23aff97dd8d56fb401da118f79287338013a8384f9b0d9969a1650d8d54",
+          "crc32": "c9d3bb64",
+          "zip_timestamp": "2026-07-02T09:14:14",
+          "column_count": 3,
+          "record_count": 4049
+        },
+        {
+          "name": "status_ap.txt",
+          "byte_size": 359434,
+          "sha256": "044c5ed0daf5a2a58b7f8cd058ea3ee1d06950782770475ea6af717c82ac1b07",
+          "crc32": "346f323c",
+          "zip_timestamp": "2026-07-02T09:14:22",
+          "column_count": 7,
+          "record_count": 6287
+        },
+        {
+          "name": "ther_ap.txt",
+          "byte_size": 170262,
+          "sha256": "05ef489c27c8b65d566f6c0332646217c00464934e2a297dbd3e2134ed0f6e3a",
+          "crc32": "9990d9fb",
+          "zip_timestamp": "2026-07-02T09:14:24",
+          "column_count": 4,
+          "record_count": 3954
+        },
+        {
+          "name": "vet_ap.txt",
+          "byte_size": 12121,
+          "sha256": "6e61a54cfaf3b589fa2574f3da3f3e5257e8ad5eefc3438fe488d054040badde",
+          "crc32": "566c20bd",
+          "zip_timestamp": "2026-07-02T09:14:24",
+          "column_count": 4,
+          "record_count": 374
+        }
+      ],
+      "http": {
+        "content_type": "application/zip",
+        "last_modified": "2026-07-02T15:27:00Z",
+        "response_date": "2026-07-22T14:36:27Z",
+        "final_url": "https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles_ap.zip",
+        "byte_size": 387730,
+        "sha256": "410fd4da8b01ccfa42a15a4d226830619dd91b777684f505975404ec075ac440"
+      }
+    }
+  ]
+}

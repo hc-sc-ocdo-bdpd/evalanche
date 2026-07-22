@@ -54,6 +54,24 @@ endings. This prevents Windows Git settings from changing dataset bytes after
 their byte sizes and SHA-256 hashes have been recorded. Do not convert a
 frozen dataset file's line endings in place.
 
+ZIP, PDF, and Parquet files under `data/` are explicitly marked as binary so
+Git never applies line-ending conversion to their bytes.
+
+## Materialized Health Canada source example
+
+The first non-synthetic source release freezes the Health Canada DPD marketed
+and approved archives published on 2026-07-02:
+
+```text
+configs/datasets/hc_dpd_2026-07-02_manifest.yaml
+```
+
+Its source-specific creation and validation process is documented in
+[`docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md`](hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md).
+The release is a `source_snapshot`, so it correctly omits sampling and splits.
+The manifest records the untouched archive hashes, while a hashed validation
+report records every ZIP member's structure and row count.
+
 ## Verify a release
 
 Run the verifier from the repository root:
