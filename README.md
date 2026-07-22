@@ -34,7 +34,7 @@ Evalanche currently supports:
 8. Saving reproducibility metadata.
 9. Producing a plain-language model recommendation report.
 10. Reporting pass-rate uncertainty and paired model comparisons.
-11. Reporting latency, token usage, response cost, and failure rates.
+11. Reporting latency, token usage, reproducible cost estimates, and failure rates.
 12. Applying client requirements and weighted model-selection policies.
 13. Validating versioned dataset manifests and file integrity.
 
@@ -45,6 +45,9 @@ The statistical methods and their limitations are documented in
 
 Operational metric definitions and limitations are documented in
 [`docs/operational_metrics.md`](docs/operational_metrics.md).
+
+Explicit endpoint pricing and cost-source precedence are documented in
+[`docs/endpoint_pricing.md`](docs/endpoint_pricing.md).
 
 Constraint-aware recommendation behavior is documented in
 [`docs/model_selection.md`](docs/model_selection.md).
@@ -138,6 +141,7 @@ evalanche/
 
   configs/
     candidate_models.yaml
+    endpoint_pricing.example.yaml
     datasets/
       generic_example_manifest.yaml
       hc_datasets.yaml
@@ -166,6 +170,7 @@ evalanche/
     llm.py
     metadata.py
     operational.py
+    pricing.py
     recommendation.py
     reporting.py
     routing.py
@@ -185,6 +190,10 @@ evalanche/
 
   docs/
     dataset_manifests.md
+    endpoint_pricing.md
+    model_selection.md
+    operational_metrics.md
+    statistical_methods.md
 ```
 
 The `data/generated/` and `results/` directories are ignored by Git by default.
@@ -286,6 +295,28 @@ models:
     max_retries: 3
 ```
 
+## Explicit endpoint pricing
+
+Custom Azure deployment names often do not map to LiteLLM pricing metadata.
+Evalanche therefore supports a versioned endpoint-pricing catalog with an
+explicit `pricing_id` on each priced candidate or judge. The configured rate is
+matched to the exact LiteLLM model route and snapshotted into run metadata.
+
+Start from:
+
+```text
+configs/endpoint_pricing.example.yaml
+```
+
+Then set `endpoint_pricing_path` in the generation or evaluation config and
+reference the matching `pricing_id` in `configs/candidate_models.yaml` or the
+`judge` block. Configured token pricing is primary, complete LiteLLM cost
+metadata is retained separately and used as fallback, and missing evidence
+remains unknown.
+
+See [`docs/endpoint_pricing.md`](docs/endpoint_pricing.md) before enabling cost
+weights or limits.
+
 ## Input dataset format
 
 Generation input files must contain:
@@ -365,7 +396,8 @@ The generation command:
 2. Loads the candidate model configuration.
 3. Calls every candidate model for every test case.
 4. Saves the model outputs.
-5. Records end-to-end latency, token usage, retry attempts, and reported cost.
+5. Records end-to-end latency, token usage, retry attempts, configured cost,
+   provider-reported cost, and the selected cost source.
 6. Records generation failures without necessarily stopping the run.
 7. Writes generation metadata.
 
@@ -453,7 +485,8 @@ overall_reason
 criterion scores
 criterion reasons
 judge token usage
-judge latency, retry attempts, and reported cost
+judge latency, retry attempts, configured cost, provider-reported cost, and
+selected cost source
 raw judge result
 ```
 
@@ -469,8 +502,11 @@ run:
 
 judge:
   model: ${JUDGE_MODEL:-azure/gpt-5.4-mini}
+  pricing_id: gpt_5_4_mini_global
   temperature: 0
   max_retries: 3
+
+endpoint_pricing_path: configs/endpoint_pricing.yaml
 
 task:
   name: generated_generic_instruction_following
@@ -568,7 +604,8 @@ model counts
 token usage
 average and p95 latency
 generation and judge failure rates
-cost values and metadata coverage
+configured and provider-reported cost values, selected source, and coverage
+pricing catalog version, file hash, rates, effective dates, and sources
 selection policy, eligibility reasons, and decision scores
 summary results
 known limitations
@@ -616,8 +653,9 @@ selection:
 ```
 
 Set a positive cost weight only when the config also provides
-`maximum_average_cost_usd`. Cost-based selection remains unavailable when
-provider cost metadata is incomplete.
+`maximum_average_cost_usd`. Cost-based selection remains unavailable when the
+selected cost source is incomplete. Missing rates, usage, or provider metadata
+are not treated as free requests.
 
 ## Current command summary
 
@@ -722,7 +760,10 @@ Current limitations include:
 - Deterministic exact matching can reject semantically equivalent answers.
 - JSON comparison currently uses strict key and value equality.
 - Open-ended judge results depend on the selected judge model and rubric.
-- Cost remains unknown when LiteLLM does not supply response-cost metadata.
+- Cost remains unknown when neither an explicit token estimate nor complete
+  LiteLLM response-cost metadata is available.
+- Configured token costs are estimates, not reconciled provider invoices, and
+  do not yet include non-token charges.
 - Operational measurements from one sequential run are not production
   service-level guarantees.
 - Multiple-run variability is not yet measured.

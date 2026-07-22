@@ -105,6 +105,12 @@ A positive cost weight requires `maximum_average_cost_usd`, which supplies both
 the hard limit and the scale for the cost component. A positive latency weight
 similarly requires `maximum_p95_latency_seconds`.
 
+Candidate cost uses the selected per-request cost recorded during generation.
+An explicit endpoint-pricing estimate is preferred when complete, with complete
+LiteLLM response-cost metadata used as fallback. The selection CSV and report
+retain the cost source. See [`endpoint_pricing.md`](endpoint_pricing.md) for the
+catalog and precedence rules.
+
 The model with the highest score is selected only when its lead is at least
 `minimum_score_margin`. This is a practical policy margin, not a statistical
 confidence test.

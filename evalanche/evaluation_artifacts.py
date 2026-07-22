@@ -12,6 +12,7 @@ from evalanche import __version__
 from evalanche.config import EvaluationConfig
 from evalanche.metadata import sha256_file
 from evalanche.operational import summarize_operations
+from evalanche.pricing import build_pricing_snapshot
 from evalanche.selection import (
     build_recommendation_decision,
 )
@@ -83,6 +84,56 @@ def _format_declared_bool(value: Any) -> str:
 def _numeric_mean_or_none(series: pd.Series) -> float | None:
     value = pd.to_numeric(series, errors="coerce").mean()
     return None if pd.isna(value) else float(value)
+
+
+def _observed_pricing_entries(
+    results: pd.DataFrame,
+    prefix: str,
+) -> list[dict[str, Any]]:
+    source_columns = {
+        "pricing_id": f"{prefix}_pricing_id",
+        "model": f"{prefix}_pricing_model",
+        "currency": f"{prefix}_pricing_currency",
+        "input_per_million_tokens": (
+            f"{prefix}_pricing_input_per_million_tokens"
+        ),
+        "cached_input_per_million_tokens": (
+            f"{prefix}_pricing_cached_input_per_million_tokens"
+        ),
+        "output_per_million_tokens": (
+            f"{prefix}_pricing_output_per_million_tokens"
+        ),
+        "effective_date": f"{prefix}_pricing_effective_date",
+        "source": f"{prefix}_pricing_source",
+        "catalog_version": f"{prefix}_pricing_catalog_version",
+        "catalog_sha256": f"{prefix}_pricing_catalog_sha256",
+    }
+    if source_columns["pricing_id"] not in results.columns:
+        return []
+
+    available = {
+        key: column
+        for key, column in source_columns.items()
+        if column in results.columns
+    }
+    observed = results[list(available.values())].copy()
+    observed = observed[
+        observed[source_columns["pricing_id"]].notna()
+    ].drop_duplicates()
+
+    records: list[dict[str, Any]] = []
+    for raw in observed.to_dict(orient="records"):
+        record = {
+            key: raw[column]
+            for key, column in available.items()
+        }
+        records.append(
+            {
+                key: None if pd.isna(value) else value
+                for key, value in record.items()
+            }
+        )
+    return records
 
 
 def _escape_markdown(
@@ -232,7 +283,8 @@ def _stage_operations_markdown(
         "Input tokens",
         "Output tokens",
         "Total tokens",
-        "Reported cost",
+        "Cost",
+        "Cost source",
     ]
     rows = [
         "| " + " | ".join(columns) + " |",
@@ -270,6 +322,9 @@ def _stage_operations_markdown(
                         row[f"{prefix}_cost_usd"],
                         row[f"{prefix}_cost_coverage"],
                         requests,
+                    ),
+                    _escape_markdown(
+                        row[f"{prefix}_cost_sources"] or "Unknown"
                     ),
                 ]
             )
@@ -348,6 +403,7 @@ def _selection_markdown(selection: pd.DataFrame) -> str:
         "Decision score",
         "Pass rate",
         "Average cost/request",
+        "Cost source",
         "p95 latency",
         "Generation failure rate",
         "Available",
@@ -379,6 +435,9 @@ def _selection_markdown(selection: pd.DataFrame) -> str:
                     _format_decimal(row["decision_score"]),
                     _format_percent(row["pass_rate"]),
                     _format_usd(row["generation_average_cost_usd"]),
+                    _escape_markdown(
+                        row["generation_cost_sources"] or "Unknown"
+                    ),
                     _format_seconds(row["generation_p95_seconds"]),
                     _format_percent(row["generation_failure_rate"]),
                     _format_declared_bool(row["available"]),
@@ -755,9 +814,10 @@ performance.
 
 {_stage_operations_markdown(summary, "judge")}
 
-Token totals include every response observed during retries. Costs are shown
-only when LiteLLM supplied response-cost metadata for every request in the
-reported total; otherwise the report shows the available coverage.
+Token totals include every response observed during retries. Configured
+endpoint rates are the primary cost source when the required token usage is
+complete. Complete LiteLLM response-cost metadata is retained separately and
+used as a fallback. Otherwise the cost remains unknown.
 
 ## Failed Cases
 
@@ -792,6 +852,8 @@ reported total; otherwise the report shows the available coverage.
   retries, and sequential execution. They are not production service-level
   guarantees.
 - Missing token or cost metadata is reported as unknown, not zero.
+- Configured token costs are estimates from declared rates and recorded usage,
+  not reconciled provider invoices.
 - Selection weights, thresholds, and capabilities express configured policy
   choices. They are not empirical facts and should be reviewed by the client.
 - Weighted operational components use point estimates from this run and do not
@@ -864,9 +926,25 @@ def build_evaluation_metadata(
         config.selection,
     )
     operations = summarize_operations(results)
+    pricing_snapshot = build_pricing_snapshot(
+        path=config.endpoint_pricing_path,
+        references=[
+            {
+                "role": "judge",
+                "model": config.judge.model,
+                "pricing_id": config.judge.pricing_id,
+            }
+        ],
+    )
+    pricing_snapshot["observed_generation_endpoints"] = (
+        _observed_pricing_entries(results, "generation")
+    )
+    pricing_snapshot["observed_judge_endpoints"] = (
+        _observed_pricing_entries(results, "judge")
+    )
 
     return {
-        "schema_version": "0.6",
+        "schema_version": "0.7",
         "created_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -892,6 +970,11 @@ def build_evaluation_metadata(
             ),
             "model_selection_path": str(selection_path),
             "recommendation_path": str(report_path),
+            "endpoint_pricing_path": (
+                str(config.endpoint_pricing_path)
+                if config.endpoint_pricing_path is not None
+                else None
+            ),
         },
         "hashes": {
             "config_sha256": (
@@ -917,6 +1000,9 @@ def build_evaluation_metadata(
             "recommendation_sha256": sha256_file(
                 report_path
             ),
+            "endpoint_pricing_sha256": pricing_snapshot[
+                "catalog_sha256"
+            ],
         },
         "task": {
             "name": config.task.name,
@@ -945,6 +1031,7 @@ def build_evaluation_metadata(
             "continue_on_error": (
                 config.judge.continue_on_error
             ),
+            "pricing_id": config.judge.pricing_id,
             "score_min": config.scoring.score_min,
             "score_max": config.scoring.score_max,
             "pass_threshold": (
@@ -1013,6 +1100,7 @@ def build_evaluation_metadata(
             ],
         },
         "operations": operations,
+        "endpoint_pricing": pricing_snapshot,
         "selection_policy": config.selection.model_dump(
             mode="json"
         ),
@@ -1075,6 +1163,10 @@ def build_evaluation_metadata(
             ),
             (
                 "Missing token and cost metadata is unknown, not zero."
+            ),
+            (
+                "Configured token costs are estimates from declared rates "
+                "and recorded usage, not reconciled provider invoices."
             ),
             (
                 "Selection weights, thresholds, and capabilities are "

@@ -36,6 +36,7 @@ def make_summary(
         "generation_latency_coverage": 1.0,
         "generation_cost_usd": 0.01,
         "generation_cost_coverage": 1.0,
+        "generation_cost_sources": "configured_endpoint_pricing",
     }
     return pd.DataFrame(
         [{**defaults, **record} for record in records]
@@ -79,6 +80,9 @@ def test_selection_applies_constraints_before_weighted_scoring() -> None:
     )
     assert selection.loc["model_a", "decision_score"] == pytest.approx(
         0.85
+    )
+    assert selection.loc["model_a", "generation_cost_sources"] == (
+        "configured_endpoint_pricing"
     )
     assert selection.loc["model_b", "selection_status"] == "ineligible"
     assert "average request cost" in selection.loc[

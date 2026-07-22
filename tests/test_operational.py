@@ -100,3 +100,47 @@ def test_operations_ignore_not_requested_judge_rows() -> None:
 
     assert summary["generation"]["requests"] == 2
     assert summary["judge"]["requests"] == 1
+
+
+def test_stage_summary_keeps_configured_and_provider_cost_evidence_separate(
+) -> None:
+    rows = pd.DataFrame(
+        [
+            {
+                "generation_status": "success",
+                "generation_prompt_tokens": 100,
+                "generation_cached_prompt_tokens": 20,
+                "generation_completion_tokens": 10,
+                "generation_total_tokens": 110,
+                "generation_cost_usd": 0.001,
+                "generation_cost_source": (
+                    "configured_endpoint_pricing"
+                ),
+                "generation_configured_cost_usd": 0.001,
+                "generation_provider_reported_cost_usd": 0.0012,
+            },
+            {
+                "generation_status": "success",
+                "generation_prompt_tokens": 200,
+                "generation_cached_prompt_tokens": 0,
+                "generation_completion_tokens": 20,
+                "generation_total_tokens": 220,
+                "generation_cost_usd": 0.002,
+                "generation_cost_source": (
+                    "configured_endpoint_pricing"
+                ),
+                "generation_configured_cost_usd": 0.002,
+                "generation_provider_reported_cost_usd": None,
+            },
+        ]
+    )
+
+    summary = summarize_stage(rows, "generation")
+
+    assert summary["cached_prompt_tokens"] == 20
+    assert summary["cost_usd"] == pytest.approx(0.003)
+    assert summary["configured_cost_usd"] == pytest.approx(0.003)
+    assert summary["configured_cost_coverage"] == 1.0
+    assert summary["provider_reported_cost_usd"] is None
+    assert summary["provider_reported_cost_coverage"] == 0.5
+    assert summary["cost_sources"] == "configured_endpoint_pricing"

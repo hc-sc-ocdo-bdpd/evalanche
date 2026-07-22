@@ -24,14 +24,24 @@ usable metadata.
 
 ## Response cost
 
-Cost values are in US dollars. Evalanche records cost only when LiteLLM includes
-response-cost metadata. It does not invent a price from a deployment name or
-treat missing cost as zero.
+Cost values are in US dollars. Evalanche can calculate an estimate from an
+explicit, versioned endpoint-pricing entry and recorded input/output tokens.
+It does not infer a rate from a deployment name. Configured estimates are
+preferred over LiteLLM response-cost metadata when both are complete.
+
+The configured estimate, LiteLLM-reported value, selected cost, and selected
+source remain separate in the evidence. LiteLLM cost is a fallback when a
+configured estimate is unavailable. Missing evidence is never treated as zero.
 
 Summary cost is reported only when every request in that summary has a known
 cost. `cost_coverage` shows the proportion of requests with cost metadata. For
 example, a coverage value of `0.75` means three quarters of request costs were
 available, and the total remains unknown.
+
+`configured_cost_coverage` and `provider_reported_cost_coverage` describe each
+underlying source independently. See
+[`endpoint_pricing.md`](endpoint_pricing.md) for catalog fields, precedence,
+retry accounting, and limitations.
 
 ## Reliability
 

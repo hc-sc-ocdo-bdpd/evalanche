@@ -136,6 +136,24 @@ def test_candidate_model_name_cannot_be_blank() -> None:
         )
 
 
+def test_candidate_pricing_id_is_trimmed() -> None:
+    candidate = CandidateModelConfig(
+        name="model_a",
+        model="azure/deployment-a",
+        pricing_id=" deployment_a_global ",
+    )
+
+    assert candidate.pricing_id == "deployment_a_global"
+
+
+def test_judge_pricing_id_cannot_be_blank() -> None:
+    with pytest.raises(ValidationError, match="pricing_id cannot be blank"):
+        JudgeConfig(
+            model="azure/judge",
+            pricing_id="   ",
+        )
+
+
 def test_candidate_model_names_must_be_unique() -> None:
     with pytest.raises(ValidationError, match="names must be unique"):
         CandidateModelsConfig(

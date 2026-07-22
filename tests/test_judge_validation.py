@@ -3,6 +3,7 @@ from typing import Any
 
 import pytest
 
+import evalanche.judges.criteria as criteria_module
 from evalanche.config import (
     CriterionConfig,
     EvalConfig,
@@ -216,3 +217,40 @@ def test_judge_prompt_names_every_required_criterion() -> None:
     assert '"correctness"' in system_prompt
     assert '"completeness"' in system_prompt
     assert "Include every configured criterion exactly once" in system_prompt
+
+
+def test_criteria_judge_resolves_explicit_endpoint_price(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    pricing_path = tmp_path / "pricing.yaml"
+    pricing_path.write_text(
+        "schema_version: '1.0'\n"
+        "catalog_version: '2026-07-01'\n"
+        "endpoints:\n"
+        "  - pricing_id: judge_global\n"
+        "    model: azure/test-judge\n"
+        "    currency: USD\n"
+        "    input_per_million_tokens: 1.0\n"
+        "    output_per_million_tokens: 4.0\n"
+        "    effective_date: 2026-07-01\n"
+        "    source: test rate card\n",
+        encoding="utf-8",
+    )
+    seen: dict[str, Any] = {}
+
+    class StubClient:
+        def __init__(self, **kwargs: Any) -> None:
+            seen.update(kwargs)
+
+    monkeypatch.setattr(criteria_module, "LLMClient", StubClient)
+    config = make_config()
+    config.endpoint_pricing_path = pricing_path
+    config.judge.pricing_id = "judge_global"
+
+    judge = CriteriaJudge(config)
+
+    assert seen["endpoint_price"].pricing_id == "judge_global"
+    assert seen["endpoint_price"].model == "azure/test-judge"
+    assert judge.pricing_catalog_version == "2026-07-01"
+    assert len(judge.pricing_catalog_sha256) == 64

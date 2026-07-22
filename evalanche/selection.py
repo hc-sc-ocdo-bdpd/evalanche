@@ -21,6 +21,7 @@ SELECTION_COLUMNS = [
     "pass_rate",
     "pass_rate_ci_low",
     "generation_average_cost_usd",
+    "generation_cost_sources",
     "generation_p95_seconds",
     "generation_failure_rate",
     "available",
@@ -286,6 +287,11 @@ def build_model_selection(
                 "pass_rate": pass_rate,
                 "pass_rate_ci_low": pass_rate_ci_low,
                 "generation_average_cost_usd": average_cost,
+                "generation_cost_sources": (
+                    str(row.get("generation_cost_sources", ""))
+                    if pd.notna(row.get("generation_cost_sources", ""))
+                    else ""
+                ),
                 "generation_p95_seconds": p95_latency,
                 "generation_failure_rate": generation_failure_rate,
                 "available": (

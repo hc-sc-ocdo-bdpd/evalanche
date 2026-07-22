@@ -23,6 +23,13 @@ from evalanche.operational import (
     COST_POLICY,
     summarize_stage,
 )
+from evalanche.pricing import (
+    EndpointPriceConfig,
+    EndpointPricingCatalogConfig,
+    build_pricing_snapshot,
+    load_optional_endpoint_pricing_catalog_with_hash,
+    resolve_endpoint_price,
+)
 from evalanche.routing import validate_evaluation_types
 
 
@@ -39,7 +46,10 @@ class SafeFormatDict(dict):
         return "{" + key + "}"
 
 
-def sha256_file(path: str | Path) -> str | None:
+def sha256_file(path: str | Path | None) -> str | None:
+    if path is None:
+        return None
+
     file_path = Path(path)
 
     if not file_path.exists() or not file_path.is_file():
@@ -121,11 +131,13 @@ def generate_one(
     config: GenerationConfig,
     candidate: CandidateModelConfig,
     row: dict[str, Any],
+    endpoint_price: EndpointPriceConfig | None = None,
 ) -> dict[str, Any]:
     client = LLMClient(
         model=candidate.model,
         temperature=candidate.temperature,
         max_retries=candidate.max_retries,
+        endpoint_price=endpoint_price,
     )
 
     max_completion_tokens = (
@@ -169,6 +181,9 @@ def generate_one(
             "generation_prompt_tokens": usage.get(
                 "prompt_tokens"
             ),
+            "generation_cached_prompt_tokens": usage.get(
+                "cached_prompt_tokens"
+            ),
             "generation_completion_tokens": usage.get(
                 "completion_tokens"
             ),
@@ -178,6 +193,36 @@ def generate_one(
             "generation_cost_usd": operational.get("cost_usd"),
             "generation_cost_source": operational.get(
                 "cost_source"
+            ),
+            "generation_configured_cost_usd": operational.get(
+                "configured_cost_usd"
+            ),
+            "generation_provider_reported_cost_usd": operational.get(
+                "provider_reported_cost_usd"
+            ),
+            "generation_pricing_id": operational.get(
+                "pricing_id"
+            ),
+            "generation_pricing_model": operational.get(
+                "pricing_model"
+            ),
+            "generation_pricing_currency": operational.get(
+                "pricing_currency"
+            ),
+            "generation_pricing_input_per_million_tokens": operational.get(
+                "pricing_input_per_million_tokens"
+            ),
+            "generation_pricing_cached_input_per_million_tokens": operational.get(
+                "pricing_cached_input_per_million_tokens"
+            ),
+            "generation_pricing_output_per_million_tokens": operational.get(
+                "pricing_output_per_million_tokens"
+            ),
+            "generation_pricing_effective_date": operational.get(
+                "pricing_effective_date"
+            ),
+            "generation_pricing_source": operational.get(
+                "pricing_source"
             ),
         }
     )
@@ -195,6 +240,19 @@ def generate_outputs(
     candidate_config = load_candidate_models(
         config.candidate_models_path
     )
+    pricing_catalog, pricing_catalog_sha256 = (
+        load_optional_endpoint_pricing_catalog_with_hash(
+            config.endpoint_pricing_path
+        )
+    )
+    endpoint_prices = {
+        candidate.name: resolve_endpoint_price(
+            catalog=pricing_catalog,
+            pricing_id=candidate.pricing_id,
+            model=candidate.model,
+        )
+        for candidate in candidate_config.models
+    }
 
     records: list[dict[str, Any]] = []
 
@@ -213,6 +271,7 @@ def generate_outputs(
                 config=config,
                 candidate=candidate,
                 row=row,
+                endpoint_price=endpoint_prices[candidate.name],
             )
 
             records.append(record)
@@ -249,6 +308,9 @@ def generate_outputs(
                     "generation_prompt_tokens": operational.get(
                         "prompt_tokens"
                     ),
+                    "generation_cached_prompt_tokens": operational.get(
+                        "cached_prompt_tokens"
+                    ),
                     "generation_completion_tokens": operational.get(
                         "completion_tokens"
                     ),
@@ -261,12 +323,53 @@ def generate_outputs(
                     "generation_cost_source": operational.get(
                         "cost_source"
                     ),
+                    "generation_configured_cost_usd": operational.get(
+                        "configured_cost_usd"
+                    ),
+                    "generation_provider_reported_cost_usd": operational.get(
+                        "provider_reported_cost_usd"
+                    ),
+                    "generation_pricing_id": operational.get(
+                        "pricing_id"
+                    ),
+                    "generation_pricing_model": operational.get(
+                        "pricing_model"
+                    ),
+                    "generation_pricing_currency": operational.get(
+                        "pricing_currency"
+                    ),
+                    "generation_pricing_input_per_million_tokens": operational.get(
+                        "pricing_input_per_million_tokens"
+                    ),
+                    (
+                        "generation_pricing_cached_"
+                        "input_per_million_tokens"
+                    ): operational.get(
+                        "pricing_cached_input_per_million_tokens"
+                    ),
+                    "generation_pricing_output_per_million_tokens": operational.get(
+                        "pricing_output_per_million_tokens"
+                    ),
+                    "generation_pricing_effective_date": operational.get(
+                        "pricing_effective_date"
+                    ),
+                    "generation_pricing_source": operational.get(
+                        "pricing_source"
+                    ),
                 }
             )
 
             records.append(error_record)
 
     outputs = pd.DataFrame(records)
+    outputs["generation_pricing_catalog_version"] = (
+        pricing_catalog.catalog_version
+        if pricing_catalog is not None
+        else None
+    )
+    outputs["generation_pricing_catalog_sha256"] = (
+        pricing_catalog_sha256
+    )
 
     output_path = Path(config.run.output_path)
     output_path.parent.mkdir(
@@ -286,6 +389,8 @@ def generate_outputs(
         cases=cases,
         outputs=outputs,
         output_path=output_path,
+        pricing_catalog=pricing_catalog,
+        pricing_catalog_sha256=pricing_catalog_sha256,
     )
 
     return outputs, output_path, metadata_path
@@ -299,6 +404,8 @@ def save_generation_metadata(
     cases: pd.DataFrame,
     outputs: pd.DataFrame,
     output_path: str | Path,
+    pricing_catalog: EndpointPricingCatalogConfig | None,
+    pricing_catalog_sha256: str | None,
 ) -> Path:
     output_path = Path(output_path)
 
@@ -328,9 +435,22 @@ def save_generation_metadata(
             dropna=False,
         )
     }
+    pricing_snapshot = build_pricing_snapshot(
+        path=config.endpoint_pricing_path,
+        catalog=pricing_catalog,
+        catalog_sha256=pricing_catalog_sha256,
+        references=[
+            {
+                "name": candidate.name,
+                "model": candidate.model,
+                "pricing_id": candidate.pricing_id,
+            }
+            for candidate in candidates
+        ],
+    )
 
     metadata = {
-        "schema_version": "0.3",
+        "schema_version": "0.4",
         "created_at_utc": (
             datetime.now(timezone.utc).isoformat()
         ),
@@ -343,6 +463,11 @@ def save_generation_metadata(
             "candidate_models_path": str(
                 config.candidate_models_path
             ),
+            "endpoint_pricing_path": (
+                str(config.endpoint_pricing_path)
+                if config.endpoint_pricing_path is not None
+                else None
+            ),
         },
         "hashes": {
             "config_sha256": sha256_file(config_path),
@@ -352,6 +477,7 @@ def save_generation_metadata(
             "candidate_models_sha256": sha256_file(
                 config.candidate_models_path
             ),
+            "endpoint_pricing_sha256": pricing_catalog_sha256,
             "output_sha256": sha256_file(output_path),
         },
         "prompt": {
@@ -375,6 +501,7 @@ def save_generation_metadata(
                 "max_completion_tokens": (
                     candidate.max_completion_tokens
                 ),
+                "pricing_id": candidate.pricing_id,
             }
             for candidate in candidates
         ],
@@ -425,7 +552,20 @@ def save_generation_metadata(
             "cost_coverage": operation_summary[
                 "cost_coverage"
             ],
+            "configured_cost_usd": operation_summary[
+                "configured_cost_usd"
+            ],
+            "configured_cost_coverage": operation_summary[
+                "configured_cost_coverage"
+            ],
+            "provider_reported_cost_usd": operation_summary[
+                "provider_reported_cost_usd"
+            ],
+            "provider_reported_cost_coverage": operation_summary[
+                "provider_reported_cost_coverage"
+            ],
         },
+        "endpoint_pricing": pricing_snapshot,
         "operations": {
             "cost_currency": COST_CURRENCY,
             "cost_policy": COST_POLICY,
@@ -445,6 +585,10 @@ def save_generation_metadata(
             (
                 "Using the same model as both candidate "
                 "and judge may introduce evaluation bias."
+            ),
+            (
+                "Configured token costs are estimates from recorded usage "
+                "and declared rates, not provider invoices."
             ),
         ],
     }

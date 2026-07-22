@@ -1,0 +1,15 @@
+# Illustrative values only. Copy this file, then replace every endpoint,
+# rate, date, and source with the approved terms for the deployed endpoint.
+schema_version: "1.0"
+catalog_version: example-1
+
+endpoints:
+  - pricing_id: example_azure_global
+    model: azure/example-deployment
+    currency: USD
+    input_per_million_tokens: 1.00
+    cached_input_per_million_tokens: 0.25
+    output_per_million_tokens: 4.00
+    effective_date: 2026-01-01
+    source: illustrative example, not an approved rate source
+    notes: Do not use these example rates for a model-selection decision.

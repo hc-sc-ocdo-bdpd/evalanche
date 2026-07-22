@@ -4,9 +4,7 @@ from typing import Any
 
 import pandas as pd
 
-
-COST_CURRENCY = "USD"
-COST_POLICY = "litellm_response_metadata_only"
+from evalanche.pricing import COST_CURRENCY, COST_POLICY
 
 
 def _numeric_values(
@@ -56,6 +54,7 @@ def summarize_stage(
             "api_attempts": None,
             "failed_api_attempts": None,
             "prompt_tokens": None,
+            "cached_prompt_tokens": None,
             "completion_tokens": None,
             "total_tokens": None,
             "token_observations": 0,
@@ -65,6 +64,14 @@ def summarize_stage(
             "cost_coverage": None,
             "cost_complete": None,
             "cost_sources": "",
+            "configured_cost_usd": None,
+            "configured_cost_observations": 0,
+            "configured_cost_coverage": None,
+            "configured_cost_complete": None,
+            "provider_reported_cost_usd": None,
+            "provider_reported_cost_observations": 0,
+            "provider_reported_cost_coverage": None,
+            "provider_reported_cost_complete": None,
         }
 
     statuses = (
@@ -102,6 +109,11 @@ def summarize_stage(
         f"{prefix}_prompt_tokens",
         request_mask,
     )
+    cached_prompt_tokens = _numeric_values(
+        frame,
+        f"{prefix}_cached_prompt_tokens",
+        request_mask,
+    )
     completion_tokens = _numeric_values(
         frame,
         f"{prefix}_completion_tokens",
@@ -122,6 +134,30 @@ def summarize_stage(
     cost_observations = int(costs.notna().sum())
     cost_complete = (
         cost_observations == request_count
+        if request_count > 0
+        else None
+    )
+    configured_costs = _numeric_values(
+        frame,
+        f"{prefix}_configured_cost_usd",
+        request_mask,
+    )
+    configured_cost_observations = int(
+        configured_costs.notna().sum()
+    )
+    configured_cost_complete = (
+        configured_cost_observations == request_count
+        if request_count > 0
+        else None
+    )
+    provider_costs = _numeric_values(
+        frame,
+        f"{prefix}_provider_reported_cost_usd",
+        request_mask,
+    )
+    provider_cost_observations = int(provider_costs.notna().sum())
+    provider_cost_complete = (
+        provider_cost_observations == request_count
         if request_count > 0
         else None
     )
@@ -178,6 +214,11 @@ def summarize_stage(
             request_count,
             integer=True,
         ),
+        "cached_prompt_tokens": _complete_sum(
+            cached_prompt_tokens,
+            request_count,
+            integer=True,
+        ),
         "completion_tokens": _complete_sum(
             completion_tokens,
             request_count,
@@ -207,6 +248,34 @@ def summarize_stage(
         ),
         "cost_complete": cost_complete,
         "cost_sources": ", ".join(sources),
+        "configured_cost_usd": _complete_sum(
+            configured_costs,
+            request_count,
+            integer=False,
+        ),
+        "configured_cost_observations": (
+            configured_cost_observations
+        ),
+        "configured_cost_coverage": (
+            configured_cost_observations / request_count
+            if request_count > 0
+            else None
+        ),
+        "configured_cost_complete": configured_cost_complete,
+        "provider_reported_cost_usd": _complete_sum(
+            provider_costs,
+            request_count,
+            integer=False,
+        ),
+        "provider_reported_cost_observations": (
+            provider_cost_observations
+        ),
+        "provider_reported_cost_coverage": (
+            provider_cost_observations / request_count
+            if request_count > 0
+            else None
+        ),
+        "provider_reported_cost_complete": provider_cost_complete,
     }
 
 

@@ -8,15 +8,36 @@ import pandas as pd
 from evalanche.config import EvalConfig
 from evalanche.judges.validation import validate_judge_response
 from evalanche.llm import LLMClient
+from evalanche.pricing import (
+    load_optional_endpoint_pricing_catalog_with_hash,
+    resolve_endpoint_price,
+)
 
 
 class CriteriaJudge:
     def __init__(self, config: EvalConfig) -> None:
         self.config = config
+        pricing_catalog, pricing_catalog_sha256 = (
+            load_optional_endpoint_pricing_catalog_with_hash(
+                config.endpoint_pricing_path
+            )
+        )
+        self.pricing_catalog_version = (
+            pricing_catalog.catalog_version
+            if pricing_catalog is not None
+            else None
+        )
+        self.pricing_catalog_sha256 = pricing_catalog_sha256
+        endpoint_price = resolve_endpoint_price(
+            catalog=pricing_catalog,
+            pricing_id=config.judge.pricing_id,
+            model=config.judge.model,
+        )
         self.client = LLMClient(
             model=config.judge.model,
             temperature=config.judge.temperature,
             max_retries=config.judge.max_retries,
+            endpoint_price=endpoint_price,
         )
 
     def judge_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -54,6 +75,9 @@ class CriteriaJudge:
             "overall_reason": result.get("overall_reason", ""),
             "raw_judge_result": json.dumps(result, ensure_ascii=False),
             "prompt_tokens": usage.get("prompt_tokens"),
+            "cached_prompt_tokens": usage.get(
+                "cached_prompt_tokens"
+            ),
             "completion_tokens": usage.get("completion_tokens"),
             "total_tokens": usage.get("total_tokens"),
             "latency_seconds": operational.get(
@@ -66,6 +90,32 @@ class CriteriaJudge:
             ),
             "cost_usd": operational.get("cost_usd"),
             "cost_source": operational.get("cost_source"),
+            "configured_cost_usd": operational.get(
+                "configured_cost_usd"
+            ),
+            "provider_reported_cost_usd": operational.get(
+                "provider_reported_cost_usd"
+            ),
+            "pricing_id": operational.get("pricing_id"),
+            "pricing_model": operational.get("pricing_model"),
+            "pricing_currency": operational.get(
+                "pricing_currency"
+            ),
+            "pricing_input_per_million_tokens": operational.get(
+                "pricing_input_per_million_tokens"
+            ),
+            "pricing_cached_input_per_million_tokens": operational.get(
+                "pricing_cached_input_per_million_tokens"
+            ),
+            "pricing_output_per_million_tokens": operational.get(
+                "pricing_output_per_million_tokens"
+            ),
+            "pricing_effective_date": operational.get(
+                "pricing_effective_date"
+            ),
+            "pricing_source": operational.get("pricing_source"),
+            "pricing_catalog_version": self.pricing_catalog_version,
+            "pricing_catalog_sha256": self.pricing_catalog_sha256,
         }
 
         for criterion in self.config.criteria:

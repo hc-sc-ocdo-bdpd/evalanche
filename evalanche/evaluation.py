@@ -94,6 +94,9 @@ def _judge_error_result(
         "_status": "error",
         "error": repr(error),
         "prompt_tokens": operational.get("prompt_tokens"),
+        "cached_prompt_tokens": operational.get(
+            "cached_prompt_tokens"
+        ),
         "completion_tokens": operational.get(
             "completion_tokens"
         ),
@@ -106,6 +109,28 @@ def _judge_error_result(
         "failed_attempts": operational.get("failed_attempts"),
         "cost_usd": operational.get("cost_usd"),
         "cost_source": operational.get("cost_source"),
+        "configured_cost_usd": operational.get(
+            "configured_cost_usd"
+        ),
+        "provider_reported_cost_usd": operational.get(
+            "provider_reported_cost_usd"
+        ),
+        "pricing_id": operational.get("pricing_id"),
+        "pricing_model": operational.get("pricing_model"),
+        "pricing_currency": operational.get("pricing_currency"),
+        "pricing_input_per_million_tokens": operational.get(
+            "pricing_input_per_million_tokens"
+        ),
+        "pricing_cached_input_per_million_tokens": operational.get(
+            "pricing_cached_input_per_million_tokens"
+        ),
+        "pricing_output_per_million_tokens": operational.get(
+            "pricing_output_per_million_tokens"
+        ),
+        "pricing_effective_date": operational.get(
+            "pricing_effective_date"
+        ),
+        "pricing_source": operational.get("pricing_source"),
     }
 
 
@@ -183,10 +208,23 @@ def evaluate_cases(
                 "judge_attempts": None,
                 "judge_failed_attempts": None,
                 "judge_prompt_tokens": None,
+                "judge_cached_prompt_tokens": None,
                 "judge_completion_tokens": None,
                 "judge_total_tokens": None,
                 "judge_cost_usd": None,
                 "judge_cost_source": None,
+                "judge_configured_cost_usd": None,
+                "judge_provider_reported_cost_usd": None,
+                "judge_pricing_id": None,
+                "judge_pricing_model": None,
+                "judge_pricing_currency": None,
+                "judge_pricing_input_per_million_tokens": None,
+                "judge_pricing_cached_input_per_million_tokens": None,
+                "judge_pricing_output_per_million_tokens": None,
+                "judge_pricing_effective_date": None,
+                "judge_pricing_source": None,
+                "judge_pricing_catalog_version": None,
+                "judge_pricing_catalog_sha256": None,
             }
         )
 
@@ -257,6 +295,9 @@ def evaluate_cases(
                     "judge_prompt_tokens": judge_result.get(
                         "prompt_tokens"
                     ),
+                    "judge_cached_prompt_tokens": judge_result.get(
+                        "cached_prompt_tokens"
+                    ),
                     "judge_completion_tokens": judge_result.get(
                         "completion_tokens"
                     ),
@@ -266,6 +307,42 @@ def evaluate_cases(
                     "judge_cost_usd": judge_result.get("cost_usd"),
                     "judge_cost_source": judge_result.get(
                         "cost_source"
+                    ),
+                    "judge_configured_cost_usd": judge_result.get(
+                        "configured_cost_usd"
+                    ),
+                    "judge_provider_reported_cost_usd": judge_result.get(
+                        "provider_reported_cost_usd"
+                    ),
+                    "judge_pricing_id": judge_result.get(
+                        "pricing_id"
+                    ),
+                    "judge_pricing_model": judge_result.get(
+                        "pricing_model"
+                    ),
+                    "judge_pricing_currency": judge_result.get(
+                        "pricing_currency"
+                    ),
+                    "judge_pricing_input_per_million_tokens": judge_result.get(
+                        "pricing_input_per_million_tokens"
+                    ),
+                    "judge_pricing_cached_input_per_million_tokens": judge_result.get(
+                        "pricing_cached_input_per_million_tokens"
+                    ),
+                    "judge_pricing_output_per_million_tokens": judge_result.get(
+                        "pricing_output_per_million_tokens"
+                    ),
+                    "judge_pricing_effective_date": judge_result.get(
+                        "pricing_effective_date"
+                    ),
+                    "judge_pricing_source": judge_result.get(
+                        "pricing_source"
+                    ),
+                    "judge_pricing_catalog_version": judge_result.get(
+                        "pricing_catalog_version"
+                    ),
+                    "judge_pricing_catalog_sha256": judge_result.get(
+                        "pricing_catalog_sha256"
                     ),
                 }
             )
@@ -443,10 +520,16 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         "generation_average_seconds",
         "generation_p95_seconds",
         "generation_prompt_tokens",
+        "generation_cached_prompt_tokens",
         "generation_completion_tokens",
         "generation_total_tokens",
         "generation_cost_usd",
         "generation_cost_coverage",
+        "generation_cost_sources",
+        "generation_configured_cost_usd",
+        "generation_configured_cost_coverage",
+        "generation_provider_reported_cost_usd",
+        "generation_provider_reported_cost_coverage",
         "judge_requests",
         "judge_successes",
         "judge_errors",
@@ -454,10 +537,16 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         "judge_average_seconds",
         "judge_p95_seconds",
         "judge_prompt_tokens",
+        "judge_cached_prompt_tokens",
         "judge_completion_tokens",
         "judge_total_tokens",
         "judge_cost_usd",
         "judge_cost_coverage",
+        "judge_cost_sources",
+        "judge_configured_cost_usd",
+        "judge_configured_cost_coverage",
+        "judge_provider_reported_cost_usd",
+        "judge_provider_reported_cost_coverage",
     ]
     remaining_columns = [
         column

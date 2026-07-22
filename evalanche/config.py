@@ -67,6 +67,17 @@ class JudgeConfig(BaseModel):
     temperature: float = 0
     max_retries: int = 3
     continue_on_error: bool = False
+    pricing_id: str | None = None
+
+    @field_validator("pricing_id")
+    @classmethod
+    def validate_pricing_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("pricing_id cannot be blank")
+        return normalized
 
 
 class TaskConfig(BaseModel):
@@ -105,6 +116,7 @@ class EvalConfig(BaseModel):
     task: TaskConfig
     scoring: ScoringConfig
     criteria: list[CriterionConfig] = Field(min_length=1)
+    endpoint_pricing_path: Path | None = None
 
     @field_validator("criteria")
     @classmethod
@@ -136,6 +148,7 @@ class GenerationSettingsConfig(BaseModel):
 class GenerationConfig(BaseModel):
     run: RunConfig
     candidate_models_path: Path
+    endpoint_pricing_path: Path | None = None
     prompt: PromptConfig = Field(default_factory=PromptConfig)
     generation: GenerationSettingsConfig = Field(
         default_factory=GenerationSettingsConfig
@@ -148,6 +161,7 @@ class CandidateModelConfig(BaseModel):
     temperature: float = 0
     max_retries: int = 3
     max_completion_tokens: int | None = None
+    pricing_id: str | None = None
 
     @field_validator("name")
     @classmethod
@@ -155,6 +169,16 @@ class CandidateModelConfig(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("candidate model name cannot be blank")
+        return normalized
+
+    @field_validator("pricing_id")
+    @classmethod
+    def validate_pricing_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("pricing_id cannot be blank")
         return normalized
 
 

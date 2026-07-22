@@ -332,6 +332,7 @@ def test_report_includes_generation_and_judge_operations(
     assert "2.90 s" in report
     assert "36" in report
     assert "$0.003000 USD" in report
+    assert "litellm_response_metadata" in report
     assert "### LLM Judge" in report
     assert "2.00 s" in report
     assert "$0.004000 USD" in report
@@ -472,7 +473,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
         )
     )
 
-    assert metadata["schema_version"] == "0.6"
+    assert metadata["schema_version"] == "0.7"
     assert (
         metadata["results"]["deterministic_rows"]
         == 2
@@ -504,8 +505,10 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert metadata["operations"]["generation"]["requests"] == 0
     assert metadata["operations"]["judge"]["requests"] == 0
     assert metadata["operations"]["cost_policy"] == (
-        "litellm_response_metadata_only"
+        "configured_endpoint_pricing_then_litellm_response_metadata"
     )
+    assert metadata["endpoint_pricing"]["catalog_path"] is None
+    assert metadata["endpoint_pricing"]["resolved_endpoints"] == []
     assert len(
         metadata["hashes"]["input_sha256"]
     ) == 64
@@ -589,3 +592,62 @@ def test_run_evaluation_records_enabled_selection_policy(
 
     report = report_path.read_text(encoding="utf-8")
     assert "Constraint-aware recommendation:** `model_a`" in report
+
+
+def test_evaluation_metadata_preserves_observed_generation_price_snapshot(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    records = []
+    for model_name, model_output in (
+        ("model_a", "negative"),
+        ("model_b", "neutral"),
+    ):
+        records.append(
+            {
+                "case_id": "case_001",
+                "input": "Return negative.",
+                "expected_output": "negative",
+                "evaluation_type": "exact",
+                "model_name": model_name,
+                "model_output": model_output,
+                "generation_status": "success",
+                "generation_seconds": 0.1,
+                "generation_prompt_tokens": 10,
+                "generation_completion_tokens": 2,
+                "generation_total_tokens": 12,
+                "generation_cost_usd": 0.000018,
+                "generation_cost_source": (
+                    "configured_endpoint_pricing"
+                ),
+                "generation_configured_cost_usd": 0.000018,
+                "generation_provider_reported_cost_usd": 0.000020,
+                "generation_pricing_id": f"{model_name}_global",
+                "generation_pricing_model": f"azure/{model_name}",
+                "generation_pricing_currency": "USD",
+                "generation_pricing_input_per_million_tokens": 1.0,
+                "generation_pricing_cached_input_per_million_tokens": 0.25,
+                "generation_pricing_output_per_million_tokens": 4.0,
+                "generation_pricing_effective_date": "2026-07-01",
+                "generation_pricing_source": "test rate card",
+            }
+        )
+    pd.DataFrame(records).to_csv(config.run.input_path, index=False)
+
+    _, _, _, _, _, metadata_path, _ = run_evaluation(config)
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    observed = metadata["endpoint_pricing"][
+        "observed_generation_endpoints"
+    ]
+    assert [entry["pricing_id"] for entry in observed] == [
+        "model_a_global",
+        "model_b_global",
+    ]
+    assert observed[0]["input_per_million_tokens"] == 1.0
+    assert metadata["operations"]["generation"][
+        "configured_cost_usd"
+    ] == 0.000036
+    assert metadata["operations"]["generation"][
+        "provider_reported_cost_usd"
+    ] == 0.00004

@@ -9,10 +9,17 @@ from typing import Any
 
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from evalanche.pricing import (
+    CONFIGURED_COST_SOURCE,
+    PROVIDER_COST_SOURCE,
+    EndpointPriceConfig,
+    endpoint_price_fields,
+    estimate_endpoint_cost_usd,
+)
+
 
 JsonValidator = Callable[[dict[str, Any]], None]
 _ERROR_OPERATIONAL_ATTRIBUTE = "_evalanche_operational"
-_COST_SOURCE = "litellm_response_metadata"
 
 
 def _completion(**kwargs: Any) -> Any:
@@ -65,12 +72,19 @@ def _usage_to_dict(response: Any) -> dict[str, Any]:
     if usage is None:
         return {
             "prompt_tokens": None,
+            "cached_prompt_tokens": None,
             "completion_tokens": None,
             "total_tokens": None,
         }
 
+    prompt_details = _value(usage, "prompt_tokens_details")
+
     return {
         "prompt_tokens": _value(usage, "prompt_tokens"),
+        "cached_prompt_tokens": _value(
+            prompt_details,
+            "cached_tokens",
+        ),
         "completion_tokens": _value(usage, "completion_tokens"),
         "total_tokens": _value(usage, "total_tokens"),
     }
@@ -78,19 +92,22 @@ def _usage_to_dict(response: Any) -> dict[str, Any]:
 
 @dataclass
 class _CallTracker:
+    endpoint_price: EndpointPriceConfig | None = None
     started_at: float = field(default_factory=perf_counter)
     attempts: int = 0
     failed_attempts: int = 0
     successful_responses: int = 0
     api_seconds: float = 0.0
     prompt_tokens: int = 0
+    cached_prompt_tokens: int = 0
     completion_tokens: int = 0
     total_tokens: int = 0
     prompt_token_observations: int = 0
+    cached_prompt_token_observations: int = 0
     completion_token_observations: int = 0
     total_token_observations: int = 0
-    known_cost_responses: int = 0
-    cost_usd: float = 0.0
+    known_provider_cost_responses: int = 0
+    provider_reported_cost_usd: float = 0.0
 
     def completion(self, **kwargs: Any) -> Any:
         self.attempts += 1
@@ -108,6 +125,10 @@ class _CallTracker:
         usage = _usage_to_dict(response)
         self._record_tokens("prompt", usage.get("prompt_tokens"))
         self._record_tokens(
+            "cached_prompt",
+            usage.get("cached_prompt_tokens"),
+        )
+        self._record_tokens(
             "completion",
             usage.get("completion_tokens"),
         )
@@ -115,8 +136,8 @@ class _CallTracker:
 
         cost = _response_cost_usd(response)
         if cost is not None:
-            self.known_cost_responses += 1
-            self.cost_usd += cost
+            self.known_provider_cost_responses += 1
+            self.provider_reported_cost_usd += cost
 
         return response
 
@@ -152,16 +173,46 @@ class _CallTracker:
 
         return {
             "prompt_tokens": complete_value("prompt"),
+            "cached_prompt_tokens": complete_value("cached_prompt"),
             "completion_tokens": complete_value("completion"),
             "total_tokens": complete_value("total"),
         }
 
     def snapshot(self) -> dict[str, Any]:
         usage = self.usage()
-        cost_complete = (
+        provider_cost_complete = (
             self.successful_responses > 0
-            and self.known_cost_responses == self.successful_responses
+            and self.known_provider_cost_responses
+            == self.successful_responses
         )
+        provider_cost = (
+            self.provider_reported_cost_usd
+            if provider_cost_complete
+            else None
+        )
+        configured_cost = (
+            estimate_endpoint_cost_usd(
+                self.endpoint_price,
+                prompt_tokens=usage["prompt_tokens"],
+                cached_prompt_tokens=usage[
+                    "cached_prompt_tokens"
+                ],
+                completion_tokens=usage["completion_tokens"],
+            )
+            if self.endpoint_price is not None
+            and self.successful_responses > 0
+            else None
+        )
+
+        if configured_cost is not None:
+            selected_cost = configured_cost
+            selected_source = CONFIGURED_COST_SOURCE
+        elif provider_cost is not None:
+            selected_cost = provider_cost
+            selected_source = PROVIDER_COST_SOURCE
+        else:
+            selected_cost = None
+            selected_source = None
 
         return {
             "latency_seconds": perf_counter() - self.started_at,
@@ -170,8 +221,11 @@ class _CallTracker:
             "failed_attempts": self.failed_attempts,
             "successful_responses": self.successful_responses,
             **usage,
-            "cost_usd": self.cost_usd if cost_complete else None,
-            "cost_source": _COST_SOURCE if cost_complete else None,
+            "cost_usd": selected_cost,
+            "cost_source": selected_source,
+            "configured_cost_usd": configured_cost,
+            "provider_reported_cost_usd": provider_cost,
+            **endpoint_price_fields(self.endpoint_price),
         }
 
 
@@ -202,17 +256,19 @@ class LLMClient:
         model: str,
         temperature: float = 0,
         max_retries: int = 3,
+        endpoint_price: EndpointPriceConfig | None = None,
     ) -> None:
         self.model = model
         self.temperature = temperature
         self.max_retries = max_retries
+        self.endpoint_price = endpoint_price
 
     def complete_json(
         self,
         messages: list[dict[str, str]],
         validator: JsonValidator | None = None,
     ) -> dict[str, Any]:
-        tracker = _CallTracker()
+        tracker = _CallTracker(endpoint_price=self.endpoint_price)
         retrying_call = retry(
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
@@ -230,6 +286,7 @@ class LLMClient:
             key: telemetry.get(key)
             for key in (
                 "prompt_tokens",
+                "cached_prompt_tokens",
                 "completion_tokens",
                 "total_tokens",
             )
@@ -242,7 +299,7 @@ class LLMClient:
         messages: list[dict[str, str]],
         max_completion_tokens: int | None = None,
     ) -> dict[str, Any]:
-        tracker = _CallTracker()
+        tracker = _CallTracker(endpoint_price=self.endpoint_price)
         retrying_call = retry(
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
@@ -264,6 +321,7 @@ class LLMClient:
             key: telemetry.get(key)
             for key in (
                 "prompt_tokens",
+                "cached_prompt_tokens",
                 "completion_tokens",
                 "total_tokens",
             )
