@@ -15,9 +15,10 @@ It contains the official marketed and approved Drug Product Database (DPD)
 all-files archives. It does not contain cancelled, dormant, or product
 monograph files.
 
-The marketed cohort is the sampling population for the first benchmark. The
-approved cohort is frozen at the same time so later normalization can detect
-status boundaries and avoid mixing records retrieved on different dates.
+The marketed cohort is the parent sampling population for the DPD-only
+benchmark slice and the planned Product Monograph benchmark. The approved
+cohort is frozen at the same time so later normalization can detect status
+boundaries and avoid mixing records retrieved on different dates.
 
 ## Frozen files
 
@@ -104,7 +105,9 @@ provenance.
 
 ## Next boundary
 
-This release freezes source evidence only. The next work is to normalize the
-24 relational tables into typed, validated data while preserving cohort and
-source lineage. Product filtering, pilot sampling, monograph acquisition, and
-benchmark splits remain outside this release.
+This release continues to freeze source evidence only. Its marketed archive is
+now consumed by the separate, immutable
+[`HC_DPD_BENCHMARK_SLICE.md`](HC_DPD_BENCHMARK_SLICE.md) release, which records
+normalization, product filtering, deterministic sampling, and benchmark
+splits. Product Monograph acquisition and DPD-to-document audit remain the next
+data boundary.

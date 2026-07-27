@@ -38,6 +38,9 @@ Evalanche currently supports:
 12. Applying client requirements and weighted model-selection policies.
 13. Validating versioned dataset manifests and file integrity.
 14. Freezing and source-validating official DPD marketed and approved archives.
+15. Building a reproducible bilingual DPD structured-extraction benchmark
+    slice with deterministic sampling, held-out membership, and source-row
+    traceability.
 
 The current workflow keeps generation and evaluation separate so outputs can be inspected, reused, and evaluated multiple ways without calling candidate models again.
 
@@ -58,6 +61,9 @@ in [`docs/dataset_manifests.md`](docs/dataset_manifests.md).
 
 The first Health Canada source release is documented in
 [`docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md`](docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md).
+
+The first executable Health Canada benchmark slice is documented in
+[`docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md`](docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md).
 
 ## Evaluation methods
 

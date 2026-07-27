@@ -1,5 +1,5 @@
 registry_version: 1
-updated_date: "2026-07-22"
+updated_date: "2026-07-27"
 owner: "Mission Evalanche"
 
 decision:
@@ -12,6 +12,7 @@ decision:
     - stable_case_schema
     - stable_combined_evaluation_result
     - stable_dataset_manifest_contract
+  current_next_step: acquire_and_freeze_product_monographs
 
 manifest_contract:
   schema_version: "1.0"
@@ -26,6 +27,7 @@ manifest_contract:
     file_verifier_implemented: true
     sampling_and_split_contract_implemented: true
     hc_release_materialized: true
+    hc_dpd_benchmark_slice_materialized: true
   first_hc_source_snapshot:
     dataset_id: hc_dpd_source_snapshot
     version: "2026.7.2"
@@ -37,6 +39,27 @@ manifest_contract:
       docs/hc_benchmark/HC_DPD_SOURCE_SNAPSHOT.md
     cohorts: [marketed, approved]
     status: frozen
+  first_hc_benchmark_slice:
+    dataset_id: hc_dpd_structured_extraction_slice
+    version: "0.1.0"
+    manifest: >-
+      configs/datasets/hc_dpd_structured_extraction_0.1.0_manifest.yaml
+    cases: >-
+      data/hc/benchmarks/dpd_structured_extraction/0.1.0/cases.csv
+    products: >-
+      data/hc/benchmarks/dpd_structured_extraction/0.1.0/products.csv
+    build_report: >-
+      data/hc/benchmarks/dpd_structured_extraction/0.1.0/build_report.json
+    documentation: >-
+      docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md
+    product_count: 40
+    case_count: 80
+    languages: [en, fr]
+    scope: dpd_only_integration_benchmark
+    status: frozen
+    limitations:
+      - product_monograph_documents_not_yet_acquired
+      - reference_labels_not_yet_manually_audited_against_monographs
 
 sources:
   - id: dpd
@@ -69,10 +92,12 @@ sources:
       limitations_documented: true
       normalization_contract_defined: true
       source_snapshot_materialized: true
+      dpd_benchmark_slice_materialized: true
     implementation:
       parser_mode: explicit_schema_header_none
       join_key: DRUG_CODE
-      output_format: parquet
+      normalization_mode: in_memory_versioned_builder
+      benchmark_output_format: csv
       source_snapshot:
         version: "2026.7.2"
         source_date: "2026-07-02"
@@ -88,6 +113,19 @@ sources:
         - valid_join_coverage
         - nonblank_reference_fields
         - row_counts_and_hashes_in_manifest
+      benchmark_slice:
+        version: "0.1.0"
+        seed: 20260702
+        products: 40
+        cases: 80
+        splits:
+          development_products: 30
+          heldout_products: 10
+        strata:
+          single_ingredient: 20
+          multi_ingredient: 10
+          multi_variant: 10
+        active_ingredient_overlap_across_splits: 0
 
   - id: product_monographs
     name: Health Canada-authorized product monographs
@@ -116,6 +154,8 @@ sources:
       benchmark_role_defined: true
       eligibility_defined: true
       manifest_contract_defined: true
+      source_documents_materialized: false
+      document_alignment_audited: false
     manifest_fields:
       - source
       - drug_code

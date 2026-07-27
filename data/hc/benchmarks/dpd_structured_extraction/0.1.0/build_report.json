@@ -1,0 +1,123 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_id": "hc_dpd_structured_extraction_slice",
+  "dataset_version": "0.1.0",
+  "release_created_at_utc": "2026-07-27T00:00:00Z",
+  "scope": "DPD-only bilingual structured extraction slice",
+  "source": {
+    "dataset_id": "hc_dpd_source_snapshot",
+    "dataset_version": "2026.7.2",
+    "source_date": "2026-07-02",
+    "manifest_path": "configs/datasets/hc_dpd_2026-07-02_manifest.yaml",
+    "manifest_sha256": "f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0",
+    "marketed_archive_path": "data/hc/dpd/snapshots/2026-07-02/raw/allfiles.zip",
+    "marketed_archive_sha256": "94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"
+  },
+  "population": {
+    "source_drug_rows": 13538,
+    "eligible_drug_rows": 11613,
+    "eligible_product_families": 7030,
+    "candidate_product_families": 6848,
+    "candidate_product_families_by_stratum": {
+      "single_ingredient": 3123,
+      "multi_ingredient": 1528,
+      "multi_variant": 2197
+    },
+    "drug_row_exclusions_by_reason": {
+      "not_human": 1925
+    },
+    "product_family_exclusions_by_reason": {
+      "inconsistent_french_brand_name": 13,
+      "multi_ingredient_multi_variant": 169
+    }
+  },
+  "sampling": {
+    "method": "deterministic stratified hash ranking with required route coverage",
+    "seed": 20260702,
+    "stratum_targets": {
+      "single_ingredient": 20,
+      "multi_ingredient": 10,
+      "multi_variant": 10
+    },
+    "heldout_targets": {
+      "single_ingredient": 5,
+      "multi_ingredient": 2,
+      "multi_variant": 3
+    },
+    "selected_product_count": 40,
+    "generated_case_count": 80,
+    "selected_products_by_stratum": {
+      "single_ingredient": 20,
+      "multi_ingredient": 10,
+      "multi_variant": 10
+    },
+    "selected_products_by_split": {
+      "development": 30,
+      "heldout": 10
+    },
+    "generated_cases_by_language": {
+      "en": 40,
+      "fr": 40
+    }
+  },
+  "coverage": {
+    "dosage_forms_en": [
+      "AEROSOL",
+      "CAPSULE",
+      "CAPSULE (EXTENDED RELEASE)",
+      "CREAM",
+      "LOTION",
+      "LOZENGE",
+      "OINTMENT",
+      "POWDER FOR SOLUTION",
+      "SHAMPOO",
+      "SOLUTION",
+      "SPRAY, METERED DOSE",
+      "TABLET",
+      "TABLET (CHEWABLE)",
+      "TABLET (ORALLY DISINTEGRATING)"
+    ],
+    "routes_en": [
+      "BLOCK/INFILTRATION",
+      "INHALATION",
+      "INTRAMUSCULAR",
+      "INTRAVENOUS",
+      "NASAL",
+      "OPHTHALMIC",
+      "ORAL",
+      "PERCUTANEOUS",
+      "SUBCUTANEOUS",
+      "TOPICAL"
+    ],
+    "schedules_en": [
+      "ETHICAL",
+      "NARCOTICS (CDSA I)",
+      "NON-PRESCRIPTION DRUGS",
+      "PRESCRIPTION",
+      "SCHEDULE D"
+    ],
+    "required_route_groups": {
+      "oral": true,
+      "injectable": true,
+      "topical": true,
+      "inhaled": true,
+      "ophthalmic": true
+    }
+  },
+  "quality_checks": {
+    "unique_product_ids": true,
+    "unique_case_ids": true,
+    "two_language_cases_per_product": true,
+    "development_heldout_ingredient_overlap": [],
+    "development_heldout_ingredient_overlap_count": 0,
+    "all_required_route_groups_present": true,
+    "all_expected_outputs_parse_as_json": true,
+    "manual_product_monograph_audit_status": "not_started"
+  },
+  "limitations": [
+    "Inputs are deterministic renderings of DPD relational records, not Product Monograph documents.",
+    "Reference values have not yet been manually audited against English and French Product Monographs.",
+    "This small slice validates acquisition, normalization, sampling, traceability, and evaluation plumbing; it is not evidence of production monograph performance.",
+    "Product Monograph availability and document quality exclusions will be applied in a later release."
+  ]
+}

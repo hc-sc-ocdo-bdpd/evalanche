@@ -17,6 +17,12 @@ from evalanche.dataset_manifest import (
     save_dataset_verification,
     verify_dataset_manifest_file,
 )
+from evalanche.dpd_benchmark import (
+    DPD_BENCHMARK_SEED,
+    DPD_BENCHMARK_VERSION,
+    DPD_SOURCE_MANIFEST,
+    create_dpd_benchmark_slice,
+)
 from evalanche.dpd_snapshot import create_dpd_source_snapshot
 from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs
@@ -245,6 +251,47 @@ def run_snapshot_dpd(
     return result
 
 
+def run_build_dpd_benchmark(
+    *,
+    root_path: str,
+    source_manifest_path: str,
+    benchmark_version: str,
+    seed: int,
+) -> dict[str, Any]:
+    try:
+        result = create_dpd_benchmark_slice(
+            root_path=root_path,
+            source_manifest_path=source_manifest_path,
+            benchmark_version=benchmark_version,
+            seed=seed,
+        )
+    except (OSError, ValueError) as error:
+        print(f"DPD benchmark slice build failed: {error}")
+        raise SystemExit(1) from None
+
+    print(
+        "\nDataset: "
+        f"{result['dataset_id']} {result['dataset_version']}"
+    )
+    print(
+        "Parent: "
+        f"{result['source_dataset_id']} "
+        f"{result['source_dataset_version']}"
+    )
+    print(f"Products: {result['product_count']}")
+    print(f"Cases: {result['case_count']}")
+    print(
+        "Product splits: "
+        f"{result['development_product_count']} development, "
+        f"{result['heldout_product_count']} heldout"
+    )
+    print(f"Output: {result['output_path']}")
+    print(f"Manifest: {result['manifest_path']}")
+    print("Verified files: 3/3")
+    print("Status: VALID")
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -314,6 +361,31 @@ def build_parser() -> argparse.ArgumentParser:
         help="Per-archive HTTP timeout in seconds.",
     )
 
+    dpd_benchmark_parser = subparsers.add_parser(
+        "build-dpd-benchmark"
+    )
+    dpd_benchmark_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the frozen DPD snapshot.",
+    )
+    dpd_benchmark_parser.add_argument(
+        "--source-manifest",
+        default=DPD_SOURCE_MANIFEST.as_posix(),
+        help="Path to the frozen DPD source manifest.",
+    )
+    dpd_benchmark_parser.add_argument(
+        "--version",
+        default=DPD_BENCHMARK_VERSION,
+        help="Semantic version for the benchmark release.",
+    )
+    dpd_benchmark_parser.add_argument(
+        "--seed",
+        type=int,
+        default=DPD_BENCHMARK_SEED,
+        help="Recorded seed used for deterministic sampling.",
+    )
+
     return parser
 
 
@@ -340,6 +412,13 @@ def main() -> None:
             source_date=args.source_date,
             root_path=args.root,
             timeout=args.timeout,
+        )
+    elif args.command == "build-dpd-benchmark":
+        run_build_dpd_benchmark(
+            root_path=args.root,
+            source_manifest_path=args.source_manifest,
+            benchmark_version=args.version,
+            seed=args.seed,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

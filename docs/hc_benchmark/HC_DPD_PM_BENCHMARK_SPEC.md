@@ -1,6 +1,6 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-**Specification status:** Source snapshot complete, ready for normalization  
+**Specification status:** DPD-only slice `0.1.0` complete, Product Monograph acquisition and audit pending  
 **Benchmark type:** Bilingual structured extraction  
 **Primary scoring:** Deterministic JSON and field-level metrics
 
@@ -22,14 +22,26 @@ This design has the strongest contribution-to-effort ratio among the identified 
 - direct relevance to document extraction work performed across HC
 - a clear path from a small internal pilot to a publishable public benchmark
 
-## 3. Pilot composition
+## 3. Pilot composition and staged releases
 
 The DPD source input is frozen as `hc_dpd_source_snapshot` version `2026.7.2`.
 It contains the official marketed and approved archives published 2026-07-02.
 See [`HC_DPD_SOURCE_SNAPSHOT.md`](HC_DPD_SOURCE_SNAPSHOT.md) for exact hashes,
 row counts, validation evidence, and reproduction instructions.
 
-The first release contains **40 marketed human-drug products**.
+The executable DPD-only foundation is frozen as
+`hc_dpd_structured_extraction_slice` version `0.1.0`. It contains 40 product
+families and 80 paired English and French cases rendered from the DPD
+relational records. It proves normalization, sampling, split assignment,
+source-row traceability, and generation compatibility. See
+[`HC_DPD_BENCHMARK_SLICE.md`](HC_DPD_BENCHMARK_SLICE.md).
+
+Version `0.1.0` is not the final Product Monograph benchmark and must not be
+used as evidence of monograph-extraction performance.
+
+The Product Monograph pilot retains the target of **40 marketed human-drug
+products** after document availability, document quality, and manual alignment
+checks.
 
 - 20 single-ingredient products
 - 10 multi-ingredient products
@@ -37,7 +49,10 @@ The first release contains **40 marketed human-drug products**.
 - English and French monographs where both are available
 - target size of 80 document-language cases before exclusions
 
-The pilot should include varied oral, injectable, topical, inhaled, ophthalmic, and other dosage forms. Sampling is reproducible from a frozen DPD snapshot using a recorded random seed.
+The materialized DPD slice includes varied oral, injectable, topical, inhaled,
+ophthalmic, and other routes and dosage forms. Sampling is reproducible from
+the frozen DPD snapshot using seed `20260702`. Product Monograph acquisition
+may require documented replacements or exclusions in a new dataset version.
 
 ### Exclusions for the pilot
 
@@ -54,7 +69,8 @@ These exclusions reduce infrastructure and label-noise risk in the first release
 
 ## 4. Unit of evaluation
 
-One case represents one product-monograph language instance.
+In the final pilot, one case represents one Product Monograph language
+instance.
 
 Each case contains:
 
@@ -74,6 +90,11 @@ source_metadata
 ```
 
 `evaluation_type` is `json`. The input contains the extraction instruction and monograph text or an explicitly bounded monograph section. The expected output is canonical JSON.
+
+In DPD-only version `0.1.0`, one case represents one rendered DPD
+product-family language instance. Its metadata uses `product_id`,
+`drug_codes`, exact archive-member row numbers, and parent hashes instead of
+`monograph_sha256`. The expected-output contract is otherwise the same.
 
 ## 5. Expected-output contract
 

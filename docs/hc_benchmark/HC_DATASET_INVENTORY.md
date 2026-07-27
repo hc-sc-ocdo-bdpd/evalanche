@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery, benchmark scoping, manifest contract, and first DPD source snapshot complete
-**Implementation gate:** Normalize and validate the frozen DPD relational tables without changing the source release.
+**Status:** Dataset discovery, manifest contract, DPD source snapshot, and first DPD-only benchmark slice complete  
+**Implementation gate:** Acquire and freeze matched Product Monographs without changing either existing release.
 
 ## Decision
 
@@ -103,13 +103,25 @@ report. The release contains 24 relational tables across marketed and approved
 cohorts, with 210,632 table rows in total. This total is not a unique-product
 count.
 
+The first executable benchmark release is documented in
+[`HC_DPD_BENCHMARK_SLICE.md`](HC_DPD_BENCHMARK_SLICE.md). Version `0.1.0`
+contains 40 sampled product families and 80 paired English and French DPD
+record-extraction cases. It records exact source rows, complexity strata, and
+30-product development and 10-product held-out assignments. No selected active
+ingredient code crosses those splits.
+
+The DPD-only slice proves the normalization, sampling, traceability, and case
+generation path. It does not replace Product Monographs as the intended source
+documents and is not evidence of monograph-extraction performance.
+
 ## Sequencing
 
 1. Complete: materialize DPD source release `2026.7.2` and verify its schema `1.0` manifest.
-2. Next: normalize the DPD snapshot into typed, validated tables.
-3. Build the eligible human-marketed product backbone.
-4. Select the pilot sample and record every member and split assignment.
-5. Acquire matched English and French monographs.
+2. Complete: normalize and validate the marketed DPD tables by `DRUG_CODE`.
+3. Complete: build the eligible human-marketed product-family backbone.
+4. Complete: materialize benchmark slice `0.1.0` with deterministic sampling,
+   bilingual cases, source-row traceability, and fixed splits.
+5. Next: acquire matched English and French monographs for candidate products.
 6. Audit document-to-DPD alignment and construct deterministic JSON cases.
 7. Run the pilot across candidate models and review error patterns.
 8. Expand only after the pilot demonstrates reliable labels and useful model separation.

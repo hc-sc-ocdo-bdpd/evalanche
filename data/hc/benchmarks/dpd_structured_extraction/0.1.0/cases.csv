@@ -1,0 +1,1709 @@
+case_id,benchmark_version,snapshot_date,product_id,drug_codes,din_list,brand_name,language,split,stratum,input,expected_output,evaluation_type,source_metadata
+hc_dpd_0877be2ddea56d10_en,0.1.0,2026-07-02,hc_dpd_0877be2ddea56d10,"[""74047"",""74048"",""74051""]","[""02255316"",""02255324"",""02255332""]",RAMIPRIL,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 74047
+DIN: 02255316
+BRAND_NAME: RAMIPRIL
+ACTIVE_INGREDIENTS:
+- NAME=RAMIPRIL; STRENGTH=2.5; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: LABORATOIRE RIVA INC.
+
+VARIANT 2
+DRUG_CODE: 74048
+DIN: 02255324
+BRAND_NAME: RAMIPRIL
+ACTIVE_INGREDIENTS:
+- NAME=RAMIPRIL; STRENGTH=5; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: LABORATOIRE RIVA INC.
+
+VARIANT 3
+DRUG_CODE: 74051
+DIN: 02255332
+BRAND_NAME: RAMIPRIL
+ACTIVE_INGREDIENTS:
+- NAME=RAMIPRIL; STRENGTH=10; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: LABORATOIRE RIVA INC.","{""din"":[""02255316"",""02255324"",""02255332""],""brand_name"":""RAMIPRIL"",""active_ingredients"":[{""name"":""RAMIPRIL"",""strength"":2.5,""unit"":""MG""},{""name"":""RAMIPRIL"",""strength"":5,""unit"":""MG""},{""name"":""RAMIPRIL"",""strength"":10,""unit"":""MG""}],""dosage_forms"":[""CAPSULE""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""LABORATOIRE RIVA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3378,3379,3380],""drug.txt"":[3378,3379,3380],""form.txt"":[3407,3408,3409],""ingred.txt"":[4885,4886,4887],""route.txt"":[4047,4048,4049],""schedule.txt"":[3424,3425,3426],""status.txt"":[17962,17968,17975]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""74047"",""74048"",""74051""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_0877be2ddea56d10_fr,0.1.0,2026-07-02,hc_dpd_0877be2ddea56d10,"[""74047"",""74048"",""74051""]","[""02255316"",""02255324"",""02255332""]",RAMIPRIL,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 74047
+DIN: 02255316
+NOM_COMMERCIAL: RAMIPRIL
+INGRÉDIENTS_ACTIFS:
+- NOM=Ramipril; CONCENTRATION=2.5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: LABORATOIRE RIVA INC.
+
+VARIANTE 2
+DRUG_CODE: 74048
+DIN: 02255324
+NOM_COMMERCIAL: RAMIPRIL
+INGRÉDIENTS_ACTIFS:
+- NOM=Ramipril; CONCENTRATION=5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: LABORATOIRE RIVA INC.
+
+VARIANTE 3
+DRUG_CODE: 74051
+DIN: 02255332
+NOM_COMMERCIAL: RAMIPRIL
+INGRÉDIENTS_ACTIFS:
+- NOM=Ramipril; CONCENTRATION=10; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: LABORATOIRE RIVA INC.","{""din"":[""02255316"",""02255324"",""02255332""],""brand_name"":""RAMIPRIL"",""active_ingredients"":[{""name"":""Ramipril"",""strength"":2.5,""unit"":""MG""},{""name"":""Ramipril"",""strength"":5,""unit"":""MG""},{""name"":""Ramipril"",""strength"":10,""unit"":""MG""}],""dosage_forms"":[""Capsule""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""LABORATOIRE RIVA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3378,3379,3380],""drug.txt"":[3378,3379,3380],""form.txt"":[3407,3408,3409],""ingred.txt"":[4885,4886,4887],""route.txt"":[4047,4048,4049],""schedule.txt"":[3424,3425,3426],""status.txt"":[17962,17968,17975]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""74047"",""74048"",""74051""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_0e64b57edf3df6c4_en,0.1.0,2026-07-02,hc_dpd_0e64b57edf3df6c4,"[""4302"",""4276"",""4303""]","[""00402796"",""00402818"",""00479799""]",APO-ALLOPURINOL TABLETS,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 4302
+DIN: 00402796
+BRAND_NAME: APO-ALLOPURINOL TABLETS
+ACTIVE_INGREDIENTS:
+- NAME=ALLOPURINOL; STRENGTH=300; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: APOTEX INC
+
+VARIANT 2
+DRUG_CODE: 4276
+DIN: 00402818
+BRAND_NAME: APO-ALLOPURINOL TABLETS
+ACTIVE_INGREDIENTS:
+- NAME=ALLOPURINOL; STRENGTH=100; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: APOTEX INC
+
+VARIANT 3
+DRUG_CODE: 4303
+DIN: 00479799
+BRAND_NAME: APO-ALLOPURINOL TABLETS
+ACTIVE_INGREDIENTS:
+- NAME=ALLOPURINOL; STRENGTH=200; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: APOTEX INC","{""din"":[""00402796"",""00402818"",""00479799""],""brand_name"":""APO-ALLOPURINOL TABLETS"",""active_ingredients"":[{""name"":""ALLOPURINOL"",""strength"":100,""unit"":""MG""},{""name"":""ALLOPURINOL"",""strength"":200,""unit"":""MG""},{""name"":""ALLOPURINOL"",""strength"":300,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""APOTEX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[345,350,351],""drug.txt"":[345,350,351],""form.txt"":[345,350,351],""ingred.txt"":[498,503,504],""route.txt"":[434,440,441],""schedule.txt"":[345,350,351],""status.txt"":[1864,1886,1892]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""4302"",""4276"",""4303""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_0e64b57edf3df6c4_fr,0.1.0,2026-07-02,hc_dpd_0e64b57edf3df6c4,"[""4302"",""4276"",""4303""]","[""00402796"",""00402818"",""00479799""]",APO-ALLOPURINOL TABLETS,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 4302
+DIN: 00402796
+NOM_COMMERCIAL: APO-ALLOPURINOL TABLETS
+INGRÉDIENTS_ACTIFS:
+- NOM=Allopurinol; CONCENTRATION=300; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: APOTEX INC
+
+VARIANTE 2
+DRUG_CODE: 4276
+DIN: 00402818
+NOM_COMMERCIAL: APO-ALLOPURINOL TABLETS
+INGRÉDIENTS_ACTIFS:
+- NOM=Allopurinol; CONCENTRATION=100; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: APOTEX INC
+
+VARIANTE 3
+DRUG_CODE: 4303
+DIN: 00479799
+NOM_COMMERCIAL: APO-ALLOPURINOL TABLETS
+INGRÉDIENTS_ACTIFS:
+- NOM=Allopurinol; CONCENTRATION=200; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: APOTEX INC","{""din"":[""00402796"",""00402818"",""00479799""],""brand_name"":""APO-ALLOPURINOL TABLETS"",""active_ingredients"":[{""name"":""Allopurinol"",""strength"":100,""unit"":""MG""},{""name"":""Allopurinol"",""strength"":200,""unit"":""MG""},{""name"":""Allopurinol"",""strength"":300,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""APOTEX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[345,350,351],""drug.txt"":[345,350,351],""form.txt"":[345,350,351],""ingred.txt"":[498,503,504],""route.txt"":[434,440,441],""schedule.txt"":[345,350,351],""status.txt"":[1864,1886,1892]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""4302"",""4276"",""4303""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_0f1a531b78cc9e20_en,0.1.0,2026-07-02,hc_dpd_0f1a531b78cc9e20,"[""13362""]","[""00896675""]",GAS-X EXTRA STRENGTH,en,heldout,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 13362
+DIN: 00896675
+BRAND_NAME: GAS-X EXTRA STRENGTH
+ACTIVE_INGREDIENTS:
+- NAME=SIMETHICONE; STRENGTH=125; UNIT=MG
+DOSAGE_FORMS: TABLET (CHEWABLE)
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: HALEON CANADA ULC","{""din"":[""00896675""],""brand_name"":""GAS-X EXTRA STRENGTH"",""active_ingredients"":[{""name"":""SIMETHICONE"",""strength"":125,""unit"":""MG""}],""dosage_forms"":[""TABLET (CHEWABLE)""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""HALEON CANADA ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1096],""drug.txt"":[1096],""form.txt"":[1098],""ingred.txt"":[1622],""route.txt"":[1295],""schedule.txt"":[1098],""status.txt"":[5425]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""13362""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_0f1a531b78cc9e20_fr,0.1.0,2026-07-02,hc_dpd_0f1a531b78cc9e20,"[""13362""]","[""00896675""]",GAS-X EXTRA STRENGTH,fr,heldout,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 13362
+DIN: 00896675
+NOM_COMMERCIAL: GAS-X EXTRA-FORT
+INGRÉDIENTS_ACTIFS:
+- NOM=Siméticone; CONCENTRATION=125; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé (à mâcher)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: HALEON CANADA ULC","{""din"":[""00896675""],""brand_name"":""GAS-X EXTRA-FORT"",""active_ingredients"":[{""name"":""Siméticone"",""strength"":125,""unit"":""MG""}],""dosage_forms"":[""Comprimé (à mâcher)""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""HALEON CANADA ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1096],""drug.txt"":[1096],""form.txt"":[1098],""ingred.txt"":[1622],""route.txt"":[1295],""schedule.txt"":[1098],""status.txt"":[5425]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""13362""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_1eb04c6cacf8e2c0_en,0.1.0,2026-07-02,hc_dpd_1eb04c6cacf8e2c0,"[""31467""]","[""02141574""]",ERYTHROMYCIN,en,heldout,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 31467
+DIN: 02141574
+BRAND_NAME: ERYTHROMYCIN
+ACTIVE_INGREDIENTS:
+- NAME=ERYTHROMYCIN; STRENGTH=5; UNIT=MG
+DOSAGE_FORMS: OINTMENT
+ROUTES: OPHTHALMIC
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: PHARMA STULLN INC.","{""din"":[""02141574""],""brand_name"":""ERYTHROMYCIN"",""active_ingredients"":[{""name"":""ERYTHROMYCIN"",""strength"":5,""unit"":""MG""}],""dosage_forms"":[""OINTMENT""],""routes"":[""OPHTHALMIC""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""PHARMA STULLN INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1756],""drug.txt"":[1756],""form.txt"":[1768],""ingred.txt"":[2648],""route.txt"":[2077],""schedule.txt"":[1765],""status.txt"":[9092]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""31467""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_1eb04c6cacf8e2c0_fr,0.1.0,2026-07-02,hc_dpd_1eb04c6cacf8e2c0,"[""31467""]","[""02141574""]",ERYTHROMYCIN,fr,heldout,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 31467
+DIN: 02141574
+NOM_COMMERCIAL: ÉRYTHROMYCINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Érythromycine; CONCENTRATION=5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Pommade
+VOIES_ADMINISTRATION: Ophtalmique
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PHARMA STULLN INC.","{""din"":[""02141574""],""brand_name"":""ÉRYTHROMYCINE"",""active_ingredients"":[{""name"":""Érythromycine"",""strength"":5,""unit"":""MG""}],""dosage_forms"":[""Pommade""],""routes"":[""Ophtalmique""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""PHARMA STULLN INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1756],""drug.txt"":[1756],""form.txt"":[1768],""ingred.txt"":[2648],""route.txt"":[2077],""schedule.txt"":[1765],""status.txt"":[9092]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""31467""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_223195da11d0850d_en,0.1.0,2026-07-02,hc_dpd_223195da11d0850d,"[""76192""]","[""02276259""]",EXTRA STRENGTH TYLENOL COLD NIGHTTIME,en,heldout,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 76192
+DIN: 02276259
+BRAND_NAME: EXTRA STRENGTH TYLENOL COLD NIGHTTIME
+ACTIVE_INGREDIENTS:
+- NAME=ACETAMINOPHEN; STRENGTH=500; UNIT=MG
+- NAME=DEXTROMETHORPHAN HYDROBROMIDE; STRENGTH=10; UNIT=MG
+- NAME=PHENYLEPHRINE HYDROCHLORIDE; STRENGTH=5; UNIT=MG
+- NAME=CHLORPHENIRAMINE MALEATE; STRENGTH=2; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: KENVUE CANADA INC.","{""din"":[""02276259""],""brand_name"":""EXTRA STRENGTH TYLENOL COLD NIGHTTIME"",""active_ingredients"":[{""name"":""ACETAMINOPHEN"",""strength"":500,""unit"":""MG""},{""name"":""CHLORPHENIRAMINE MALEATE"",""strength"":2,""unit"":""MG""},{""name"":""DEXTROMETHORPHAN HYDROBROMIDE"",""strength"":10,""unit"":""MG""},{""name"":""PHENYLEPHRINE HYDROCHLORIDE"",""strength"":5,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3709],""drug.txt"":[3709],""form.txt"":[3748],""ingred.txt"":[5390,5391,5392,5393],""route.txt"":[4425],""schedule.txt"":[3769],""status.txt"":[19564]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""76192""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_223195da11d0850d_fr,0.1.0,2026-07-02,hc_dpd_223195da11d0850d,"[""76192""]","[""02276259""]",EXTRA STRENGTH TYLENOL COLD NIGHTTIME,fr,heldout,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 76192
+DIN: 02276259
+NOM_COMMERCIAL: EXTRA STRENGTH TYLENOL COLD NIGHTTIME
+INGRÉDIENTS_ACTIFS:
+- NOM=Acétaminophène; CONCENTRATION=500; UNITÉ=MG
+- NOM=Bromhydrate de dextrométhorphane; CONCENTRATION=10; UNITÉ=MG
+- NOM=Chlorhydrate de phényléphrine; CONCENTRATION=5; UNITÉ=MG
+- NOM=Maléate de chlorphéniramine; CONCENTRATION=2; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: KENVUE CANADA INC.","{""din"":[""02276259""],""brand_name"":""EXTRA STRENGTH TYLENOL COLD NIGHTTIME"",""active_ingredients"":[{""name"":""Acétaminophène"",""strength"":500,""unit"":""MG""},{""name"":""Bromhydrate de dextrométhorphane"",""strength"":10,""unit"":""MG""},{""name"":""Chlorhydrate de phényléphrine"",""strength"":5,""unit"":""MG""},{""name"":""Maléate de chlorphéniramine"",""strength"":2,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3709],""drug.txt"":[3709],""form.txt"":[3748],""ingred.txt"":[5390,5391,5392,5393],""route.txt"":[4425],""schedule.txt"":[3769],""status.txt"":[19564]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""76192""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_28787c405835368e_en,0.1.0,2026-07-02,hc_dpd_28787c405835368e,"[""98866""]","[""02498944""]",AG-VITAMINE D TABLETS,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 98866
+DIN: 02498944
+BRAND_NAME: AG-VITAMINE D TABLETS
+ACTIVE_INGREDIENTS:
+- NAME=VITAMIN D3; STRENGTH=10000; UNIT=UNIT
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: ANGITA PHARMA INC.","{""din"":[""02498944""],""brand_name"":""AG-VITAMINE D TABLETS"",""active_ingredients"":[{""name"":""VITAMIN D3"",""strength"":10000,""unit"":""UNIT""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""ANGITA PHARMA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10223],""drug.txt"":[10223],""form.txt"":[10439],""ingred.txt"":[14737],""route.txt"":[12101],""schedule.txt"":[10525],""status.txt"":[42286]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98866""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_28787c405835368e_fr,0.1.0,2026-07-02,hc_dpd_28787c405835368e,"[""98866""]","[""02498944""]",AG-VITAMINE D TABLETS,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 98866
+DIN: 02498944
+NOM_COMMERCIAL: AG-VITAMINE D TABLETS
+INGRÉDIENTS_ACTIFS:
+- NOM=Vitamine D3; CONCENTRATION=10000; UNITÉ=Unité
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: ANGITA PHARMA INC.","{""din"":[""02498944""],""brand_name"":""AG-VITAMINE D TABLETS"",""active_ingredients"":[{""name"":""Vitamine D3"",""strength"":10000,""unit"":""Unité""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""ANGITA PHARMA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10223],""drug.txt"":[10223],""form.txt"":[10439],""ingred.txt"":[14737],""route.txt"":[12101],""schedule.txt"":[10525],""status.txt"":[42286]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98866""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_289ed49d533b9d9b_en,0.1.0,2026-07-02,hc_dpd_289ed49d533b9d9b,"[""71374""]","[""02247134""]",SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 71374
+DIN: 02247134
+BRAND_NAME: SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS
+ACTIVE_INGREDIENTS:
+- NAME=SENNOSIDES; STRENGTH=8.6; UNIT=MG
+- NAME=DOCUSATE SODIUM; STRENGTH=50; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: VITA HEALTH PRODUCTS INC","{""din"":[""02247134""],""brand_name"":""SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS"",""active_ingredients"":[{""name"":""DOCUSATE SODIUM"",""strength"":50,""unit"":""MG""},{""name"":""SENNOSIDES"",""strength"":8.6,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""VITA HEALTH PRODUCTS INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3091],""drug.txt"":[3091],""form.txt"":[3119],""ingred.txt"":[4439,4440],""route.txt"":[3703],""schedule.txt"":[3129],""status.txt"":[16663]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""71374""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_289ed49d533b9d9b_fr,0.1.0,2026-07-02,hc_dpd_289ed49d533b9d9b,"[""71374""]","[""02247134""]",SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 71374
+DIN: 02247134
+NOM_COMMERCIAL: SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS
+INGRÉDIENTS_ACTIFS:
+- NOM=Sennosides; CONCENTRATION=8.6; UNITÉ=MG
+- NOM=Docusate sodique; CONCENTRATION=50; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: VITA HEALTH PRODUCTS INC","{""din"":[""02247134""],""brand_name"":""SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS"",""active_ingredients"":[{""name"":""Docusate sodique"",""strength"":50,""unit"":""MG""},{""name"":""Sennosides"",""strength"":8.6,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""VITA HEALTH PRODUCTS INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3091],""drug.txt"":[3091],""form.txt"":[3119],""ingred.txt"":[4439,4440],""route.txt"":[3703],""schedule.txt"":[3129],""status.txt"":[16663]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""71374""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2c2174190b036b5a_en,0.1.0,2026-07-02,hc_dpd_2c2174190b036b5a,"[""77884""]","[""02293471""]",MAXIMUM STRENGTH ACID REDUCER WITHOUT PRESCRIPTION,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 77884
+DIN: 02293471
+BRAND_NAME: MAXIMUM STRENGTH ACID REDUCER WITHOUT PRESCRIPTION
+ACTIVE_INGREDIENTS:
+- NAME=RANITIDINE (RANITIDINE HYDROCHLORIDE); STRENGTH=150; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: PHARMASCIENCE INC","{""din"":[""02293471""],""brand_name"":""MAXIMUM STRENGTH ACID REDUCER WITHOUT PRESCRIPTION"",""active_ingredients"":[{""name"":""RANITIDINE (RANITIDINE HYDROCHLORIDE)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""PHARMASCIENCE INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4015],""drug.txt"":[4015],""form.txt"":[4055],""ingred.txt"":[5781],""route.txt"":[4792],""schedule.txt"":[4081],""status.txt"":[20983]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""77884""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2c2174190b036b5a_fr,0.1.0,2026-07-02,hc_dpd_2c2174190b036b5a,"[""77884""]","[""02293471""]",MAXIMUM STRENGTH ACID REDUCER WITHOUT PRESCRIPTION,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 77884
+DIN: 02293471
+NOM_COMMERCIAL: RÉDUCTEUR D'ACIDE DOSE MAXIMUM SANS ORDONNANCE
+INGRÉDIENTS_ACTIFS:
+- NOM=Rantidine (Chlorhydrate de ranitidine); CONCENTRATION=150; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PHARMASCIENCE INC","{""din"":[""02293471""],""brand_name"":""RÉDUCTEUR D'ACIDE DOSE MAXIMUM SANS ORDONNANCE"",""active_ingredients"":[{""name"":""Rantidine (Chlorhydrate de ranitidine)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""PHARMASCIENCE INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4015],""drug.txt"":[4015],""form.txt"":[4055],""ingred.txt"":[5781],""route.txt"":[4792],""schedule.txt"":[4081],""status.txt"":[20983]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""77884""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2dcb457e633b3402_en,0.1.0,2026-07-02,hc_dpd_2dcb457e633b3402,"[""96645""]","[""02475774""]",JULUCA,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 96645
+DIN: 02475774
+BRAND_NAME: JULUCA
+ACTIVE_INGREDIENTS:
+- NAME=RILPIVIRINE (RILPIVIRINE HYDROCHLORIDE); STRENGTH=25; UNIT=MG
+- NAME=DOLUTEGRAVIR (DOLUTEGRAVIR SODIUM); STRENGTH=50; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: VIIV HEALTHCARE ULC","{""din"":[""02475774""],""brand_name"":""JULUCA"",""active_ingredients"":[{""name"":""DOLUTEGRAVIR (DOLUTEGRAVIR SODIUM)"",""strength"":50,""unit"":""MG""},{""name"":""RILPIVIRINE (RILPIVIRINE HYDROCHLORIDE)"",""strength"":25,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""VIIV HEALTHCARE ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9087],""drug.txt"":[9087],""form.txt"":[9262],""ingred.txt"":[12886,12887],""route.txt"":[10762],""schedule.txt"":[9328],""status.txt"":[39421]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""96645""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2dcb457e633b3402_fr,0.1.0,2026-07-02,hc_dpd_2dcb457e633b3402,"[""96645""]","[""02475774""]",JULUCA,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 96645
+DIN: 02475774
+NOM_COMMERCIAL: JULUCA
+INGRÉDIENTS_ACTIFS:
+- NOM=Rilpivirine (Chlorhydrate de Rilpivirine); CONCENTRATION=25; UNITÉ=MG
+- NOM=DOLUTÉGRAVIR (Dolutégravir sodique); CONCENTRATION=50; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: VIIV HEALTHCARE ULC","{""din"":[""02475774""],""brand_name"":""JULUCA"",""active_ingredients"":[{""name"":""DOLUTÉGRAVIR (Dolutégravir sodique)"",""strength"":50,""unit"":""MG""},{""name"":""Rilpivirine (Chlorhydrate de Rilpivirine)"",""strength"":25,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""VIIV HEALTHCARE ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9087],""drug.txt"":[9087],""form.txt"":[9262],""ingred.txt"":[12886,12887],""route.txt"":[10762],""schedule.txt"":[9328],""status.txt"":[39421]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""96645""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2f405ba36abb65d5_en,0.1.0,2026-07-02,hc_dpd_2f405ba36abb65d5,"[""96248""]","[""02473135""]",MUSCLE & JOINT NO ODOUR EXTRA STRENGTH,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 96248
+DIN: 02473135
+BRAND_NAME: MUSCLE & JOINT NO ODOUR EXTRA STRENGTH
+ACTIVE_INGREDIENTS:
+- NAME=TROLAMINE SALICYLATE; STRENGTH=20; UNIT=%
+DOSAGE_FORMS: CREAM
+ROUTES: TOPICAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: CHURCH & DWIGHT CANADA CORP","{""din"":[""02473135""],""brand_name"":""MUSCLE & JOINT NO ODOUR EXTRA STRENGTH"",""active_ingredients"":[{""name"":""TROLAMINE SALICYLATE"",""strength"":20,""unit"":""%""}],""dosage_forms"":[""CREAM""],""routes"":[""TOPICAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""CHURCH & DWIGHT CANADA CORP""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8959],""drug.txt"":[8959],""form.txt"":[9130],""ingred.txt"":[12708],""route.txt"":[10600],""schedule.txt"":[9191],""status.txt"":[39104]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""96248""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2f405ba36abb65d5_fr,0.1.0,2026-07-02,hc_dpd_2f405ba36abb65d5,"[""96248""]","[""02473135""]",MUSCLE & JOINT NO ODOUR EXTRA STRENGTH,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 96248
+DIN: 02473135
+NOM_COMMERCIAL: MUSCLES ET ARTICULATIONS EXTRA FORTE INODORE
+INGRÉDIENTS_ACTIFS:
+- NOM=Salicylate de trolamine; CONCENTRATION=20; UNITÉ=%
+FORMES_PHARMACEUTIQUES: Crème
+VOIES_ADMINISTRATION: Topique
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: CHURCH & DWIGHT CANADA CORP","{""din"":[""02473135""],""brand_name"":""MUSCLES ET ARTICULATIONS EXTRA FORTE INODORE"",""active_ingredients"":[{""name"":""Salicylate de trolamine"",""strength"":20,""unit"":""%""}],""dosage_forms"":[""Crème""],""routes"":[""Topique""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""CHURCH & DWIGHT CANADA CORP""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8959],""drug.txt"":[8959],""form.txt"":[9130],""ingred.txt"":[12708],""route.txt"":[10600],""schedule.txt"":[9191],""status.txt"":[39104]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""96248""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2fc21f129a5c9b0a_en,0.1.0,2026-07-02,hc_dpd_2fc21f129a5c9b0a,"[""104399""]","[""02555239""]",ZYNYZ,en,heldout,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 104399
+DIN: 02555239
+BRAND_NAME: ZYNYZ
+ACTIVE_INGREDIENTS:
+- NAME=RETIFANLIMAB; STRENGTH=25; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INTRAVENOUS
+SCHEDULES: PRESCRIPTION | SCHEDULE D
+PRODUCT_STATUS: MARKETED
+COMPANY: INCYTE CORPORATION","{""din"":[""02555239""],""brand_name"":""ZYNYZ"",""active_ingredients"":[{""name"":""RETIFANLIMAB"",""strength"":25,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INTRAVENOUS""],""schedule"":[""PRESCRIPTION"",""SCHEDULE D""],""product_status"":""MARKETED"",""company"":""INCYTE CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[13174],""drug.txt"":[13174],""form.txt"":[13468],""ingred.txt"":[19170],""route.txt"":[15764],""schedule.txt"":[13679,13680],""status.txt"":[48979]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""104399""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_2fc21f129a5c9b0a_fr,0.1.0,2026-07-02,hc_dpd_2fc21f129a5c9b0a,"[""104399""]","[""02555239""]",ZYNYZ,fr,heldout,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 104399
+DIN: 02555239
+NOM_COMMERCIAL: ZYNYZ
+INGRÉDIENTS_ACTIFS:
+- NOM=Rétifanlimab; CONCENTRATION=25; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Intraveineuse
+ANNEXES: Médicaments sur ordonnance | Annexe D
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: INCYTE CORPORATION","{""din"":[""02555239""],""brand_name"":""ZYNYZ"",""active_ingredients"":[{""name"":""Rétifanlimab"",""strength"":25,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Intraveineuse""],""schedule"":[""Annexe D"",""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""INCYTE CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[13174],""drug.txt"":[13174],""form.txt"":[13468],""ingred.txt"":[19170],""route.txt"":[15764],""schedule.txt"":[13679,13680],""status.txt"":[48979]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""104399""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_368497cc07261e3e_en,0.1.0,2026-07-02,hc_dpd_368497cc07261e3e,"[""93116"",""93118"",""93120"",""93121"",""93122""]","[""02445883"",""02445905"",""02445913"",""02445948"",""02445956""]",ATOMOXETINE,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 93116
+DIN: 02445883
+BRAND_NAME: ATOMOXETINE
+ACTIVE_INGREDIENTS:
+- NAME=ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE); STRENGTH=10; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 2
+DRUG_CODE: 93118
+DIN: 02445905
+BRAND_NAME: ATOMOXETINE
+ACTIVE_INGREDIENTS:
+- NAME=ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE); STRENGTH=18; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 3
+DRUG_CODE: 93120
+DIN: 02445913
+BRAND_NAME: ATOMOXETINE
+ACTIVE_INGREDIENTS:
+- NAME=ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE); STRENGTH=25; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 4
+DRUG_CODE: 93121
+DIN: 02445948
+BRAND_NAME: ATOMOXETINE
+ACTIVE_INGREDIENTS:
+- NAME=ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE); STRENGTH=40; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 5
+DRUG_CODE: 93122
+DIN: 02445956
+BRAND_NAME: ATOMOXETINE
+ACTIVE_INGREDIENTS:
+- NAME=ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE); STRENGTH=60; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC","{""din"":[""02445883"",""02445905"",""02445913"",""02445948"",""02445956""],""brand_name"":""ATOMOXETINE"",""active_ingredients"":[{""name"":""ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE)"",""strength"":10,""unit"":""MG""},{""name"":""ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE)"",""strength"":18,""unit"":""MG""},{""name"":""ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE)"",""strength"":25,""unit"":""MG""},{""name"":""ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE)"",""strength"":40,""unit"":""MG""},{""name"":""ATOMOXETINE (ATOMOXETINE HYDROCHLORIDE)"",""strength"":60,""unit"":""MG""}],""dosage_forms"":[""CAPSULE""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""SIVEM PHARMACEUTICALS ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7809,7810,7811,7812,7813],""drug.txt"":[7809,7810,7811,7812,7813],""form.txt"":[7951,7952,7953,7954,7955],""ingred.txt"":[11136,11137,11138,11139,11140],""route.txt"":[9181,9182,9183,9184,9185],""schedule.txt"":[7975,7976,7977,7978,7979],""status.txt"":[35867,35869,35871,35873,35875]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93116"",""93118"",""93120"",""93121"",""93122""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_368497cc07261e3e_fr,0.1.0,2026-07-02,hc_dpd_368497cc07261e3e,"[""93116"",""93118"",""93120"",""93121"",""93122""]","[""02445883"",""02445905"",""02445913"",""02445948"",""02445956""]",ATOMOXETINE,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 93116
+DIN: 02445883
+NOM_COMMERCIAL: ATOMOXÉTINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Atomoxétine (Chlorhydrate d'atomoxétine); CONCENTRATION=10; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 2
+DRUG_CODE: 93118
+DIN: 02445905
+NOM_COMMERCIAL: ATOMOXÉTINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Atomoxétine (Chlorhydrate d'atomoxétine); CONCENTRATION=18; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 3
+DRUG_CODE: 93120
+DIN: 02445913
+NOM_COMMERCIAL: ATOMOXÉTINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Atomoxétine (Chlorhydrate d'atomoxétine); CONCENTRATION=25; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 4
+DRUG_CODE: 93121
+DIN: 02445948
+NOM_COMMERCIAL: ATOMOXÉTINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Atomoxétine (Chlorhydrate d'atomoxétine); CONCENTRATION=40; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 5
+DRUG_CODE: 93122
+DIN: 02445956
+NOM_COMMERCIAL: ATOMOXÉTINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Atomoxétine (Chlorhydrate d'atomoxétine); CONCENTRATION=60; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC","{""din"":[""02445883"",""02445905"",""02445913"",""02445948"",""02445956""],""brand_name"":""ATOMOXÉTINE"",""active_ingredients"":[{""name"":""Atomoxétine (Chlorhydrate d'atomoxétine)"",""strength"":10,""unit"":""MG""},{""name"":""Atomoxétine (Chlorhydrate d'atomoxétine)"",""strength"":18,""unit"":""MG""},{""name"":""Atomoxétine (Chlorhydrate d'atomoxétine)"",""strength"":25,""unit"":""MG""},{""name"":""Atomoxétine (Chlorhydrate d'atomoxétine)"",""strength"":40,""unit"":""MG""},{""name"":""Atomoxétine (Chlorhydrate d'atomoxétine)"",""strength"":60,""unit"":""MG""}],""dosage_forms"":[""Capsule""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""SIVEM PHARMACEUTICALS ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7809,7810,7811,7812,7813],""drug.txt"":[7809,7810,7811,7812,7813],""form.txt"":[7951,7952,7953,7954,7955],""ingred.txt"":[11136,11137,11138,11139,11140],""route.txt"":[9181,9182,9183,9184,9185],""schedule.txt"":[7975,7976,7977,7978,7979],""status.txt"":[35867,35869,35871,35873,35875]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93116"",""93118"",""93120"",""93121"",""93122""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_36e7c644e36eece6_en,0.1.0,2026-07-02,hc_dpd_36e7c644e36eece6,"[""81318"",""81319"",""81320"",""81321""]","[""02327775"",""02327783"",""02327791"",""02327805""]",SANDOZ OLANZAPINE ODT,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 81318
+DIN: 02327775
+BRAND_NAME: SANDOZ OLANZAPINE ODT
+ACTIVE_INGREDIENTS:
+- NAME=OLANZAPINE; STRENGTH=5; UNIT=MG
+DOSAGE_FORMS: TABLET (ORALLY DISINTEGRATING)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED
+
+VARIANT 2
+DRUG_CODE: 81319
+DIN: 02327783
+BRAND_NAME: SANDOZ OLANZAPINE ODT
+ACTIVE_INGREDIENTS:
+- NAME=OLANZAPINE; STRENGTH=10; UNIT=MG
+DOSAGE_FORMS: TABLET (ORALLY DISINTEGRATING)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED
+
+VARIANT 3
+DRUG_CODE: 81320
+DIN: 02327791
+BRAND_NAME: SANDOZ OLANZAPINE ODT
+ACTIVE_INGREDIENTS:
+- NAME=OLANZAPINE; STRENGTH=15; UNIT=MG
+DOSAGE_FORMS: TABLET (ORALLY DISINTEGRATING)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED
+
+VARIANT 4
+DRUG_CODE: 81321
+DIN: 02327805
+BRAND_NAME: SANDOZ OLANZAPINE ODT
+ACTIVE_INGREDIENTS:
+- NAME=OLANZAPINE; STRENGTH=20; UNIT=MG
+DOSAGE_FORMS: TABLET (ORALLY DISINTEGRATING)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED","{""din"":[""02327775"",""02327783"",""02327791"",""02327805""],""brand_name"":""SANDOZ OLANZAPINE ODT"",""active_ingredients"":[{""name"":""OLANZAPINE"",""strength"":5,""unit"":""MG""},{""name"":""OLANZAPINE"",""strength"":10,""unit"":""MG""},{""name"":""OLANZAPINE"",""strength"":15,""unit"":""MG""},{""name"":""OLANZAPINE"",""strength"":20,""unit"":""MG""}],""dosage_forms"":[""TABLET (ORALLY DISINTEGRATING)""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""SANDOZ CANADA INCORPORATED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4777,4778,4779,4780],""drug.txt"":[4777,4778,4779,4780],""form.txt"":[4828,4829,4830,4831],""ingred.txt"":[6833,6834,6835,6836],""route.txt"":[5669,5670,5671,5672],""schedule.txt"":[4862,4863,4864,4865],""status.txt"":[24246,24248,24250,24252]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""81318"",""81319"",""81320"",""81321""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_36e7c644e36eece6_fr,0.1.0,2026-07-02,hc_dpd_36e7c644e36eece6,"[""81318"",""81319"",""81320"",""81321""]","[""02327775"",""02327783"",""02327791"",""02327805""]",SANDOZ OLANZAPINE ODT,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 81318
+DIN: 02327775
+NOM_COMMERCIAL: SANDOZ OLANZAPINE ODT
+INGRÉDIENTS_ACTIFS:
+- NOM=Olanzapine; CONCENTRATION=5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé (à désintégration orale)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED
+
+VARIANTE 2
+DRUG_CODE: 81319
+DIN: 02327783
+NOM_COMMERCIAL: SANDOZ OLANZAPINE ODT
+INGRÉDIENTS_ACTIFS:
+- NOM=Olanzapine; CONCENTRATION=10; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé (à désintégration orale)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED
+
+VARIANTE 3
+DRUG_CODE: 81320
+DIN: 02327791
+NOM_COMMERCIAL: SANDOZ OLANZAPINE ODT
+INGRÉDIENTS_ACTIFS:
+- NOM=Olanzapine; CONCENTRATION=15; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé (à désintégration orale)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED
+
+VARIANTE 4
+DRUG_CODE: 81321
+DIN: 02327805
+NOM_COMMERCIAL: SANDOZ OLANZAPINE ODT
+INGRÉDIENTS_ACTIFS:
+- NOM=Olanzapine; CONCENTRATION=20; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé (à désintégration orale)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED","{""din"":[""02327775"",""02327783"",""02327791"",""02327805""],""brand_name"":""SANDOZ OLANZAPINE ODT"",""active_ingredients"":[{""name"":""Olanzapine"",""strength"":5,""unit"":""MG""},{""name"":""Olanzapine"",""strength"":10,""unit"":""MG""},{""name"":""Olanzapine"",""strength"":15,""unit"":""MG""},{""name"":""Olanzapine"",""strength"":20,""unit"":""MG""}],""dosage_forms"":[""Comprimé (à désintégration orale)""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""SANDOZ CANADA INCORPORATED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4777,4778,4779,4780],""drug.txt"":[4777,4778,4779,4780],""form.txt"":[4828,4829,4830,4831],""ingred.txt"":[6833,6834,6835,6836],""route.txt"":[5669,5670,5671,5672],""schedule.txt"":[4862,4863,4864,4865],""status.txt"":[24246,24248,24250,24252]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""81318"",""81319"",""81320"",""81321""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_3c7a02c6dfa581f0_en,0.1.0,2026-07-02,hc_dpd_3c7a02c6dfa581f0,"[""99741"",""99742""]","[""02508052"",""02508060""]",TAVALISSE,en,heldout,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 99741
+DIN: 02508052
+BRAND_NAME: TAVALISSE
+ACTIVE_INGREDIENTS:
+- NAME=FOSTAMATINIB (FOSTAMATINIB DISODIUM); STRENGTH=100; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: MEDISON PHARMA CANADA INC.
+
+VARIANT 2
+DRUG_CODE: 99742
+DIN: 02508060
+BRAND_NAME: TAVALISSE
+ACTIVE_INGREDIENTS:
+- NAME=FOSTAMATINIB (FOSTAMATINIB DISODIUM); STRENGTH=150; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: MEDISON PHARMA CANADA INC.","{""din"":[""02508052"",""02508060""],""brand_name"":""TAVALISSE"",""active_ingredients"":[{""name"":""FOSTAMATINIB (FOSTAMATINIB DISODIUM)"",""strength"":100,""unit"":""MG""},{""name"":""FOSTAMATINIB (FOSTAMATINIB DISODIUM)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""MEDISON PHARMA CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10656,10657],""drug.txt"":[10656,10657],""form.txt"":[10889,10890],""ingred.txt"":[15407,15408],""route.txt"":[12767,12768],""schedule.txt"":[10977,10978],""status.txt"":[43388,43397]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""99741"",""99742""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_3c7a02c6dfa581f0_fr,0.1.0,2026-07-02,hc_dpd_3c7a02c6dfa581f0,"[""99741"",""99742""]","[""02508052"",""02508060""]",TAVALISSE,fr,heldout,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 99741
+DIN: 02508052
+NOM_COMMERCIAL: TAVALISSE
+INGRÉDIENTS_ACTIFS:
+- NOM=Fostamatinib (Fostamatinib disodique); CONCENTRATION=100; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: MEDISON PHARMA CANADA INC.
+
+VARIANTE 2
+DRUG_CODE: 99742
+DIN: 02508060
+NOM_COMMERCIAL: TAVALISSE
+INGRÉDIENTS_ACTIFS:
+- NOM=Fostamatinib (Fostamatinib disodique); CONCENTRATION=150; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: MEDISON PHARMA CANADA INC.","{""din"":[""02508052"",""02508060""],""brand_name"":""TAVALISSE"",""active_ingredients"":[{""name"":""Fostamatinib (Fostamatinib disodique)"",""strength"":100,""unit"":""MG""},{""name"":""Fostamatinib (Fostamatinib disodique)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""MEDISON PHARMA CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10656,10657],""drug.txt"":[10656,10657],""form.txt"":[10889,10890],""ingred.txt"":[15407,15408],""route.txt"":[12767,12768],""schedule.txt"":[10977,10978],""status.txt"":[43388,43397]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""99741"",""99742""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_524f46556d9e7ecb_en,0.1.0,2026-07-02,hc_dpd_524f46556d9e7ecb,"[""80341"",""80342"",""80344"",""80345""]","[""02317893"",""02317907"",""02317923"",""02317931""]",QUETIAPINE,en,heldout,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 80341
+DIN: 02317893
+BRAND_NAME: QUETIAPINE
+ACTIVE_INGREDIENTS:
+- NAME=QUETIAPINE (QUETIAPINE FUMARATE); STRENGTH=25; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 2
+DRUG_CODE: 80342
+DIN: 02317907
+BRAND_NAME: QUETIAPINE
+ACTIVE_INGREDIENTS:
+- NAME=QUETIAPINE (QUETIAPINE FUMARATE); STRENGTH=100; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 3
+DRUG_CODE: 80344
+DIN: 02317923
+BRAND_NAME: QUETIAPINE
+ACTIVE_INGREDIENTS:
+- NAME=QUETIAPINE (QUETIAPINE FUMARATE); STRENGTH=200; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC
+
+VARIANT 4
+DRUG_CODE: 80345
+DIN: 02317931
+BRAND_NAME: QUETIAPINE
+ACTIVE_INGREDIENTS:
+- NAME=QUETIAPINE (QUETIAPINE FUMARATE); STRENGTH=300; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SIVEM PHARMACEUTICALS ULC","{""din"":[""02317893"",""02317907"",""02317923"",""02317931""],""brand_name"":""QUETIAPINE"",""active_ingredients"":[{""name"":""QUETIAPINE (QUETIAPINE FUMARATE)"",""strength"":25,""unit"":""MG""},{""name"":""QUETIAPINE (QUETIAPINE FUMARATE)"",""strength"":100,""unit"":""MG""},{""name"":""QUETIAPINE (QUETIAPINE FUMARATE)"",""strength"":200,""unit"":""MG""},{""name"":""QUETIAPINE (QUETIAPINE FUMARATE)"",""strength"":300,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""SIVEM PHARMACEUTICALS ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4560,4561,4562,4563],""drug.txt"":[4560,4561,4562,4563],""form.txt"":[4607,4608,4609,4610],""ingred.txt"":[6479,6480,6481,6482],""route.txt"":[5408,5409,5410,5411],""schedule.txt"":[4630,4631,4632,4633],""status.txt"":[23421,23435,23453,23463]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""80341"",""80342"",""80344"",""80345""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_524f46556d9e7ecb_fr,0.1.0,2026-07-02,hc_dpd_524f46556d9e7ecb,"[""80341"",""80342"",""80344"",""80345""]","[""02317893"",""02317907"",""02317923"",""02317931""]",QUETIAPINE,fr,heldout,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 80341
+DIN: 02317893
+NOM_COMMERCIAL: QUETIAPINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Quétiapine (Fumarate de quétiapine); CONCENTRATION=25; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 2
+DRUG_CODE: 80342
+DIN: 02317907
+NOM_COMMERCIAL: QUETIAPINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Quétiapine (Fumarate de quétiapine); CONCENTRATION=100; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 3
+DRUG_CODE: 80344
+DIN: 02317923
+NOM_COMMERCIAL: QUETIAPINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Quétiapine (Fumarate de quétiapine); CONCENTRATION=200; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC
+
+VARIANTE 4
+DRUG_CODE: 80345
+DIN: 02317931
+NOM_COMMERCIAL: QUETIAPINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Quétiapine (Fumarate de quétiapine); CONCENTRATION=300; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SIVEM PHARMACEUTICALS ULC","{""din"":[""02317893"",""02317907"",""02317923"",""02317931""],""brand_name"":""QUETIAPINE"",""active_ingredients"":[{""name"":""Quétiapine (Fumarate de quétiapine)"",""strength"":25,""unit"":""MG""},{""name"":""Quétiapine (Fumarate de quétiapine)"",""strength"":100,""unit"":""MG""},{""name"":""Quétiapine (Fumarate de quétiapine)"",""strength"":200,""unit"":""MG""},{""name"":""Quétiapine (Fumarate de quétiapine)"",""strength"":300,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""SIVEM PHARMACEUTICALS ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4560,4561,4562,4563],""drug.txt"":[4560,4561,4562,4563],""form.txt"":[4607,4608,4609,4610],""ingred.txt"":[6479,6480,6481,6482],""route.txt"":[5408,5409,5410,5411],""schedule.txt"":[4630,4631,4632,4633],""status.txt"":[23421,23435,23453,23463]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""80341"",""80342"",""80344"",""80345""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_57f05e10f203066a_en,0.1.0,2026-07-02,hc_dpd_57f05e10f203066a,"[""79596"",""79597"",""79598""]","[""02310317"",""02310325"",""02310333""]",SANDOZ VENLAFAXINE XR,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 79596
+DIN: 02310317
+BRAND_NAME: SANDOZ VENLAFAXINE XR
+ACTIVE_INGREDIENTS:
+- NAME=VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE); STRENGTH=37.5; UNIT=MG
+DOSAGE_FORMS: CAPSULE (EXTENDED RELEASE)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED
+
+VARIANT 2
+DRUG_CODE: 79597
+DIN: 02310325
+BRAND_NAME: SANDOZ VENLAFAXINE XR
+ACTIVE_INGREDIENTS:
+- NAME=VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE); STRENGTH=75; UNIT=MG
+DOSAGE_FORMS: CAPSULE (EXTENDED RELEASE)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED
+
+VARIANT 3
+DRUG_CODE: 79598
+DIN: 02310333
+BRAND_NAME: SANDOZ VENLAFAXINE XR
+ACTIVE_INGREDIENTS:
+- NAME=VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE); STRENGTH=150; UNIT=MG
+DOSAGE_FORMS: CAPSULE (EXTENDED RELEASE)
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SANDOZ CANADA INCORPORATED","{""din"":[""02310317"",""02310325"",""02310333""],""brand_name"":""SANDOZ VENLAFAXINE XR"",""active_ingredients"":[{""name"":""VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE)"",""strength"":37.5,""unit"":""MG""},{""name"":""VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE)"",""strength"":75,""unit"":""MG""},{""name"":""VENLAFAXINE (VENLAFAXINE HYDROCHLORIDE)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""CAPSULE (EXTENDED RELEASE)""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""SANDOZ CANADA INCORPORATED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4352,4353,4354],""drug.txt"":[4352,4353,4354],""form.txt"":[4399,4400,4401],""ingred.txt"":[6222,6223,6224],""route.txt"":[5173,5174,5175],""schedule.txt"":[4422,4423,4424],""status.txt"":[22463,22466,22475]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""79596"",""79597"",""79598""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_57f05e10f203066a_fr,0.1.0,2026-07-02,hc_dpd_57f05e10f203066a,"[""79596"",""79597"",""79598""]","[""02310317"",""02310325"",""02310333""]",SANDOZ VENLAFAXINE XR,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 79596
+DIN: 02310317
+NOM_COMMERCIAL: SANDOZ VENLAFAXINE XR
+INGRÉDIENTS_ACTIFS:
+- NOM=Venlafaxine (Chlorhydrate de venlafaxine); CONCENTRATION=37.5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule (à libération prolongée)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED
+
+VARIANTE 2
+DRUG_CODE: 79597
+DIN: 02310325
+NOM_COMMERCIAL: SANDOZ VENLAFAXINE XR
+INGRÉDIENTS_ACTIFS:
+- NOM=Venlafaxine (Chlorhydrate de venlafaxine); CONCENTRATION=75; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule (à libération prolongée)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED
+
+VARIANTE 3
+DRUG_CODE: 79598
+DIN: 02310333
+NOM_COMMERCIAL: SANDOZ VENLAFAXINE XR
+INGRÉDIENTS_ACTIFS:
+- NOM=Venlafaxine (Chlorhydrate de venlafaxine); CONCENTRATION=150; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule (à libération prolongée)
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SANDOZ CANADA INCORPORATED","{""din"":[""02310317"",""02310325"",""02310333""],""brand_name"":""SANDOZ VENLAFAXINE XR"",""active_ingredients"":[{""name"":""Venlafaxine (Chlorhydrate de venlafaxine)"",""strength"":37.5,""unit"":""MG""},{""name"":""Venlafaxine (Chlorhydrate de venlafaxine)"",""strength"":75,""unit"":""MG""},{""name"":""Venlafaxine (Chlorhydrate de venlafaxine)"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""Capsule (à libération prolongée)""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""SANDOZ CANADA INCORPORATED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[4352,4353,4354],""drug.txt"":[4352,4353,4354],""form.txt"":[4399,4400,4401],""ingred.txt"":[6222,6223,6224],""route.txt"":[5173,5174,5175],""schedule.txt"":[4422,4423,4424],""status.txt"":[22463,22466,22475]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""79596"",""79597"",""79598""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_5935efeaed9c44f5_en,0.1.0,2026-07-02,hc_dpd_5935efeaed9c44f5,"[""49064""]","[""02230304""]",MICATIN POWDER SPRAY - UNSCENTED 2%,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 49064
+DIN: 02230304
+BRAND_NAME: MICATIN POWDER SPRAY - UNSCENTED 2%
+ACTIVE_INGREDIENTS:
+- NAME=MICONAZOLE NITRATE; STRENGTH=2; UNIT=%
+DOSAGE_FORMS: AEROSOL
+ROUTES: TOPICAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: WELLSPRING PHARMACEUTICAL CANADA CORP","{""din"":[""02230304""],""brand_name"":""MICATIN POWDER SPRAY - UNSCENTED 2%"",""active_ingredients"":[{""name"":""MICONAZOLE NITRATE"",""strength"":2,""unit"":""%""}],""dosage_forms"":[""AEROSOL""],""routes"":[""TOPICAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""WELLSPRING PHARMACEUTICAL CANADA CORP""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[2075],""drug.txt"":[2075],""form.txt"":[2093],""ingred.txt"":[3099],""route.txt"":[2486],""schedule.txt"":[2086],""status.txt"":[11155]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""49064""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_5935efeaed9c44f5_fr,0.1.0,2026-07-02,hc_dpd_5935efeaed9c44f5,"[""49064""]","[""02230304""]",MICATIN POWDER SPRAY - UNSCENTED 2%,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 49064
+DIN: 02230304
+NOM_COMMERCIAL: MICATIN POWDER SPRAY - UNSCENTED 2%
+INGRÉDIENTS_ACTIFS:
+- NOM=Nitrate de miconazole; CONCENTRATION=2; UNITÉ=%
+FORMES_PHARMACEUTIQUES: Aérosol
+VOIES_ADMINISTRATION: Topique
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: WELLSPRING PHARMACEUTICAL CANADA CORP","{""din"":[""02230304""],""brand_name"":""MICATIN POWDER SPRAY - UNSCENTED 2%"",""active_ingredients"":[{""name"":""Nitrate de miconazole"",""strength"":2,""unit"":""%""}],""dosage_forms"":[""Aérosol""],""routes"":[""Topique""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""WELLSPRING PHARMACEUTICAL CANADA CORP""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[2075],""drug.txt"":[2075],""form.txt"":[2093],""ingred.txt"":[3099],""route.txt"":[2486],""schedule.txt"":[2086],""status.txt"":[11155]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""49064""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_65a23fd38726245c_en,0.1.0,2026-07-02,hc_dpd_65a23fd38726245c,"[""93234""]","[""02446820""]",ACT PROGESTERONE INJECTION,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 93234
+DIN: 02446820
+BRAND_NAME: ACT PROGESTERONE INJECTION
+ACTIVE_INGREDIENTS:
+- NAME=PROGESTERONE; STRENGTH=50; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INTRAMUSCULAR
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: TEVA CANADA LIMITED","{""din"":[""02446820""],""brand_name"":""ACT PROGESTERONE INJECTION"",""active_ingredients"":[{""name"":""PROGESTERONE"",""strength"":50,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INTRAMUSCULAR""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""TEVA CANADA LIMITED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7836],""drug.txt"":[7836],""form.txt"":[7978],""ingred.txt"":[11167],""route.txt"":[9211],""schedule.txt"":[8005],""status.txt"":[35964]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93234""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_65a23fd38726245c_fr,0.1.0,2026-07-02,hc_dpd_65a23fd38726245c,"[""93234""]","[""02446820""]",ACT PROGESTERONE INJECTION,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 93234
+DIN: 02446820
+NOM_COMMERCIAL: ACT INJECTION DE PROGESTERONE
+INGRÉDIENTS_ACTIFS:
+- NOM=Progestérone; CONCENTRATION=50; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Intramusculaire
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: TEVA CANADA LIMITED","{""din"":[""02446820""],""brand_name"":""ACT INJECTION DE PROGESTERONE"",""active_ingredients"":[{""name"":""Progestérone"",""strength"":50,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Intramusculaire""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""TEVA CANADA LIMITED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7836],""drug.txt"":[7836],""form.txt"":[7978],""ingred.txt"":[11167],""route.txt"":[9211],""schedule.txt"":[8005],""status.txt"":[35964]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93234""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_6ffd2316b35f9403_en,0.1.0,2026-07-02,hc_dpd_6ffd2316b35f9403,"[""10041""]","[""00438049""]",(20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 10041
+DIN: 00438049
+BRAND_NAME: (20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP
+ACTIVE_INGREDIENTS:
+- NAME=DEXTROSE; STRENGTH=5; UNIT=G
+- NAME=POTASSIUM CHLORIDE; STRENGTH=150; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INTRAVENOUS
+SCHEDULES: ETHICAL
+PRODUCT_STATUS: MARKETED
+COMPANY: BAXTER CORPORATION","{""din"":[""00438049""],""brand_name"":""(20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP"",""active_ingredients"":[{""name"":""DEXTROSE"",""strength"":5,""unit"":""G""},{""name"":""POTASSIUM CHLORIDE"",""strength"":150,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INTRAVENOUS""],""schedule"":[""ETHICAL""],""product_status"":""MARKETED"",""company"":""BAXTER CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[783],""drug.txt"":[783],""form.txt"":[784],""ingred.txt"":[1147,1148],""route.txt"":[932],""schedule.txt"":[783],""status.txt"":[3783]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""10041""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_6ffd2316b35f9403_fr,0.1.0,2026-07-02,hc_dpd_6ffd2316b35f9403,"[""10041""]","[""00438049""]",(20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 10041
+DIN: 00438049
+NOM_COMMERCIAL: (20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP
+INGRÉDIENTS_ACTIFS:
+- NOM=Dextrose; CONCENTRATION=5; UNITÉ=G
+- NOM=Chlorure de potassium; CONCENTRATION=150; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Intraveineuse
+ANNEXES: Spécialité médicale
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: BAXTER CORPORATION","{""din"":[""00438049""],""brand_name"":""(20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP"",""active_ingredients"":[{""name"":""Chlorure de potassium"",""strength"":150,""unit"":""MG""},{""name"":""Dextrose"",""strength"":5,""unit"":""G""}],""dosage_forms"":[""Solution""],""routes"":[""Intraveineuse""],""schedule"":[""Spécialité médicale""],""product_status"":""COMMERCIALISÉ"",""company"":""BAXTER CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[783],""drug.txt"":[783],""form.txt"":[784],""ingred.txt"":[1147,1148],""route.txt"":[932],""schedule.txt"":[783],""status.txt"":[3783]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""10041""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7130dde82a11689c_en,0.1.0,2026-07-02,hc_dpd_7130dde82a11689c,"[""73231""]","[""02248859""]",BENYLIN SLEEP TIME,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 73231
+DIN: 02248859
+BRAND_NAME: BENYLIN SLEEP TIME
+ACTIVE_INGREDIENTS:
+- NAME=DIPHENHYDRAMINE HYDROCHLORIDE; STRENGTH=12.5; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: KENVUE CANADA INC.","{""din"":[""02248859""],""brand_name"":""BENYLIN SLEEP TIME"",""active_ingredients"":[{""name"":""DIPHENHYDRAMINE HYDROCHLORIDE"",""strength"":12.5,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3272],""drug.txt"":[3272],""form.txt"":[3300],""ingred.txt"":[4701],""route.txt"":[3925],""schedule.txt"":[3313],""status.txt"":[17540]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""73231""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7130dde82a11689c_fr,0.1.0,2026-07-02,hc_dpd_7130dde82a11689c,"[""73231""]","[""02248859""]",BENYLIN SLEEP TIME,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 73231
+DIN: 02248859
+NOM_COMMERCIAL: BENYLIN SLEEP TIME
+INGRÉDIENTS_ACTIFS:
+- NOM=Chlorhydrate de diphénhydramine; CONCENTRATION=12.5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: KENVUE CANADA INC.","{""din"":[""02248859""],""brand_name"":""BENYLIN SLEEP TIME"",""active_ingredients"":[{""name"":""Chlorhydrate de diphénhydramine"",""strength"":12.5,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3272],""drug.txt"":[3272],""form.txt"":[3300],""ingred.txt"":[4701],""route.txt"":[3925],""schedule.txt"":[3313],""status.txt"":[17540]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""73231""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7549c78320e483e3_en,0.1.0,2026-07-02,hc_dpd_7549c78320e483e3,"[""43176""]","[""02216221""]",TEVA-IPRATROPIUM STERINEBS,en,heldout,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 43176
+DIN: 02216221
+BRAND_NAME: TEVA-IPRATROPIUM STERINEBS
+ACTIVE_INGREDIENTS:
+- NAME=IPRATROPIUM BROMIDE; STRENGTH=250; UNIT=MCG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INHALATION
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: TEVA CANADA LIMITED","{""din"":[""02216221""],""brand_name"":""TEVA-IPRATROPIUM STERINEBS"",""active_ingredients"":[{""name"":""IPRATROPIUM BROMIDE"",""strength"":250,""unit"":""MCG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INHALATION""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""TEVA CANADA LIMITED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1909],""drug.txt"":[1909],""form.txt"":[1925],""ingred.txt"":[2883],""route.txt"":[2270],""schedule.txt"":[1918],""status.txt"":[10055]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""43176""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7549c78320e483e3_fr,0.1.0,2026-07-02,hc_dpd_7549c78320e483e3,"[""43176""]","[""02216221""]",TEVA-IPRATROPIUM STERINEBS,fr,heldout,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 43176
+DIN: 02216221
+NOM_COMMERCIAL: TEVA-IPRATROPIUM STERINEBS
+INGRÉDIENTS_ACTIFS:
+- NOM=Bromure d'ipratropium; CONCENTRATION=250; UNITÉ=MCG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Inhalation
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: TEVA CANADA LIMITED","{""din"":[""02216221""],""brand_name"":""TEVA-IPRATROPIUM STERINEBS"",""active_ingredients"":[{""name"":""Bromure d'ipratropium"",""strength"":250,""unit"":""MCG""}],""dosage_forms"":[""Solution""],""routes"":[""Inhalation""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""TEVA CANADA LIMITED""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[1909],""drug.txt"":[1909],""form.txt"":[1925],""ingred.txt"":[2883],""route.txt"":[2270],""schedule.txt"":[1918],""status.txt"":[10055]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""43176""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_771eaf63bd1bf1d7_en,0.1.0,2026-07-02,hc_dpd_771eaf63bd1bf1d7,"[""88225"",""88226""]","[""02397285"",""02397293""]",NAT-IMATINIB,en,heldout,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 88225
+DIN: 02397285
+BRAND_NAME: NAT-IMATINIB
+ACTIVE_INGREDIENTS:
+- NAME=IMATINIB (IMATINIB MESYLATE); STRENGTH=100; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: NATCO PHARMA (CANADA) INC
+
+VARIANT 2
+DRUG_CODE: 88226
+DIN: 02397293
+BRAND_NAME: NAT-IMATINIB
+ACTIVE_INGREDIENTS:
+- NAME=IMATINIB (IMATINIB MESYLATE); STRENGTH=400; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: NATCO PHARMA (CANADA) INC","{""din"":[""02397285"",""02397293""],""brand_name"":""NAT-IMATINIB"",""active_ingredients"":[{""name"":""IMATINIB (IMATINIB MESYLATE)"",""strength"":100,""unit"":""MG""},{""name"":""IMATINIB (IMATINIB MESYLATE)"",""strength"":400,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""NATCO PHARMA (CANADA) INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6337,6338],""drug.txt"":[6337,6338],""form.txt"":[6422,6423],""ingred.txt"":[9091,9092],""route.txt"":[7498,7499],""schedule.txt"":[6457,6458],""status.txt"":[30247,30257]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""88225"",""88226""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_771eaf63bd1bf1d7_fr,0.1.0,2026-07-02,hc_dpd_771eaf63bd1bf1d7,"[""88225"",""88226""]","[""02397285"",""02397293""]",NAT-IMATINIB,fr,heldout,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 88225
+DIN: 02397285
+NOM_COMMERCIAL: NAT-IMATINIB
+INGRÉDIENTS_ACTIFS:
+- NOM=Imatinib (Mésylate d'imatinib); CONCENTRATION=100; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: NATCO PHARMA (CANADA) INC
+
+VARIANTE 2
+DRUG_CODE: 88226
+DIN: 02397293
+NOM_COMMERCIAL: NAT-IMATINIB
+INGRÉDIENTS_ACTIFS:
+- NOM=Imatinib (Mésylate d'imatinib); CONCENTRATION=400; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: NATCO PHARMA (CANADA) INC","{""din"":[""02397285"",""02397293""],""brand_name"":""NAT-IMATINIB"",""active_ingredients"":[{""name"":""Imatinib (Mésylate d'imatinib)"",""strength"":100,""unit"":""MG""},{""name"":""Imatinib (Mésylate d'imatinib)"",""strength"":400,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""NATCO PHARMA (CANADA) INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6337,6338],""drug.txt"":[6337,6338],""form.txt"":[6422,6423],""ingred.txt"":[9091,9092],""route.txt"":[7498,7499],""schedule.txt"":[6457,6458],""status.txt"":[30247,30257]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""88225"",""88226""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7a25872371a726a2_en,0.1.0,2026-07-02,hc_dpd_7a25872371a726a2,"[""101467""]","[""02525720""]",KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 101467
+DIN: 02525720
+BRAND_NAME: KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY
+ACTIVE_INGREDIENTS:
+- NAME=AVOBENZONE; STRENGTH=3; UNIT=%
+- NAME=HOMOSALATE; STRENGTH=15; UNIT=%
+- NAME=OCTISALATE; STRENGTH=5; UNIT=%
+DOSAGE_FORMS: LOTION
+ROUTES: TOPICAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: BLACK GIRL SUNSCREEN LLC","{""din"":[""02525720""],""brand_name"":""KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY"",""active_ingredients"":[{""name"":""AVOBENZONE"",""strength"":3,""unit"":""%""},{""name"":""HOMOSALATE"",""strength"":15,""unit"":""%""},{""name"":""OCTISALATE"",""strength"":5,""unit"":""%""}],""dosage_forms"":[""LOTION""],""routes"":[""TOPICAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""BLACK GIRL SUNSCREEN LLC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[11451],""drug.txt"":[11451],""form.txt"":[11716],""ingred.txt"":[16576,16577,16578],""route.txt"":[13819],""schedule.txt"":[11822],""status.txt"":[45227]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""101467""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7a25872371a726a2_fr,0.1.0,2026-07-02,hc_dpd_7a25872371a726a2,"[""101467""]","[""02525720""]",KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 101467
+DIN: 02525720
+NOM_COMMERCIAL: KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY
+INGRÉDIENTS_ACTIFS:
+- NOM=Avobenzone; CONCENTRATION=3; UNITÉ=%
+- NOM=Homosalate; CONCENTRATION=15; UNITÉ=%
+- NOM=Octisalate; CONCENTRATION=5; UNITÉ=%
+FORMES_PHARMACEUTIQUES: Lotion
+VOIES_ADMINISTRATION: Topique
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: BLACK GIRL SUNSCREEN LLC","{""din"":[""02525720""],""brand_name"":""KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY"",""active_ingredients"":[{""name"":""Avobenzone"",""strength"":3,""unit"":""%""},{""name"":""Homosalate"",""strength"":15,""unit"":""%""},{""name"":""Octisalate"",""strength"":5,""unit"":""%""}],""dosage_forms"":[""Lotion""],""routes"":[""Topique""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""BLACK GIRL SUNSCREEN LLC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[11451],""drug.txt"":[11451],""form.txt"":[11716],""ingred.txt"":[16576,16577,16578],""route.txt"":[13819],""schedule.txt"":[11822],""status.txt"":[45227]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""101467""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7c564b021ccc75e5_en,0.1.0,2026-07-02,hc_dpd_7c564b021ccc75e5,"[""83612""]","[""02350939""]",LATISSE,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 83612
+DIN: 02350939
+BRAND_NAME: LATISSE
+ACTIVE_INGREDIENTS:
+- NAME=BIMATOPROST; STRENGTH=0.03; UNIT=%
+DOSAGE_FORMS: SOLUTION
+ROUTES: TOPICAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: ABBVIE CORPORATION","{""din"":[""02350939""],""brand_name"":""LATISSE"",""active_ingredients"":[{""name"":""BIMATOPROST"",""strength"":0.03,""unit"":""%""}],""dosage_forms"":[""SOLUTION""],""routes"":[""TOPICAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""ABBVIE CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[5088],""drug.txt"":[5088],""form.txt"":[5150],""ingred.txt"":[7304],""route.txt"":[6053],""schedule.txt"":[5181],""status.txt"":[25585]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""83612""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_7c564b021ccc75e5_fr,0.1.0,2026-07-02,hc_dpd_7c564b021ccc75e5,"[""83612""]","[""02350939""]",LATISSE,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 83612
+DIN: 02350939
+NOM_COMMERCIAL: LATISSE
+INGRÉDIENTS_ACTIFS:
+- NOM=Bimatoprost; CONCENTRATION=0.03; UNITÉ=%
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Topique
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: ABBVIE CORPORATION","{""din"":[""02350939""],""brand_name"":""LATISSE"",""active_ingredients"":[{""name"":""Bimatoprost"",""strength"":0.03,""unit"":""%""}],""dosage_forms"":[""Solution""],""routes"":[""Topique""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""ABBVIE CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[5088],""drug.txt"":[5088],""form.txt"":[5150],""ingred.txt"":[7304],""route.txt"":[6053],""schedule.txt"":[5181],""status.txt"":[25585]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""83612""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_83027a6372dd02be_en,0.1.0,2026-07-02,hc_dpd_83027a6372dd02be,"[""98563""]","[""02495732""]",VYNDAQEL,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 98563
+DIN: 02495732
+BRAND_NAME: VYNDAQEL
+ACTIVE_INGREDIENTS:
+- NAME=TAFAMIDIS MEGLUMINE; STRENGTH=20; UNIT=MG
+DOSAGE_FORMS: CAPSULE
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: PFIZER CANADA ULC","{""din"":[""02495732""],""brand_name"":""VYNDAQEL"",""active_ingredients"":[{""name"":""TAFAMIDIS MEGLUMINE"",""strength"":20,""unit"":""MG""}],""dosage_forms"":[""CAPSULE""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""PFIZER CANADA ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10048],""drug.txt"":[10048],""form.txt"":[10250],""ingred.txt"":[14390],""route.txt"":[11862],""schedule.txt"":[10336],""status.txt"":[41854]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98563""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_83027a6372dd02be_fr,0.1.0,2026-07-02,hc_dpd_83027a6372dd02be,"[""98563""]","[""02495732""]",VYNDAQEL,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 98563
+DIN: 02495732
+NOM_COMMERCIAL: VYNDAQEL
+INGRÉDIENTS_ACTIFS:
+- NOM=Tafamidis méglumine; CONCENTRATION=20; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PFIZER CANADA ULC","{""din"":[""02495732""],""brand_name"":""VYNDAQEL"",""active_ingredients"":[{""name"":""Tafamidis méglumine"",""strength"":20,""unit"":""MG""}],""dosage_forms"":[""Capsule""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""PFIZER CANADA ULC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[10048],""drug.txt"":[10048],""form.txt"":[10250],""ingred.txt"":[14390],""route.txt"":[11862],""schedule.txt"":[10336],""status.txt"":[41854]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98563""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_832be5088084b7fa_en,0.1.0,2026-07-02,hc_dpd_832be5088084b7fa,"[""90285""]","[""02418282""]",ULTIBRO BREEZHALER,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 90285
+DIN: 02418282
+BRAND_NAME: ULTIBRO BREEZHALER
+ACTIVE_INGREDIENTS:
+- NAME=INDACATEROL (INDACATEROL MALEATE); STRENGTH=110; UNIT=MCG
+- NAME=GLYCOPYRRONIUM (GLYCOPYRRONIUM BROMIDE); STRENGTH=50; UNIT=MCG
+DOSAGE_FORMS: CAPSULE
+ROUTES: INHALATION
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: NOVARTIS PHARMACEUTICALS CANADA INC","{""din"":[""02418282""],""brand_name"":""ULTIBRO BREEZHALER"",""active_ingredients"":[{""name"":""GLYCOPYRRONIUM (GLYCOPYRRONIUM BROMIDE)"",""strength"":50,""unit"":""MCG""},{""name"":""INDACATEROL (INDACATEROL MALEATE)"",""strength"":110,""unit"":""MCG""}],""dosage_forms"":[""CAPSULE""],""routes"":[""INHALATION""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""NOVARTIS PHARMACEUTICALS CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6956],""drug.txt"":[6956],""form.txt"":[7059],""ingred.txt"":[9960,9961],""route.txt"":[8176],""schedule.txt"":[7098],""status.txt"":[32696]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""90285""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_832be5088084b7fa_fr,0.1.0,2026-07-02,hc_dpd_832be5088084b7fa,"[""90285""]","[""02418282""]",ULTIBRO BREEZHALER,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 90285
+DIN: 02418282
+NOM_COMMERCIAL: ULTIBRO BREEZHALER
+INGRÉDIENTS_ACTIFS:
+- NOM=Indacatérol (Maléate d'Indacatérol); CONCENTRATION=110; UNITÉ=MCG
+- NOM=Glycopyrronium (Bromure de Glycopyrronium); CONCENTRATION=50; UNITÉ=MCG
+FORMES_PHARMACEUTIQUES: Capsule
+VOIES_ADMINISTRATION: Inhalation
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: NOVARTIS PHARMACEUTICALS CANADA INC","{""din"":[""02418282""],""brand_name"":""ULTIBRO BREEZHALER"",""active_ingredients"":[{""name"":""Glycopyrronium (Bromure de Glycopyrronium)"",""strength"":50,""unit"":""MCG""},{""name"":""Indacatérol (Maléate d'Indacatérol)"",""strength"":110,""unit"":""MCG""}],""dosage_forms"":[""Capsule""],""routes"":[""Inhalation""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""NOVARTIS PHARMACEUTICALS CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6956],""drug.txt"":[6956],""form.txt"":[7059],""ingred.txt"":[9960,9961],""route.txt"":[8176],""schedule.txt"":[7098],""status.txt"":[32696]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""90285""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_83c23d1f8ed38293_en,0.1.0,2026-07-02,hc_dpd_83c23d1f8ed38293,"[""104208""]","[""02553120""]",JAMTEKI I.V.,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 104208
+DIN: 02553120
+BRAND_NAME: JAMTEKI I.V.
+ACTIVE_INGREDIENTS:
+- NAME=USTEKINUMAB; STRENGTH=5; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INTRAVENOUS
+SCHEDULES: PRESCRIPTION | SCHEDULE D
+PRODUCT_STATUS: MARKETED
+COMPANY: JAMP PHARMA CORPORATION","{""din"":[""02553120""],""brand_name"":""JAMTEKI I.V."",""active_ingredients"":[{""name"":""USTEKINUMAB"",""strength"":5,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INTRAVENOUS""],""schedule"":[""PRESCRIPTION"",""SCHEDULE D""],""product_status"":""MARKETED"",""company"":""JAMP PHARMA CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[13054],""drug.txt"":[13054],""form.txt"":[13347],""ingred.txt"":[18993],""route.txt"":[15637],""schedule.txt"":[13543,13544],""status.txt"":[48734]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""104208""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_83c23d1f8ed38293_fr,0.1.0,2026-07-02,hc_dpd_83c23d1f8ed38293,"[""104208""]","[""02553120""]",JAMTEKI I.V.,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 104208
+DIN: 02553120
+NOM_COMMERCIAL: JAMTEKI I.V.
+INGRÉDIENTS_ACTIFS:
+- NOM=Ustékinumab; CONCENTRATION=5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Intraveineuse
+ANNEXES: Médicaments sur ordonnance | Annexe D
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: JAMP PHARMA CORPORATION","{""din"":[""02553120""],""brand_name"":""JAMTEKI I.V."",""active_ingredients"":[{""name"":""Ustékinumab"",""strength"":5,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Intraveineuse""],""schedule"":[""Annexe D"",""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""JAMP PHARMA CORPORATION""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[13054],""drug.txt"":[13054],""form.txt"":[13347],""ingred.txt"":[18993],""route.txt"":[15637],""schedule.txt"":[13543,13544],""status.txt"":[48734]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""104208""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_8d256a8ea08f5dad_en,0.1.0,2026-07-02,hc_dpd_8d256a8ea08f5dad,"[""92402""]","[""02439611""]",HUMALOG 200 UNITS/ML KWIKPEN,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 92402
+DIN: 02439611
+BRAND_NAME: HUMALOG 200 UNITS/ML KWIKPEN
+ACTIVE_INGREDIENTS:
+- NAME=INSULIN LISPRO; STRENGTH=200; UNIT=UNIT
+DOSAGE_FORMS: SOLUTION
+ROUTES: SUBCUTANEOUS
+SCHEDULES: SCHEDULE D
+PRODUCT_STATUS: MARKETED
+COMPANY: ELI LILLY CANADA INC","{""din"":[""02439611""],""brand_name"":""HUMALOG 200 UNITS/ML KWIKPEN"",""active_ingredients"":[{""name"":""INSULIN LISPRO"",""strength"":200,""unit"":""UNIT""}],""dosage_forms"":[""SOLUTION""],""routes"":[""SUBCUTANEOUS""],""schedule"":[""SCHEDULE D""],""product_status"":""MARKETED"",""company"":""ELI LILLY CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7586],""drug.txt"":[7586],""form.txt"":[7723],""ingred.txt"":[10796],""route.txt"":[8931],""schedule.txt"":[7743],""status.txt"":[35039]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""92402""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_8d256a8ea08f5dad_fr,0.1.0,2026-07-02,hc_dpd_8d256a8ea08f5dad,"[""92402""]","[""02439611""]",HUMALOG 200 UNITS/ML KWIKPEN,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 92402
+DIN: 02439611
+NOM_COMMERCIAL: HUMALOG 200 UNITS/ML KWIKPEN
+INGRÉDIENTS_ACTIFS:
+- NOM=Insuline lispro; CONCENTRATION=200; UNITÉ=Unité
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Sous-cutanée
+ANNEXES: Annexe D
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: ELI LILLY CANADA INC","{""din"":[""02439611""],""brand_name"":""HUMALOG 200 UNITS/ML KWIKPEN"",""active_ingredients"":[{""name"":""Insuline lispro"",""strength"":200,""unit"":""Unité""}],""dosage_forms"":[""Solution""],""routes"":[""Sous-cutanée""],""schedule"":[""Annexe D""],""product_status"":""COMMERCIALISÉ"",""company"":""ELI LILLY CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7586],""drug.txt"":[7586],""form.txt"":[7723],""ingred.txt"":[10796],""route.txt"":[8931],""schedule.txt"":[7743],""status.txt"":[35039]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""92402""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_8eff929469606201_en,0.1.0,2026-07-02,hc_dpd_8eff929469606201,"[""87415""]","[""02388642""]",CEPACOL SENSATIONS SORE THROAT & COUGH,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 87415
+DIN: 02388642
+BRAND_NAME: CEPACOL SENSATIONS SORE THROAT & COUGH
+ACTIVE_INGREDIENTS:
+- NAME=MENTHOL; STRENGTH=8; UNIT=MG
+- NAME=AMYLMETACRESOL; STRENGTH=0.6; UNIT=MG
+- NAME=DICHLOROBENZYL ALCOHOL; STRENGTH=1.2; UNIT=MG
+DOSAGE_FORMS: LOZENGE
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: RECKITT BENCKISER (CANADA) INC","{""din"":[""02388642""],""brand_name"":""CEPACOL SENSATIONS SORE THROAT & COUGH"",""active_ingredients"":[{""name"":""AMYLMETACRESOL"",""strength"":0.6,""unit"":""MG""},{""name"":""DICHLOROBENZYL ALCOHOL"",""strength"":1.2,""unit"":""MG""},{""name"":""MENTHOL"",""strength"":8,""unit"":""MG""}],""dosage_forms"":[""LOZENGE""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""RECKITT BENCKISER (CANADA) INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6088],""drug.txt"":[6088],""form.txt"":[6172],""ingred.txt"":[8777,8778,8779],""route.txt"":[7210],""schedule.txt"":[6195],""status.txt"":[29334]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""87415""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_8eff929469606201_fr,0.1.0,2026-07-02,hc_dpd_8eff929469606201,"[""87415""]","[""02388642""]",CEPACOL SENSATIONS SORE THROAT & COUGH,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 87415
+DIN: 02388642
+NOM_COMMERCIAL: CEPACOL SENSATIONS SORE THROAT & COUGH
+INGRÉDIENTS_ACTIFS:
+- NOM=Menthol; CONCENTRATION=8; UNITÉ=MG
+- NOM=Amylmétacrésol; CONCENTRATION=0.6; UNITÉ=MG
+- NOM=Alcool dichlorobenzylique; CONCENTRATION=1.2; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Pastille
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: RECKITT BENCKISER (CANADA) INC","{""din"":[""02388642""],""brand_name"":""CEPACOL SENSATIONS SORE THROAT & COUGH"",""active_ingredients"":[{""name"":""Alcool dichlorobenzylique"",""strength"":1.2,""unit"":""MG""},{""name"":""Amylmétacrésol"",""strength"":0.6,""unit"":""MG""},{""name"":""Menthol"",""strength"":8,""unit"":""MG""}],""dosage_forms"":[""Pastille""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""RECKITT BENCKISER (CANADA) INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[6088],""drug.txt"":[6088],""form.txt"":[6172],""ingred.txt"":[8777,8778,8779],""route.txt"":[7210],""schedule.txt"":[6195],""status.txt"":[29334]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""87415""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_90c34aee86855e30_en,0.1.0,2026-07-02,hc_dpd_90c34aee86855e30,"[""102955""]","[""02540886""]",APO-AZELASTINE/FLUTICASONE,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 102955
+DIN: 02540886
+BRAND_NAME: APO-AZELASTINE/FLUTICASONE
+ACTIVE_INGREDIENTS:
+- NAME=FLUTICASONE PROPIONATE; STRENGTH=50; UNIT=MCG
+- NAME=AZELASTINE HYDROCHLORIDE; STRENGTH=137; UNIT=MCG
+DOSAGE_FORMS: SPRAY, METERED DOSE
+ROUTES: NASAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: APOTEX INC","{""din"":[""02540886""],""brand_name"":""APO-AZELASTINE/FLUTICASONE"",""active_ingredients"":[{""name"":""AZELASTINE HYDROCHLORIDE"",""strength"":137,""unit"":""MCG""},{""name"":""FLUTICASONE PROPIONATE"",""strength"":50,""unit"":""MCG""}],""dosage_forms"":[""SPRAY, METERED DOSE""],""routes"":[""NASAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""APOTEX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[12348],""drug.txt"":[12348],""form.txt"":[12622],""ingred.txt"":[17955,17956],""route.txt"":[14837],""schedule.txt"":[12778],""status.txt"":[47212]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""102955""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_90c34aee86855e30_fr,0.1.0,2026-07-02,hc_dpd_90c34aee86855e30,"[""102955""]","[""02540886""]",APO-AZELASTINE/FLUTICASONE,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 102955
+DIN: 02540886
+NOM_COMMERCIAL: APO-AZELASTINE/FLUTICASONE
+INGRÉDIENTS_ACTIFS:
+- NOM=Propionate de fluticasone; CONCENTRATION=50; UNITÉ=MCG
+- NOM=Chlorhydrate d'azélastine; CONCENTRATION=137; UNITÉ=MCG
+FORMES_PHARMACEUTIQUES: Pulvérisation, à dose mesurée
+VOIES_ADMINISTRATION: Nasale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: APOTEX INC","{""din"":[""02540886""],""brand_name"":""APO-AZELASTINE/FLUTICASONE"",""active_ingredients"":[{""name"":""Chlorhydrate d'azélastine"",""strength"":137,""unit"":""MCG""},{""name"":""Propionate de fluticasone"",""strength"":50,""unit"":""MCG""}],""dosage_forms"":[""Pulvérisation, à dose mesurée""],""routes"":[""Nasale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""APOTEX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[12348],""drug.txt"":[12348],""form.txt"":[12622],""ingred.txt"":[17955,17956],""route.txt"":[14837],""schedule.txt"":[12778],""status.txt"":[47212]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""102955""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_9ca23a49789e0651_en,0.1.0,2026-07-02,hc_dpd_9ca23a49789e0651,"[""66438""]","[""02242658""]",MOTRIN 400MG,en,heldout,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 66438
+DIN: 02242658
+BRAND_NAME: MOTRIN 400MG
+ACTIVE_INGREDIENTS:
+- NAME=IBUPROFEN; STRENGTH=400; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: NON-PRESCRIPTION DRUGS
+PRODUCT_STATUS: MARKETED
+COMPANY: KENVUE CANADA INC.","{""din"":[""02242658""],""brand_name"":""MOTRIN 400MG"",""active_ingredients"":[{""name"":""IBUPROFEN"",""strength"":400,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""NON-PRESCRIPTION DRUGS""],""product_status"":""MARKETED"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[2660],""drug.txt"":[2660],""form.txt"":[2686],""ingred.txt"":[3885],""route.txt"":[3180],""schedule.txt"":[2685],""status.txt"":[14586]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""66438""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_9ca23a49789e0651_fr,0.1.0,2026-07-02,hc_dpd_9ca23a49789e0651,"[""66438""]","[""02242658""]",MOTRIN 400MG,fr,heldout,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 66438
+DIN: 02242658
+NOM_COMMERCIAL: MOTRIN 400MG
+INGRÉDIENTS_ACTIFS:
+- NOM=Ibuprofène; CONCENTRATION=400; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sans ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: KENVUE CANADA INC.","{""din"":[""02242658""],""brand_name"":""MOTRIN 400MG"",""active_ingredients"":[{""name"":""Ibuprofène"",""strength"":400,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sans ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""KENVUE CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[2660],""drug.txt"":[2660],""form.txt"":[2686],""ingred.txt"":[3885],""route.txt"":[3180],""schedule.txt"":[2685],""status.txt"":[14586]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""66438""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_a718725b15dfa81f_en,0.1.0,2026-07-02,hc_dpd_a718725b15dfa81f,"[""92393""]","[""02439514""]",POSITIVE SKIN TEST CONTROL-HISTAMINE,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 92393
+DIN: 02439514
+BRAND_NAME: POSITIVE SKIN TEST CONTROL-HISTAMINE
+ACTIVE_INGREDIENTS:
+- NAME=HISTAMINE (HISTAMINE DIHYDROCHLORIDE); STRENGTH=6; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: PERCUTANEOUS
+SCHEDULES: ETHICAL
+PRODUCT_STATUS: MARKETED
+COMPANY: JUBILANT HOLLISTERSTIER LLC","{""din"":[""02439514""],""brand_name"":""POSITIVE SKIN TEST CONTROL-HISTAMINE"",""active_ingredients"":[{""name"":""HISTAMINE (HISTAMINE DIHYDROCHLORIDE)"",""strength"":6,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""PERCUTANEOUS""],""schedule"":[""ETHICAL""],""product_status"":""MARKETED"",""company"":""JUBILANT HOLLISTERSTIER LLC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7583],""drug.txt"":[7583],""form.txt"":[7720],""ingred.txt"":[10792],""route.txt"":[8928],""schedule.txt"":[7740],""status.txt"":[35025]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""92393""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_a718725b15dfa81f_fr,0.1.0,2026-07-02,hc_dpd_a718725b15dfa81f,"[""92393""]","[""02439514""]",POSITIVE SKIN TEST CONTROL-HISTAMINE,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 92393
+DIN: 02439514
+NOM_COMMERCIAL: POSITIVE SKIN TEST CONTROL-HISTAMINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Histamine (Dichlorhydrate d'histamine); CONCENTRATION=6; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Percutanée
+ANNEXES: Spécialité médicale
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: JUBILANT HOLLISTERSTIER LLC","{""din"":[""02439514""],""brand_name"":""POSITIVE SKIN TEST CONTROL-HISTAMINE"",""active_ingredients"":[{""name"":""Histamine (Dichlorhydrate d'histamine)"",""strength"":6,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Percutanée""],""schedule"":[""Spécialité médicale""],""product_status"":""COMMERCIALISÉ"",""company"":""JUBILANT HOLLISTERSTIER LLC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[7583],""drug.txt"":[7583],""form.txt"":[7720],""ingred.txt"":[10792],""route.txt"":[8928],""schedule.txt"":[7740],""status.txt"":[35025]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""92393""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_b2e29a0786795152_en,0.1.0,2026-07-02,hc_dpd_b2e29a0786795152,"[""97499""]","[""02484706""]",PDP-AMLODIPINE,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 97499
+DIN: 02484706
+BRAND_NAME: PDP-AMLODIPINE
+ACTIVE_INGREDIENTS:
+- NAME=AMLODIPINE (AMLODIPINE BESYLATE); STRENGTH=1; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: PENDOPHARM DIVISION OF PHARMASCIENCE INC","{""din"":[""02484706""],""brand_name"":""PDP-AMLODIPINE"",""active_ingredients"":[{""name"":""AMLODIPINE (AMLODIPINE BESYLATE)"",""strength"":1,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""PENDOPHARM DIVISION OF PHARMASCIENCE INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9483],""drug.txt"":[9483],""form.txt"":[9669],""ingred.txt"":[13462],""route.txt"":[11212],""schedule.txt"":[9746],""status.txt"":[40469]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""97499""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_b2e29a0786795152_fr,0.1.0,2026-07-02,hc_dpd_b2e29a0786795152,"[""97499""]","[""02484706""]",PDP-AMLODIPINE,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 97499
+DIN: 02484706
+NOM_COMMERCIAL: PDP-AMLODIPINE
+INGRÉDIENTS_ACTIFS:
+- NOM=Amlodipine (Bésylate d'amlodipine); CONCENTRATION=1; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PENDOPHARM DIVISION OF PHARMASCIENCE INC","{""din"":[""02484706""],""brand_name"":""PDP-AMLODIPINE"",""active_ingredients"":[{""name"":""Amlodipine (Bésylate d'amlodipine)"",""strength"":1,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""PENDOPHARM DIVISION OF PHARMASCIENCE INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9483],""drug.txt"":[9483],""form.txt"":[9669],""ingred.txt"":[13462],""route.txt"":[11212],""schedule.txt"":[9746],""status.txt"":[40469]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""97499""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_b35e1ec6cb452259_en,0.1.0,2026-07-02,hc_dpd_b35e1ec6cb452259,"[""93883""]","[""02452456""]",BORTEZOMIB FOR INJECTION,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 93883
+DIN: 02452456
+BRAND_NAME: BORTEZOMIB FOR INJECTION
+ACTIVE_INGREDIENTS:
+- NAME=BORTEZOMIB (BORTEZOMIB MANNITOL BORONIC ESTER); STRENGTH=3.5; UNIT=MG
+DOSAGE_FORMS: POWDER FOR SOLUTION
+ROUTES: INTRAVENOUS | SUBCUTANEOUS
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: DR REDDY'S LABORATORIES LTD","{""din"":[""02452456""],""brand_name"":""BORTEZOMIB FOR INJECTION"",""active_ingredients"":[{""name"":""BORTEZOMIB (BORTEZOMIB MANNITOL BORONIC ESTER)"",""strength"":3.5,""unit"":""MG""}],""dosage_forms"":[""POWDER FOR SOLUTION""],""routes"":[""INTRAVENOUS"",""SUBCUTANEOUS""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""DR REDDY'S LABORATORIES LTD""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8044],""drug.txt"":[8044],""form.txt"":[8198],""ingred.txt"":[11473],""route.txt"":[9481,9482],""schedule.txt"":[8223],""status.txt"":[36544]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93883""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_b35e1ec6cb452259_fr,0.1.0,2026-07-02,hc_dpd_b35e1ec6cb452259,"[""93883""]","[""02452456""]",BORTEZOMIB FOR INJECTION,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 93883
+DIN: 02452456
+NOM_COMMERCIAL: BORTEZOMIB FOR INJECTION
+INGRÉDIENTS_ACTIFS:
+- NOM=Bortézomib (Bortézomib, ester boronique de mannitol); CONCENTRATION=3.5; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Poudre pour solution
+VOIES_ADMINISTRATION: Intraveineuse | Sous-cutanée
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: DR REDDY'S LABORATORIES LTD","{""din"":[""02452456""],""brand_name"":""BORTEZOMIB FOR INJECTION"",""active_ingredients"":[{""name"":""Bortézomib (Bortézomib, ester boronique de mannitol)"",""strength"":3.5,""unit"":""MG""}],""dosage_forms"":[""Poudre pour solution""],""routes"":[""Intraveineuse"",""Sous-cutanée""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""DR REDDY'S LABORATORIES LTD""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8044],""drug.txt"":[8044],""form.txt"":[8198],""ingred.txt"":[11473],""route.txt"":[9481,9482],""schedule.txt"":[8223],""status.txt"":[36544]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""93883""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_c8e96c44873b5890_en,0.1.0,2026-07-02,hc_dpd_c8e96c44873b5890,"[""100870""]","[""02519437""]",REDDY-CLOBETASOL SHAMPOO,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 100870
+DIN: 02519437
+BRAND_NAME: REDDY-CLOBETASOL SHAMPOO
+ACTIVE_INGREDIENTS:
+- NAME=CLOBETASOL PROPIONATE; STRENGTH=0.05; UNIT=%
+DOSAGE_FORMS: SHAMPOO
+ROUTES: TOPICAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: DR. REDDY'S LABORATORIES CANADA INC.","{""din"":[""02519437""],""brand_name"":""REDDY-CLOBETASOL SHAMPOO"",""active_ingredients"":[{""name"":""CLOBETASOL PROPIONATE"",""strength"":0.05,""unit"":""%""}],""dosage_forms"":[""SHAMPOO""],""routes"":[""TOPICAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""DR. REDDY'S LABORATORIES CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[11127],""drug.txt"":[11127],""form.txt"":[11384],""ingred.txt"":[16099],""route.txt"":[13428],""schedule.txt"":[11469],""status.txt"":[44480]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""100870""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_c8e96c44873b5890_fr,0.1.0,2026-07-02,hc_dpd_c8e96c44873b5890,"[""100870""]","[""02519437""]",REDDY-CLOBETASOL SHAMPOO,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 100870
+DIN: 02519437
+NOM_COMMERCIAL: REDDY-CLOBETASOL SHAMPOO
+INGRÉDIENTS_ACTIFS:
+- NOM=Propionate de clobétasol; CONCENTRATION=0.05; UNITÉ=%
+FORMES_PHARMACEUTIQUES: Shampoing
+VOIES_ADMINISTRATION: Topique
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: DR. REDDY'S LABORATORIES CANADA INC.","{""din"":[""02519437""],""brand_name"":""REDDY-CLOBETASOL SHAMPOO"",""active_ingredients"":[{""name"":""Propionate de clobétasol"",""strength"":0.05,""unit"":""%""}],""dosage_forms"":[""Shampoing""],""routes"":[""Topique""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""DR. REDDY'S LABORATORIES CANADA INC.""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[11127],""drug.txt"":[11127],""form.txt"":[11384],""ingred.txt"":[16099],""route.txt"":[13428],""schedule.txt"":[11469],""status.txt"":[44480]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""100870""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_d56491f43e6d2377_en,0.1.0,2026-07-02,hc_dpd_d56491f43e6d2377,"[""85352"",""94181""]","[""02368544"",""02455005""]",BRILINTA,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 85352
+DIN: 02368544
+BRAND_NAME: BRILINTA
+ACTIVE_INGREDIENTS:
+- NAME=TICAGRELOR; STRENGTH=90; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: ASTRAZENECA CANADA INC
+
+VARIANT 2
+DRUG_CODE: 94181
+DIN: 02455005
+BRAND_NAME: BRILINTA
+ACTIVE_INGREDIENTS:
+- NAME=TICAGRELOR; STRENGTH=60; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: ASTRAZENECA CANADA INC","{""din"":[""02368544"",""02455005""],""brand_name"":""BRILINTA"",""active_ingredients"":[{""name"":""TICAGRELOR"",""strength"":60,""unit"":""MG""},{""name"":""TICAGRELOR"",""strength"":90,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""ASTRAZENECA CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[5546,8150],""drug.txt"":[5546,8150],""form.txt"":[5620,8305],""ingred.txt"":[8020,11616],""route.txt"":[6584,9612],""schedule.txt"":[5644,8333],""status.txt"":[27235,36870]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""85352"",""94181""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_d56491f43e6d2377_fr,0.1.0,2026-07-02,hc_dpd_d56491f43e6d2377,"[""85352"",""94181""]","[""02368544"",""02455005""]",BRILINTA,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 85352
+DIN: 02368544
+NOM_COMMERCIAL: BRILINTA
+INGRÉDIENTS_ACTIFS:
+- NOM=Ticagrélor; CONCENTRATION=90; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: ASTRAZENECA CANADA INC
+
+VARIANTE 2
+DRUG_CODE: 94181
+DIN: 02455005
+NOM_COMMERCIAL: BRILINTA
+INGRÉDIENTS_ACTIFS:
+- NOM=Ticagrélor; CONCENTRATION=60; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: ASTRAZENECA CANADA INC","{""din"":[""02368544"",""02455005""],""brand_name"":""BRILINTA"",""active_ingredients"":[{""name"":""Ticagrélor"",""strength"":60,""unit"":""MG""},{""name"":""Ticagrélor"",""strength"":90,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""ASTRAZENECA CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[5546,8150],""drug.txt"":[5546,8150],""form.txt"":[5620,8305],""ingred.txt"":[8020,11616],""route.txt"":[6584,9612],""schedule.txt"":[5644,8333],""status.txt"":[27235,36870]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""85352"",""94181""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_d69abb82e0ea64c5_en,0.1.0,2026-07-02,hc_dpd_d69abb82e0ea64c5,"[""70752""]","[""02246569""]",COVERSYL PLUS,en,development,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 70752
+DIN: 02246569
+BRAND_NAME: COVERSYL PLUS
+ACTIVE_INGREDIENTS:
+- NAME=PERINDOPRIL ERBUMINE; STRENGTH=4; UNIT=MG
+- NAME=INDAPAMIDE; STRENGTH=1.25; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: SERVIER CANADA INC","{""din"":[""02246569""],""brand_name"":""COVERSYL PLUS"",""active_ingredients"":[{""name"":""INDAPAMIDE"",""strength"":1.25,""unit"":""MG""},{""name"":""PERINDOPRIL ERBUMINE"",""strength"":4,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""SERVIER CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3032],""drug.txt"":[3032],""form.txt"":[3060],""ingred.txt"":[4362,4363],""route.txt"":[3638],""schedule.txt"":[3069],""status.txt"":[16371]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""70752""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_d69abb82e0ea64c5_fr,0.1.0,2026-07-02,hc_dpd_d69abb82e0ea64c5,"[""70752""]","[""02246569""]",COVERSYL PLUS,fr,development,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 70752
+DIN: 02246569
+NOM_COMMERCIAL: COVERSYL PLUS
+INGRÉDIENTS_ACTIFS:
+- NOM=Périndopril erbumine; CONCENTRATION=4; UNITÉ=MG
+- NOM=Indapamide; CONCENTRATION=1.25; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: SERVIER CANADA INC","{""din"":[""02246569""],""brand_name"":""COVERSYL PLUS"",""active_ingredients"":[{""name"":""Indapamide"",""strength"":1.25,""unit"":""MG""},{""name"":""Périndopril erbumine"",""strength"":4,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""SERVIER CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[3032],""drug.txt"":[3032],""form.txt"":[3060],""ingred.txt"":[4362,4363],""route.txt"":[3638],""schedule.txt"":[3069],""status.txt"":[16371]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""70752""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_f0cd29136b724eec_en,0.1.0,2026-07-02,hc_dpd_f0cd29136b724eec,"[""2828""]","[""00393746""]",PRILOCAINE HCL 4% EPINEPH 1:200000INJ,en,heldout,multi_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 2828
+DIN: 00393746
+BRAND_NAME: PRILOCAINE HCL 4% EPINEPH 1:200000INJ
+ACTIVE_INGREDIENTS:
+- NAME=EPINEPHRINE; STRENGTH=0.005; UNIT=MG
+- NAME=PRILOCAINE HYDROCHLORIDE; STRENGTH=40; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: BLOCK/INFILTRATION
+SCHEDULES: ETHICAL
+PRODUCT_STATUS: MARKETED
+COMPANY: NOVOCOL PHARMACEUTICAL OF CANADA INC","{""din"":[""00393746""],""brand_name"":""PRILOCAINE HCL 4% EPINEPH 1:200000INJ"",""active_ingredients"":[{""name"":""EPINEPHRINE"",""strength"":0.005,""unit"":""MG""},{""name"":""PRILOCAINE HYDROCHLORIDE"",""strength"":40,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""BLOCK/INFILTRATION""],""schedule"":[""ETHICAL""],""product_status"":""MARKETED"",""company"":""NOVOCOL PHARMACEUTICAL OF CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[225],""drug.txt"":[225],""form.txt"":[225],""ingred.txt"":[331,332],""route.txt"":[282],""schedule.txt"":[225],""status.txt"":[1317]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""2828""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_f0cd29136b724eec_fr,0.1.0,2026-07-02,hc_dpd_f0cd29136b724eec,"[""2828""]","[""00393746""]",PRILOCAINE HCL 4% EPINEPH 1:200000INJ,fr,heldout,multi_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 2828
+DIN: 00393746
+NOM_COMMERCIAL: PRILOCAINE HCL 4% EPINEPH 1:200000INJ
+INGRÉDIENTS_ACTIFS:
+- NOM=Épinéphrine; CONCENTRATION=0.005; UNITÉ=MG
+- NOM=Chlorhydrate de prilocaïne; CONCENTRATION=40; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Bloc/Infiltration
+ANNEXES: Spécialité médicale
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: NOVOCOL PHARMACEUTICAL OF CANADA INC","{""din"":[""00393746""],""brand_name"":""PRILOCAINE HCL 4% EPINEPH 1:200000INJ"",""active_ingredients"":[{""name"":""Chlorhydrate de prilocaïne"",""strength"":40,""unit"":""MG""},{""name"":""Épinéphrine"",""strength"":0.005,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Bloc/Infiltration""],""schedule"":[""Spécialité médicale""],""product_status"":""COMMERCIALISÉ"",""company"":""NOVOCOL PHARMACEUTICAL OF CANADA INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[225],""drug.txt"":[225],""form.txt"":[225],""ingred.txt"":[331,332],""route.txt"":[282],""schedule.txt"":[225],""status.txt"":[1317]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""2828""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_f8e67f7fbd96cbac_en,0.1.0,2026-07-02,hc_dpd_f8e67f7fbd96cbac,"[""98004"",""98005""]","[""02489961"",""02489988""]",PRO-ELETRIPTAN,en,development,multi_variant,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 98004
+DIN: 02489961
+BRAND_NAME: PRO-ELETRIPTAN
+ACTIVE_INGREDIENTS:
+- NAME=ELETRIPTAN (ELETRIPTAN HYDROBROMIDE); STRENGTH=20; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: PRO DOC LIMITEE
+
+VARIANT 2
+DRUG_CODE: 98005
+DIN: 02489988
+BRAND_NAME: PRO-ELETRIPTAN
+ACTIVE_INGREDIENTS:
+- NAME=ELETRIPTAN (ELETRIPTAN HYDROBROMIDE); STRENGTH=40; UNIT=MG
+DOSAGE_FORMS: TABLET
+ROUTES: ORAL
+SCHEDULES: PRESCRIPTION
+PRODUCT_STATUS: MARKETED
+COMPANY: PRO DOC LIMITEE","{""din"":[""02489961"",""02489988""],""brand_name"":""PRO-ELETRIPTAN"",""active_ingredients"":[{""name"":""ELETRIPTAN (ELETRIPTAN HYDROBROMIDE)"",""strength"":20,""unit"":""MG""},{""name"":""ELETRIPTAN (ELETRIPTAN HYDROBROMIDE)"",""strength"":40,""unit"":""MG""}],""dosage_forms"":[""TABLET""],""routes"":[""ORAL""],""schedule"":[""PRESCRIPTION""],""product_status"":""MARKETED"",""company"":""PRO DOC LIMITEE""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9730,9731],""drug.txt"":[9730,9731],""form.txt"":[9926,9927],""ingred.txt"":[13839,13840],""route.txt"":[11525,11526],""schedule.txt"":[10007,10008],""status.txt"":[41112,41117]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98004"",""98005""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_f8e67f7fbd96cbac_fr,0.1.0,2026-07-02,hc_dpd_f8e67f7fbd96cbac,"[""98004"",""98005""]","[""02489961"",""02489988""]",PRO-ELETRIPTAN,fr,development,multi_variant,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 98004
+DIN: 02489961
+NOM_COMMERCIAL: PRO-ELETRIPTAN
+INGRÉDIENTS_ACTIFS:
+- NOM=Élétriptan (Bromhydrate d'élétriptan); CONCENTRATION=20; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PRO DOC LIMITEE
+
+VARIANTE 2
+DRUG_CODE: 98005
+DIN: 02489988
+NOM_COMMERCIAL: PRO-ELETRIPTAN
+INGRÉDIENTS_ACTIFS:
+- NOM=Élétriptan (Bromhydrate d'élétriptan); CONCENTRATION=40; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Comprimé
+VOIES_ADMINISTRATION: Orale
+ANNEXES: Médicaments sur ordonnance
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: PRO DOC LIMITEE","{""din"":[""02489961"",""02489988""],""brand_name"":""PRO-ELETRIPTAN"",""active_ingredients"":[{""name"":""Élétriptan (Bromhydrate d'élétriptan)"",""strength"":20,""unit"":""MG""},{""name"":""Élétriptan (Bromhydrate d'élétriptan)"",""strength"":40,""unit"":""MG""}],""dosage_forms"":[""Comprimé""],""routes"":[""Orale""],""schedule"":[""Médicaments sur ordonnance""],""product_status"":""COMMERCIALISÉ"",""company"":""PRO DOC LIMITEE""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[9730,9731],""drug.txt"":[9730,9731],""form.txt"":[9926,9927],""ingred.txt"":[13839,13840],""route.txt"":[11525,11526],""schedule.txt"":[10007,10008],""status.txt"":[41112,41117]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""98004"",""98005""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_fdbaa3af81b1e7cd_en,0.1.0,2026-07-02,hc_dpd_fdbaa3af81b1e7cd,"[""95689""]","[""02468468""]",HYDROMORPHONE HYDROCHLORIDE INJECTION HP FORTE,en,development,single_ingredient,"Extract drug-product facts from the Health Canada Drug Product Database source record below. Return only one JSON object with exactly the keys din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status, and company. din, dosage_forms, routes, and schedule must be lists. active_ingredients must be a list of objects with name, strength, and unit keys. Combine distinct facts from every variant and do not infer values.
+
+DPD SOURCE RECORD (ENGLISH)
+
+VARIANT 1
+DRUG_CODE: 95689
+DIN: 02468468
+BRAND_NAME: HYDROMORPHONE HYDROCHLORIDE INJECTION HP FORTE
+ACTIVE_INGREDIENTS:
+- NAME=HYDROMORPHONE HYDROCHLORIDE; STRENGTH=100; UNIT=MG
+DOSAGE_FORMS: SOLUTION
+ROUTES: INTRAMUSCULAR | INTRAVENOUS | SUBCUTANEOUS
+SCHEDULES: NARCOTICS (CDSA I)
+PRODUCT_STATUS: MARKETED
+COMPANY: STERIMAX INC","{""din"":[""02468468""],""brand_name"":""HYDROMORPHONE HYDROCHLORIDE INJECTION HP FORTE"",""active_ingredients"":[{""name"":""HYDROMORPHONE HYDROCHLORIDE"",""strength"":100,""unit"":""MG""}],""dosage_forms"":[""SOLUTION""],""routes"":[""INTRAMUSCULAR"",""INTRAVENOUS"",""SUBCUTANEOUS""],""schedule"":[""NARCOTICS (CDSA I)""],""product_status"":""MARKETED"",""company"":""STERIMAX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8715],""drug.txt"":[8715],""form.txt"":[8880],""ingred.txt"":[12398],""route.txt"":[10296,10297,10298],""schedule.txt"":[8929],""status.txt"":[38441]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""95689""],""language"":""en"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
+hc_dpd_fdbaa3af81b1e7cd_fr,0.1.0,2026-07-02,hc_dpd_fdbaa3af81b1e7cd,"[""95689""]","[""02468468""]",HYDROMORPHONE HYDROCHLORIDE INJECTION HP FORTE,fr,development,single_ingredient,"Extrayez les faits de produit pharmaceutique du dossier source de la Base de données sur les produits pharmaceutiques de Santé Canada ci-dessous. Retournez uniquement un objet JSON avec exactement les clés din, brand_name, active_ingredients, dosage_forms, routes, schedule, product_status et company. din, dosage_forms, routes et schedule doivent être des listes. active_ingredients doit être une liste d'objets ayant les clés name, strength et unit. Regroupez les faits distincts de toutes les variantes, sans rien déduire.
+
+DOSSIER SOURCE DPD (FRANÇAIS)
+
+VARIANTE 1
+DRUG_CODE: 95689
+DIN: 02468468
+NOM_COMMERCIAL: CHLORHYDRATE D'HYDROMORPHONE INJECTABLE HP FORTE
+INGRÉDIENTS_ACTIFS:
+- NOM=Chlorhydrate d'hydromorphone; CONCENTRATION=100; UNITÉ=MG
+FORMES_PHARMACEUTIQUES: Solution
+VOIES_ADMINISTRATION: Intramusculaire | Intraveineuse | Sous-cutanée
+ANNEXES: Stupéfiants (LRCDAS I)
+ÉTAT_DU_PRODUIT: COMMERCIALISÉ
+ENTREPRISE: STERIMAX INC","{""din"":[""02468468""],""brand_name"":""CHLORHYDRATE D'HYDROMORPHONE INJECTABLE HP FORTE"",""active_ingredients"":[{""name"":""Chlorhydrate d'hydromorphone"",""strength"":100,""unit"":""MG""}],""dosage_forms"":[""Solution""],""routes"":[""Intramusculaire"",""Intraveineuse"",""Sous-cutanée""],""schedule"":[""Stupéfiants (LRCDAS I)""],""product_status"":""COMMERCIALISÉ"",""company"":""STERIMAX INC""}",json,"{""archive_file_id"":""dpd_marketed_archive"",""archive_members"":{""comp.txt"":[8715],""drug.txt"":[8715],""form.txt"":[8880],""ingred.txt"":[12398],""route.txt"":[10296,10297,10298],""schedule.txt"":[8929],""status.txt"":[38441]},""archive_sha256"":""94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"",""drug_codes"":[""95689""],""language"":""fr"",""source_dataset_id"":""hc_dpd_source_snapshot"",""source_dataset_version"":""2026.7.2"",""source_manifest_sha256"":""f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0""}"
