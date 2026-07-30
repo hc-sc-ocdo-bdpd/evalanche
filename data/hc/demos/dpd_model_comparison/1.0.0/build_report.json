@@ -1,0 +1,60 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_id": "hc_dpd_model_comparison",
+  "dataset_version": "1.0.0",
+  "release_created_at_utc": "2026-07-28T00:00:00Z",
+  "source": {
+    "dataset_id": "hc_dpd_structured_extraction_census",
+    "dataset_version": "0.2.0",
+    "cases_path": "data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz",
+    "cases_sha256": "79ab483ffc12fcd81acc1d6c20cec53446b26945bd4b68ffd8f21804fe95fba1"
+  },
+  "selection": {
+    "method": "deterministic proportional stratified hash sample of product families, retaining paired English and French cases",
+    "seed": 20260728,
+    "product_count": 250,
+    "case_count": 500,
+    "products_by_stratum": {
+      "single_ingredient": 111,
+      "multi_ingredient": 55,
+      "multi_variant": 78,
+      "multi_ingredient_multi_variant": 6
+    },
+    "cases_by_stratum": {
+      "single_ingredient": 222,
+      "multi_ingredient": 110,
+      "multi_variant": 156,
+      "multi_ingredient_multi_variant": 12
+    },
+    "cases_by_language": {
+      "en": 250,
+      "fr": 250
+    }
+  },
+  "coverage": {
+    "required_route_groups": {
+      "oral": true,
+      "injectable": true,
+      "topical": true,
+      "inhaled": true,
+      "ophthalmic": true
+    },
+    "all_required_route_groups_present": true
+  },
+  "artifacts": {
+    "cases_path": "data/hc/demos/dpd_model_comparison/1.0.0/cases.csv",
+    "cases_sha256": "c996579a8e27b53c61a9f775924f1023d725c4a8657ac60649ce6e5cab8ce0dd"
+  },
+  "quality_checks": {
+    "unique_case_ids": true,
+    "unique_product_count": true,
+    "paired_languages_per_product": true,
+    "proportional_stratum_allocation": true,
+    "all_expected_outputs_parse_as_json": true
+  },
+  "limitations": [
+    "The 500 cases are a sample of the frozen census, so small performance differences should be interpreted with their uncertainty intervals and paired tests.",
+    "Inputs are deterministic renderings of DPD records, not Product Monograph documents.",
+    "Recorded token costs use public Global Standard rates and are estimates, not reconciled Azure invoices."
+  ]
+}

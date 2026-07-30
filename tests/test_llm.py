@@ -60,11 +60,16 @@ def test_complete_json_retries_when_validator_rejects_response(
         ]
     )
     call_count = 0
+    attempt_hook_count = 0
 
     def fake_completion(**kwargs: Any) -> SimpleNamespace:
         nonlocal call_count
         call_count += 1
         return next(responses)
+
+    def before_attempt() -> None:
+        nonlocal attempt_hook_count
+        attempt_hook_count += 1
 
     def validator(response: dict[str, Any]) -> None:
         if response.get("status") != "valid":
@@ -80,12 +85,14 @@ def test_complete_json_retries_when_validator_rejects_response(
     result = LLMClient(
         model="azure/test-model",
         max_retries=2,
+        before_attempt=before_attempt,
     ).complete_json(
         [{"role": "user", "content": "Test"}],
         validator=validator,
     )
 
     assert call_count == 2
+    assert attempt_hook_count == 2
     assert result["status"] == "valid"
     assert result["_usage"] == {
         "prompt_tokens": 20,
@@ -121,6 +128,49 @@ def test_complete_text_leaves_unreported_cost_unknown(
     assert result["usage"]["total_tokens"] == 15
     assert result["operational"]["cost_usd"] is None
     assert result["operational"]["cost_source"] is None
+
+
+def test_complete_text_sends_reasoning_and_omits_temperature(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: dict[str, Any] = {}
+
+    def fake_completion(**kwargs: Any) -> SimpleNamespace:
+        seen.update(kwargs)
+        return make_response("answer")
+
+    monkeypatch.setattr(llm_module, "_completion", fake_completion)
+
+    result = LLMClient(
+        model="azure/gpt-5.6-sol",
+        temperature=None,
+        reasoning_effort="none",
+        max_retries=1,
+    ).complete_text(
+        [{"role": "user", "content": "Test"}],
+        max_completion_tokens=900,
+    )
+
+    assert result["content"] == "answer"
+    assert seen["model"] == "azure/gpt-5.6-sol"
+    assert seen["reasoning_effort"] == "none"
+    assert seen["max_completion_tokens"] == 900
+    assert "temperature" not in seen
+
+
+def test_installed_litellm_supports_gpt_5_6_azure_reasoning_effort(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("LITELLM_LOCAL_MODEL_COST_MAP", "true")
+    from litellm import get_supported_openai_params
+
+    for tier in ("luna", "terra", "sol"):
+        supported = get_supported_openai_params(
+            model=f"azure/gpt-5.6-{tier}"
+        )
+
+        assert supported is not None
+        assert "reasoning_effort" in supported
 
 
 def test_configured_endpoint_price_precedes_provider_cost_and_counts_retries(

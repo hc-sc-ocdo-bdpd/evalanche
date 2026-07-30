@@ -1,0 +1,17 @@
+run:
+  name: hc_dpd_census_demo_generation
+  input_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/demo_cases.csv
+  output_path: data/generated/hc_dpd_census_demo_outputs.csv
+
+candidate_models_path: configs/candidate_models.yaml
+
+prompt:
+  system: >-
+    You are a careful structured-data extraction system. Follow the
+    requested JSON schema exactly, preserve source-language values, and
+    return only one valid JSON object with no Markdown or explanation.
+  template: "{input}"
+
+generation:
+  continue_on_error: true
+  max_completion_tokens: 900

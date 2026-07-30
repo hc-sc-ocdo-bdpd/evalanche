@@ -1,0 +1,124 @@
+{
+  "schema_version": "1.0",
+  "release_id": "hc_dpd_census_model_comparison_0.2.0",
+  "status": "provisional",
+  "created_at_utc": "2026-07-29T18:06:31.763340+00:00",
+  "benchmark": {
+    "dataset_id": "hc_dpd_structured_extraction_census",
+    "dataset_version": "0.2.0",
+    "manifest_path": "configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml",
+    "cases_path": "data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz",
+    "cases_sha256": "79ab483ffc12fcd81acc1d6c20cec53446b26945bd4b68ffd8f21804fe95fba1",
+    "case_count": 14034,
+    "product_family_count": 7017
+  },
+  "evaluation": {
+    "run_name": "evaluate_hc_dpd_full_census_all_models",
+    "evalanche_version": "0.2.1",
+    "config_path": "configs/evaluate_hc_dpd_census_all_models.yaml",
+    "config_sha256": "8f6418b3e0928cd3d0a20e6a2e9bd3ed15dd1072cc3e6c71bb769bb7593266c0",
+    "models": [
+      "gpt_5_4_mini",
+      "gpt_5_6_luna",
+      "gpt_5_6_terra",
+      "gpt_5_6_sol"
+    ],
+    "rows": 56136
+  },
+  "published_files": [
+    {
+      "path": "reports/hc_dpd_census/0.2.0/model_summary.csv",
+      "role": "aggregate_model_summary",
+      "size_bytes": 3398,
+      "sha256": "96dfb32c0a0e8e36269dd1c752a0fec43b1a84f24c22c6d22c33b12731be5300"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/pairwise_comparisons.csv",
+      "role": "paired_model_comparisons",
+      "size_bytes": 1283,
+      "sha256": "54b1aaef613dafbfedbd0948c82eef8fc68441389775361cbdf69cf982d1c9ad"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/evaluation_report.md",
+      "role": "generated_evaluation_report",
+      "size_bytes": 8001,
+      "sha256": "17cf17ac35b4ba989ffedebd9ce0dde061b36520578267bf71f2a1573d5d0ea1"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/evaluation_metadata.json",
+      "role": "evaluation_run_metadata",
+      "size_bytes": 26348,
+      "sha256": "82e53a87230469cb632aee46da94faebd5b6782ab1c15f496ef9db1d5c1b6687"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/generation/gpt_5_4_mini.json",
+      "role": "generation_run_metadata",
+      "size_bytes": 8522,
+      "sha256": "d17e769afd7b906e289e5804f973f545eeda692246590d6588e6df8e6df087d3"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/generation/gpt_5_6_luna.json",
+      "role": "generation_run_metadata",
+      "size_bytes": 8742,
+      "sha256": "95f648850d5ac64a70b1122e9f0213ded1cb9142b5a951ab1f01a26b18764e11"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/generation/gpt_5_6_terra.json",
+      "role": "generation_run_metadata",
+      "size_bytes": 8837,
+      "sha256": "65c441d84209f8d5b47a9bb9f1ed6186c1e490f8636cbe172333dcf112fcf540"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/generation/gpt_5_6_sol.json",
+      "role": "generation_run_metadata",
+      "size_bytes": 8808,
+      "sha256": "c4060caeac7b6286a75340d34de61bf921a1479ff8d8708b9ea811345fd499ef"
+    }
+  ],
+  "retained_raw_artifacts": [
+    {
+      "path": "data/generated/hc_dpd_census_gpt_5_4_mini_outputs.csv",
+      "role": "model_outputs",
+      "size_bytes": 44431073,
+      "sha256": "4dfa4f4bed313ffaeabb356f7f589746f078118f72e8770fd210d782f3815202"
+    },
+    {
+      "path": "data/generated/hc_dpd_census_gpt_5_6_luna_outputs.csv",
+      "role": "model_outputs",
+      "size_bytes": 44787723,
+      "sha256": "54c39c4574b3f1fc48c52b834be9e065ff35d740d1562338d32ea91e342b195d"
+    },
+    {
+      "path": "data/generated/hc_dpd_census_gpt_5_6_terra_outputs.csv",
+      "role": "model_outputs",
+      "size_bytes": 44878990,
+      "sha256": "b5025735576695145e5f7378271c5802dfbf41aed9f798920d1249f38f6bc7d2"
+    },
+    {
+      "path": "data/generated/hc_dpd_census_gpt_5_6_sol_outputs.csv",
+      "role": "model_outputs",
+      "size_bytes": 44730605,
+      "sha256": "a9f4c870ba7d2cf42fb15191b774841f6b63067d0a4aad8db3cfcce4c8cf6332"
+    },
+    {
+      "path": "data/generated/hc_dpd_census_all_models_outputs.csv",
+      "role": "assembled_model_outputs",
+      "size_bytes": 178682096,
+      "sha256": "040a92bb4eb45e6353fae728d108459584fd1ac44566bda04038a2736d8e9887"
+    },
+    {
+      "path": "results/evaluate_hc_dpd_census_all_models_results.csv",
+      "role": "case_level_evaluation_results",
+      "size_bytes": 190637120,
+      "sha256": "15daf2d03116671eac7987197ffde780d530f34735bb7da5e3cad93613768e59"
+    }
+  ],
+  "validation": {
+    "generation_complete": true,
+    "generation_failures": 0,
+    "deterministic_evaluation_complete": true,
+    "manual_label_review": "pending",
+    "grouped_product_family_analysis": "pending",
+    "error_adjudication": "pending"
+  }
+}

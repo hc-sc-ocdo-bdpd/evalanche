@@ -3,6 +3,8 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import unicodedata
+from decimal import Decimal, InvalidOperation
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -33,6 +35,11 @@ REQUIRED_METRIC_COLUMNS = {
     "model_name",
     "model_output",
 }
+
+_NUMERIC_TEXT_PATTERN = re.compile(
+    r"^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$"
+)
+_CANONICAL_NUMBER_TAG = "__evalanche_numeric__"
 
 
 def sha256_file(path: str | Path) -> str | None:
@@ -81,11 +88,14 @@ def normalize_text(
     case_sensitive: bool,
     trim_whitespace: bool,
     collapse_whitespace: bool,
+    unicode_normalization: str = "NFC",
 ) -> str:
     if pd.isna(value):
         text = ""
     else:
         text = str(value)
+
+    text = unicodedata.normalize(unicode_normalization, text)
 
     if trim_whitespace:
         text = text.strip()
@@ -94,7 +104,7 @@ def normalize_text(
         text = re.sub(r"\s+", " ", text)
 
     if not case_sensitive:
-        text = text.lower()
+        text = text.casefold()
 
     return text
 
@@ -129,6 +139,234 @@ def canonical_json(value: Any) -> str:
     )
 
 
+def _decode_json_pointer(pointer: str) -> tuple[str, ...]:
+    if pointer == "":
+        return ()
+    return tuple(
+        token.replace("~1", "/").replace("~0", "~")
+        for token in pointer.removeprefix("/").split("/")
+    )
+
+
+def _path_matches(
+    pointer: str,
+    path: tuple[str, ...],
+) -> bool:
+    pattern = _decode_json_pointer(pointer)
+    return len(pattern) == len(path) and all(
+        expected == "*" or expected == actual
+        for expected, actual in zip(pattern, path, strict=True)
+    )
+
+
+def _matching_rule_value(
+    rules: dict[str, Any],
+    path: tuple[str, ...],
+) -> Any | None:
+    for pointer, value in rules.items():
+        if _path_matches(pointer, path):
+            return value
+    return None
+
+
+def _normalize_json_string(
+    value: str,
+    *,
+    config: MetricsConfig,
+    path: tuple[str, ...],
+) -> str:
+    normalized = normalize_text(
+        value,
+        case_sensitive=config.metrics.case_sensitive,
+        trim_whitespace=config.metrics.trim_whitespace,
+        collapse_whitespace=config.metrics.collapse_whitespace,
+        unicode_normalization=config.metrics.unicode_normalization,
+    )
+    comparison = config.metrics.json_comparison
+    width = _matching_rule_value(
+        comparison.zero_pad_numeric_string_paths,
+        path,
+    )
+    if width is not None and normalized.isdecimal():
+        normalized = normalized.zfill(int(width))
+
+    aliases = _matching_rule_value(
+        comparison.value_aliases,
+        path,
+    )
+    if aliases is not None:
+        normalized_aliases = {
+            normalize_text(
+                source,
+                case_sensitive=config.metrics.case_sensitive,
+                trim_whitespace=config.metrics.trim_whitespace,
+                collapse_whitespace=(
+                    config.metrics.collapse_whitespace
+                ),
+                unicode_normalization=(
+                    config.metrics.unicode_normalization
+                ),
+            ): normalize_text(
+                target,
+                case_sensitive=config.metrics.case_sensitive,
+                trim_whitespace=config.metrics.trim_whitespace,
+                collapse_whitespace=(
+                    config.metrics.collapse_whitespace
+                ),
+                unicode_normalization=(
+                    config.metrics.unicode_normalization
+                ),
+            )
+            for source, target in aliases.items()
+        }
+        normalized = normalized_aliases.get(
+            normalized,
+            normalized,
+        )
+
+    return normalized
+
+
+def _canonical_json_number(
+    value: Any,
+) -> tuple[str, int, str, int] | None:
+    if isinstance(value, bool):
+        return None
+
+    if isinstance(value, str):
+        if not _NUMERIC_TEXT_PATTERN.fullmatch(value):
+            return None
+        source = value
+    elif isinstance(value, (int, float)):
+        source = str(value)
+    else:
+        return None
+
+    try:
+        number = Decimal(source)
+    except InvalidOperation:
+        return None
+
+    if not number.is_finite():
+        return None
+
+    if number.is_zero():
+        return (_CANONICAL_NUMBER_TAG, 0, "0", 0)
+
+    sign, digits, exponent = number.as_tuple()
+    significant_digits = list(digits)
+    while (
+        len(significant_digits) > 1
+        and significant_digits[-1] == 0
+    ):
+        significant_digits.pop()
+        exponent += 1
+
+    return (
+        _CANONICAL_NUMBER_TAG,
+        sign,
+        "".join(str(digit) for digit in significant_digits),
+        exponent,
+    )
+
+
+def normalize_json_value(
+    value: Any,
+    *,
+    config: MetricsConfig,
+    path: tuple[str, ...] = (),
+) -> Any:
+    if isinstance(value, dict):
+        return {
+            key: normalize_json_value(
+                nested,
+                config=config,
+                path=(*path, str(key)),
+            )
+            for key, nested in value.items()
+        }
+
+    if isinstance(value, list):
+        normalized_items = [
+            normalize_json_value(
+                nested,
+                config=config,
+                path=(*path, str(index)),
+            )
+            for index, nested in enumerate(value)
+        ]
+        if any(
+            _path_matches(pointer, path)
+            for pointer in (
+                config.metrics.json_comparison.unordered_list_paths
+            )
+        ):
+            return sorted(normalized_items, key=canonical_json)
+        return normalized_items
+
+    if isinstance(value, str):
+        normalized = _normalize_json_string(
+            value,
+            config=config,
+            path=path,
+        )
+        if any(
+            _path_matches(pointer, path)
+            for pointer in (
+                config.metrics.json_comparison.numeric_value_paths
+            )
+        ):
+            canonical_number = _canonical_json_number(normalized)
+            if canonical_number is not None:
+                return canonical_number
+        return normalized
+
+    if any(
+        _path_matches(pointer, path)
+        for pointer in config.metrics.json_comparison.numeric_value_paths
+    ):
+        canonical_number = _canonical_json_number(value)
+        if canonical_number is not None:
+            return canonical_number
+
+    return value
+
+
+def json_values_equal(expected: Any, output: Any) -> bool:
+    if isinstance(expected, bool) or isinstance(output, bool):
+        return type(expected) is type(output) and expected == output
+
+    if isinstance(expected, (int, float)) and isinstance(
+        output,
+        (int, float),
+    ):
+        return expected == output
+
+    if type(expected) is not type(output):
+        return False
+
+    if isinstance(expected, dict):
+        return (
+            expected.keys() == output.keys()
+            and all(
+                json_values_equal(expected[key], output[key])
+                for key in expected
+            )
+        )
+
+    if isinstance(expected, list):
+        return len(expected) == len(output) and all(
+            json_values_equal(expected_value, output_value)
+            for expected_value, output_value in zip(
+                expected,
+                output,
+                strict=True,
+            )
+        )
+
+    return expected == output
+
+
 def compare_json_fields(
     expected: Any,
     output: Any,
@@ -144,12 +382,71 @@ def compare_json_fields(
     matching = sum(
         1
         for key in expected_keys
-        if key in output and output[key] == expected[key]
+        if key in output
+        and json_values_equal(expected[key], output[key])
     )
 
     total = len(expected_keys)
 
     return total, matching, matching / total
+
+
+def _json_field_diagnostics(
+    expected: Any,
+    output: Any,
+) -> dict[str, Any]:
+    if not isinstance(expected, dict) or not isinstance(output, dict):
+        return {
+            "json_expected_field_count": (
+                len(expected) if isinstance(expected, dict) else None
+            ),
+            "json_output_field_count": (
+                len(output) if isinstance(output, dict) else None
+            ),
+            "json_matching_field_count": (
+                0 if isinstance(expected, dict) else None
+            ),
+            "json_field_match_rate": (
+                0.0
+                if isinstance(expected, dict) and expected
+                else None
+            ),
+            "json_missing_fields": (
+                canonical_json(sorted(expected))
+                if isinstance(expected, dict)
+                else None
+            ),
+            "json_extra_fields": None,
+            "json_mismatched_fields": (
+                canonical_json([])
+                if isinstance(expected, dict)
+                else None
+            ),
+        }
+
+    expected_keys = set(expected)
+    output_keys = set(output)
+    missing = sorted(expected_keys - output_keys)
+    extra = sorted(output_keys - expected_keys)
+    mismatched = sorted(
+        key
+        for key in expected_keys & output_keys
+        if not json_values_equal(expected[key], output[key])
+    )
+    matching = len(expected_keys) - len(missing) - len(mismatched)
+    total = len(expected_keys)
+
+    return {
+        "json_expected_field_count": total,
+        "json_output_field_count": len(output_keys),
+        "json_matching_field_count": matching,
+        "json_field_match_rate": (
+            matching / total if total else None
+        ),
+        "json_missing_fields": canonical_json(missing),
+        "json_extra_fields": canonical_json(extra),
+        "json_mismatched_fields": canonical_json(mismatched),
+    }
 
 
 def _empty_metric_values() -> dict[str, Any]:
@@ -159,9 +456,14 @@ def _empty_metric_values() -> dict[str, Any]:
         "expected_is_json": None,
         "output_is_json": None,
         "json_exact_match": None,
+        "json_canonical_match": None,
         "json_expected_field_count": None,
+        "json_output_field_count": None,
         "json_matching_field_count": None,
         "json_field_match_rate": None,
+        "json_missing_fields": None,
+        "json_extra_fields": None,
+        "json_mismatched_fields": None,
     }
 
 
@@ -205,6 +507,7 @@ def score_row(
         case_sensitive=config.metrics.case_sensitive,
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
+        unicode_normalization=config.metrics.unicode_normalization,
     )
 
     output_normalized = normalize_text(
@@ -212,6 +515,7 @@ def score_row(
         case_sensitive=config.metrics.case_sensitive,
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
+        unicode_normalization=config.metrics.unicode_normalization,
     )
 
     normalized_exact_match = (
@@ -229,9 +533,14 @@ def score_row(
             "expected_is_json": None,
             "output_is_json": None,
             "json_exact_match": None,
+            "json_canonical_match": None,
             "json_expected_field_count": None,
+            "json_output_field_count": None,
             "json_matching_field_count": None,
             "json_field_match_rate": None,
+            "json_missing_fields": None,
+            "json_extra_fields": None,
+            "json_mismatched_fields": None,
         }
 
     expected_is_json, expected_json = try_parse_json(expected_text)
@@ -244,41 +553,48 @@ def score_row(
         )
 
     json_exact_match = False
-    json_expected_field_count: int | None = None
-    json_matching_field_count: int | None = None
-    json_field_match_rate: float | None = None
+    json_canonical_match = False
+    field_diagnostics = _json_field_diagnostics(
+        expected_json,
+        None,
+    )
 
     if output_is_json:
-        json_exact_match = (
-            canonical_json(output_json)
-            == canonical_json(expected_json)
+        json_exact_match = json_values_equal(
+            expected_json,
+            output_json,
         )
-
-        (
-            json_expected_field_count,
-            json_matching_field_count,
-            json_field_match_rate,
-        ) = compare_json_fields(expected_json, output_json)
-    elif isinstance(expected_json, dict):
-        json_expected_field_count = len(expected_json)
-        json_matching_field_count = 0
-        json_field_match_rate = 0.0
+        expected_canonical = normalize_json_value(
+            expected_json,
+            config=config,
+        )
+        output_canonical = normalize_json_value(
+            output_json,
+            config=config,
+        )
+        json_canonical_match = json_values_equal(
+            expected_canonical,
+            output_canonical,
+        )
+        field_diagnostics = _json_field_diagnostics(
+            expected_canonical,
+            output_canonical,
+        )
 
     return {
         **base_result,
         "metric_applicable": True,
         "metric_status": "evaluated",
         "metric_passed": bool(
-            output_is_json and json_exact_match
+            output_is_json and json_canonical_match
         ),
         "exact_match": exact_match,
         "normalized_exact_match": normalized_exact_match,
         "expected_is_json": expected_is_json,
         "output_is_json": output_is_json,
         "json_exact_match": json_exact_match,
-        "json_expected_field_count": json_expected_field_count,
-        "json_matching_field_count": json_matching_field_count,
-        "json_field_match_rate": json_field_match_rate,
+        "json_canonical_match": json_canonical_match,
+        **field_diagnostics,
     }
 
 
@@ -335,6 +651,9 @@ def build_metrics_summary(results: pd.DataFrame) -> pd.DataFrame:
                 "json_exact_match_rate": _safe_rate(
                     json_cases["json_exact_match"]
                 ),
+                "json_canonical_match_rate": _safe_rate(
+                    json_cases["json_canonical_match"]
+                ),
                 "average_json_field_match_rate": _safe_rate(
                     json_cases["json_field_match_rate"]
                 ),
@@ -362,6 +681,7 @@ def build_metrics_summary(results: pd.DataFrame) -> pd.DataFrame:
         "normalized_exact_match_rate",
         "valid_json_rate",
         "json_exact_match_rate",
+        "json_canonical_match_rate",
         "average_json_field_match_rate",
     ]
 
@@ -417,7 +737,7 @@ def save_metrics_metadata(
     ]
 
     metadata = {
-        "schema_version": "0.2",
+        "schema_version": "0.3",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "evalanche_version": __version__,
         "run": {
@@ -433,13 +753,7 @@ def save_metrics_metadata(
             "output_sha256": sha256_file(output_path),
             "summary_sha256": sha256_file(summary_path),
         },
-        "metrics": {
-            "case_sensitive": config.metrics.case_sensitive,
-            "trim_whitespace": config.metrics.trim_whitespace,
-            "collapse_whitespace": (
-                config.metrics.collapse_whitespace
-            ),
-        },
+        "metrics": config.metrics.model_dump(mode="json"),
         "routing": {
             "supported_evaluation_types": [
                 "exact",
@@ -509,7 +823,8 @@ def print_metrics_summary(summary: pd.DataFrame) -> None:
     table.add_column("Skipped")
     table.add_column("Pass rate")
     table.add_column("Exact")
-    table.add_column("JSON exact")
+    table.add_column("JSON raw")
+    table.add_column("JSON canonical")
     table.add_column("JSON fields")
 
     for _, row in summary.iterrows():
@@ -536,6 +851,11 @@ def print_metrics_summary(summary: pd.DataFrame) -> None:
                 "N/A"
                 if pd.isna(row["json_exact_match_rate"])
                 else f"{row['json_exact_match_rate']:.1%}"
+            ),
+            (
+                "N/A"
+                if pd.isna(row["json_canonical_match_rate"])
+                else f"{row['json_canonical_match_rate']:.1%}"
             ),
             (
                 "N/A"
@@ -576,8 +896,9 @@ def print_metric_failures(
     table.add_column("model_name")
     table.add_column("type")
     table.add_column("exact")
-    table.add_column("json_exact")
+    table.add_column("json_canonical")
     table.add_column("json_field_match")
+    table.add_column("mismatched_fields")
 
     for _, row in failures.head(max_rows).iterrows():
         table.add_row(
@@ -591,13 +912,18 @@ def print_metric_failures(
             ),
             (
                 "N/A"
-                if pd.isna(row["json_exact_match"])
-                else str(row["json_exact_match"])
+                if pd.isna(row["json_canonical_match"])
+                else str(row["json_canonical_match"])
             ),
             (
                 "N/A"
                 if pd.isna(row["json_field_match_rate"])
                 else f"{row['json_field_match_rate']:.1%}"
+            ),
+            (
+                "N/A"
+                if pd.isna(row["json_mismatched_fields"])
+                else str(row["json_mismatched_fields"])
             ),
         )
 

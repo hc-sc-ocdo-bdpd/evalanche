@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 from pydantic import (
@@ -141,8 +141,49 @@ class PromptConfig(BaseModel):
 
 
 class GenerationSettingsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     continue_on_error: bool = True
     max_completion_tokens: int | None = None
+    max_workers: int = Field(default=1, ge=1, le=64)
+    checkpoint_every: int = Field(default=100, ge=1)
+    resume: bool = False
+    max_requests_per_minute: float | None = Field(
+        default=None,
+        gt=0,
+        allow_inf_nan=False,
+    )
+    cost_preflight_sample_path: Path | None = None
+    maximum_estimated_cost_usd: float | None = Field(
+        default=None,
+        gt=0,
+        allow_inf_nan=False,
+    )
+    cost_safety_multiplier: float = Field(
+        default=1.0,
+        ge=1.0,
+        allow_inf_nan=False,
+    )
+
+    @model_validator(mode="after")
+    def validate_cost_guard(self) -> "GenerationSettingsConfig":
+        if (
+            self.maximum_estimated_cost_usd is not None
+            and self.cost_preflight_sample_path is None
+        ):
+            raise ValueError(
+                "cost_preflight_sample_path is required when "
+                "maximum_estimated_cost_usd is configured"
+            )
+        if (
+            self.maximum_estimated_cost_usd is None
+            and self.cost_safety_multiplier != 1.0
+        ):
+            raise ValueError(
+                "maximum_estimated_cost_usd is required when "
+                "cost_safety_multiplier is greater than 1"
+            )
+        return self
 
 
 class GenerationConfig(BaseModel):
@@ -156,12 +197,25 @@ class GenerationConfig(BaseModel):
 
 
 class CandidateModelConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     model: str
-    temperature: float = 0
-    max_retries: int = 3
-    max_completion_tokens: int | None = None
+    temperature: float | None = 0
+    reasoning_effort: Literal[
+        "none",
+        "minimal",
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+    ] | None = None
+    max_retries: int = Field(default=3, ge=1)
+    max_completion_tokens: int | None = Field(default=None, ge=1)
     pricing_id: str | None = None
+    provider_model_version: str | None = None
+    deployment_type: str | None = None
+    resource_region: str | None = None
 
     @field_validator("name")
     @classmethod
@@ -169,6 +223,14 @@ class CandidateModelConfig(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("candidate model name cannot be blank")
+        return normalized
+
+    @field_validator("model")
+    @classmethod
+    def validate_model(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("candidate model route cannot be blank")
         return normalized
 
     @field_validator("pricing_id")
@@ -179,6 +241,25 @@ class CandidateModelConfig(BaseModel):
         normalized = value.strip()
         if not normalized:
             raise ValueError("pricing_id cannot be blank")
+        return normalized
+
+    @field_validator(
+        "provider_model_version",
+        "deployment_type",
+        "resource_region",
+    )
+    @classmethod
+    def normalize_optional_metadata(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError(
+                "candidate deployment metadata cannot be blank"
+            )
         return normalized
 
 
@@ -197,10 +278,95 @@ class CandidateModelsConfig(BaseModel):
         return models
 
 
+def _validate_json_pointer(value: str) -> str:
+    if value == "":
+        return value
+    if not value.startswith("/"):
+        raise ValueError(
+            "JSON comparison paths must be JSON Pointers beginning with '/'"
+        )
+    if re.search(r"~(?![01])", value):
+        raise ValueError(
+            "JSON comparison paths may only use '~0' and '~1' escapes"
+        )
+    return value
+
+
+class JsonComparisonSettingsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    unordered_list_paths: list[str] = Field(default_factory=list)
+    numeric_value_paths: list[str] = Field(default_factory=list)
+    zero_pad_numeric_string_paths: dict[str, int] = Field(
+        default_factory=dict
+    )
+    value_aliases: dict[str, dict[str, str]] = Field(
+        default_factory=dict
+    )
+
+    @field_validator("unordered_list_paths")
+    @classmethod
+    def validate_unordered_list_paths(
+        cls,
+        values: list[str],
+    ) -> list[str]:
+        validated = [_validate_json_pointer(value) for value in values]
+        if len(validated) != len(set(validated)):
+            raise ValueError("unordered_list_paths must be unique")
+        return validated
+
+    @field_validator("numeric_value_paths")
+    @classmethod
+    def validate_numeric_value_paths(
+        cls,
+        values: list[str],
+    ) -> list[str]:
+        validated = [_validate_json_pointer(value) for value in values]
+        if len(validated) != len(set(validated)):
+            raise ValueError("numeric_value_paths must be unique")
+        return validated
+
+    @field_validator(
+        "zero_pad_numeric_string_paths",
+        "value_aliases",
+    )
+    @classmethod
+    def validate_rule_paths(
+        cls,
+        values: dict[str, Any],
+    ) -> dict[str, Any]:
+        for path in values:
+            _validate_json_pointer(path)
+        return values
+
+    @field_validator("zero_pad_numeric_string_paths")
+    @classmethod
+    def validate_zero_pad_widths(
+        cls,
+        values: dict[str, int],
+    ) -> dict[str, int]:
+        if any(width <= 0 for width in values.values()):
+            raise ValueError(
+                "zero-pad widths must be positive integers"
+            )
+        return values
+
+
 class DeterministicMetricsSettingsConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     case_sensitive: bool = False
     trim_whitespace: bool = True
     collapse_whitespace: bool = True
+    unicode_normalization: Literal[
+        "NFC",
+        "NFD",
+        "NFKC",
+        "NFKD",
+    ] = "NFC"
+    json_comparison: JsonComparisonSettingsConfig = Field(
+        default_factory=JsonComparisonSettingsConfig
+    )
 
 
 class MetricsConfig(BaseModel):

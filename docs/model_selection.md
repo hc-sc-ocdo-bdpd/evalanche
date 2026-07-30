@@ -130,8 +130,9 @@ An enabled combined evaluation writes a model-selection CSV containing:
 - the recommended-model flag.
 
 The same policy, decision, and model table are included in the Markdown report
-and run metadata. Evaluation metadata schema version `0.6` includes a hash of
-the model-selection CSV.
+and run metadata. Evaluation metadata schema version `0.9` includes a hash of
+the model-selection CSV and the complete deterministic JSON-comparison
+profile.
 
 ## Limits
 

@@ -19,6 +19,7 @@ from evalanche.pricing import (
 
 
 JsonValidator = Callable[[dict[str, Any]], None]
+AttemptHook = Callable[[], None]
 _ERROR_OPERATIONAL_ATTRIBUTE = "_evalanche_operational"
 
 
@@ -93,6 +94,7 @@ def _usage_to_dict(response: Any) -> dict[str, Any]:
 @dataclass
 class _CallTracker:
     endpoint_price: EndpointPriceConfig | None = None
+    before_attempt: AttemptHook | None = None
     started_at: float = field(default_factory=perf_counter)
     attempts: int = 0
     failed_attempts: int = 0
@@ -110,6 +112,8 @@ class _CallTracker:
     provider_reported_cost_usd: float = 0.0
 
     def completion(self, **kwargs: Any) -> Any:
+        if self.before_attempt is not None:
+            self.before_attempt()
         self.attempts += 1
         attempt_started_at = perf_counter()
 
@@ -254,21 +258,42 @@ class LLMClient:
     def __init__(
         self,
         model: str,
-        temperature: float = 0,
+        temperature: float | None = 0,
+        reasoning_effort: str | None = None,
         max_retries: int = 3,
         endpoint_price: EndpointPriceConfig | None = None,
+        before_attempt: AttemptHook | None = None,
     ) -> None:
         self.model = model
         self.temperature = temperature
+        self.reasoning_effort = reasoning_effort
         self.max_retries = max_retries
         self.endpoint_price = endpoint_price
+        self.before_attempt = before_attempt
+
+    def _request_kwargs(
+        self,
+        messages: list[dict[str, str]],
+    ) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "messages": messages,
+        }
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
+        if self.reasoning_effort is not None:
+            kwargs["reasoning_effort"] = self.reasoning_effort
+        return kwargs
 
     def complete_json(
         self,
         messages: list[dict[str, str]],
         validator: JsonValidator | None = None,
     ) -> dict[str, Any]:
-        tracker = _CallTracker(endpoint_price=self.endpoint_price)
+        tracker = _CallTracker(
+            endpoint_price=self.endpoint_price,
+            before_attempt=self.before_attempt,
+        )
         retrying_call = retry(
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
@@ -299,7 +324,10 @@ class LLMClient:
         messages: list[dict[str, str]],
         max_completion_tokens: int | None = None,
     ) -> dict[str, Any]:
-        tracker = _CallTracker(endpoint_price=self.endpoint_price)
+        tracker = _CallTracker(
+            endpoint_price=self.endpoint_price,
+            before_attempt=self.before_attempt,
+        )
         retrying_call = retry(
             stop=stop_after_attempt(self.max_retries),
             wait=wait_exponential(multiplier=1, min=1, max=10),
@@ -335,19 +363,14 @@ class LLMClient:
         validator: JsonValidator | None,
         tracker: _CallTracker,
     ) -> dict[str, Any]:
+        kwargs = self._request_kwargs(messages)
         try:
             response = tracker.completion(
-                model=self.model,
-                messages=messages,
-                temperature=self.temperature,
+                **kwargs,
                 response_format={"type": "json_object"},
             )
         except Exception:
-            response = tracker.completion(
-                model=self.model,
-                messages=messages,
-                temperature=self.temperature,
-            )
+            response = tracker.completion(**kwargs)
 
         content = response.choices[0].message.content
         parsed = _parse_json_content(content)
@@ -363,11 +386,7 @@ class LLMClient:
         max_completion_tokens: int | None,
         tracker: _CallTracker,
     ) -> dict[str, Any]:
-        kwargs: dict[str, Any] = {
-            "model": self.model,
-            "messages": messages,
-            "temperature": self.temperature,
-        }
+        kwargs = self._request_kwargs(messages)
 
         if max_completion_tokens is not None:
             kwargs["max_completion_tokens"] = max_completion_tokens

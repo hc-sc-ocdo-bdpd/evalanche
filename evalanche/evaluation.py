@@ -58,16 +58,33 @@ def _deterministic_reason(metric: dict[str, Any]) -> str:
         return "Model output was not valid JSON."
 
     if metric["metric_passed"]:
-        return "Model output exactly matched the expected JSON."
+        if metric["json_exact_match"]:
+            return "Model output exactly matched the expected JSON."
+        return (
+            "Model output matched after configured JSON "
+            "canonicalization."
+        )
 
     matching = metric["json_matching_field_count"]
     expected = metric["json_expected_field_count"]
 
     if matching is not None and expected is not None:
-        return (
+        reason = (
             "JSON did not exactly match; "
             f"{matching} of {expected} expected fields matched."
         )
+        diagnostics = []
+        for label, key in [
+            ("mismatched", "json_mismatched_fields"),
+            ("missing", "json_missing_fields"),
+            ("extra", "json_extra_fields"),
+        ]:
+            value = metric.get(key)
+            if value not in {None, "[]"}:
+                diagnostics.append(f"{label}={value}")
+        if diagnostics:
+            reason = f"{reason} {'; '.join(diagnostics)}."
+        return reason
 
     return "Model output did not match the expected JSON."
 

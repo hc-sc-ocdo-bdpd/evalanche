@@ -829,7 +829,8 @@ used as a fallback. Otherwise the cost remains unknown.
 - Open-ended judge cases use the configured LLM judge.
 - Generation errors receive a score of zero and are not sent to the judge.
 - Judge errors remain unscored and prevent a comparative recommendation.
-- JSON partial-field scores are diagnostic; only a full expected JSON match passes.
+- JSON partial-field scores are diagnostic; only a full match after the
+  configured deterministic canonicalization passes.
 
 ## Evidence Files
 
@@ -944,7 +945,7 @@ def build_evaluation_metadata(
     )
 
     return {
-        "schema_version": "0.7",
+        "schema_version": "0.9",
         "created_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -1013,17 +1014,7 @@ def build_evaluation_metadata(
             "judge": "llm_judge",
             "generation_error": "automatic_failure",
         },
-        "metrics": {
-            "case_sensitive": (
-                config.metrics.case_sensitive
-            ),
-            "trim_whitespace": (
-                config.metrics.trim_whitespace
-            ),
-            "collapse_whitespace": (
-                config.metrics.collapse_whitespace
-            ),
-        },
+        "metrics": config.metrics.model_dump(mode="json"),
         "judge": {
             "model": config.judge.model,
             "temperature": config.judge.temperature,

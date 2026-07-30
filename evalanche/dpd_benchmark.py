@@ -47,6 +47,8 @@ STRATUM_ORDER = (
     "multi_ingredient",
     "multi_variant",
 )
+COMPLEX_STRATUM = "multi_ingredient_multi_variant"
+ALL_STRATUM_ORDER = (*STRATUM_ORDER, COMPLEX_STRATUM)
 DEFAULT_STRATUM_TARGETS = {
     "single_ingredient": 20,
     "multi_ingredient": 10,
@@ -351,7 +353,9 @@ def _read_table(
                     f"{member_name} row {row_number} has {len(row)} "
                     f"columns, expected {len(columns)}"
                 )
-            record: dict[str, Any] = dict(zip(columns, row))
+            record: dict[str, Any] = dict(
+                zip(columns, row, strict=True)
+            )
             record["_row_number"] = row_number
             records.append(record)
     except csv.Error as error:
@@ -569,18 +573,20 @@ def _variant_from_row(
 def _classify_family(
     ingredient_codes: tuple[str, ...],
     variant_count: int,
-) -> str | None:
+) -> str:
     if len(ingredient_codes) == 1 and variant_count == 1:
         return "single_ingredient"
     if len(ingredient_codes) >= 2 and variant_count == 1:
         return "multi_ingredient"
     if len(ingredient_codes) == 1 and variant_count >= 2:
         return "multi_variant"
-    return None
+    return COMPLEX_STRATUM
 
 
 def build_candidate_products(
     tables: Mapping[str, list[dict[str, Any]]],
+    *,
+    include_complex_families: bool = False,
 ) -> tuple[list[CandidateProduct], dict[str, Any]]:
     indexed = _index_related_tables(tables)
     drug_codes = [
@@ -676,9 +682,9 @@ def build_candidate_products(
             ingredient_codes,
             len(ordered_variants),
         )
-        if stratum is None:
+        if stratum == COMPLEX_STRATUM and not include_complex_families:
             family_exclusions[
-                "multi_ingredient_multi_variant"
+                COMPLEX_STRATUM
             ] += 1
             continue
 
@@ -708,6 +714,11 @@ def build_candidate_products(
     candidate_counts = Counter(
         candidate.stratum for candidate in candidates
     )
+    reported_strata = (
+        ALL_STRATUM_ORDER
+        if include_complex_families
+        else STRATUM_ORDER
+    )
     statistics = {
         "source_drug_rows": len(tables["drug"]),
         "eligible_drug_rows": len(variants),
@@ -715,7 +726,7 @@ def build_candidate_products(
         "candidate_product_families": len(candidates),
         "candidate_product_families_by_stratum": {
             stratum: candidate_counts[stratum]
-            for stratum in STRATUM_ORDER
+            for stratum in reported_strata
         },
         "drug_row_exclusions_by_reason": dict(
             sorted(exclusion_counts.items())

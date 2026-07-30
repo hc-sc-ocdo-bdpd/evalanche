@@ -17,14 +17,12 @@ from evalanche.dataset_manifest import (
 )
 from evalanche.dpd_benchmark import (
     CASE_FIELDS,
-    DEFAULT_HELDOUT_TARGETS,
     DEFAULT_STRATUM_TARGETS,
     DPD_BENCHMARK_SEED,
     DPD_BENCHMARK_VERSION,
     DPD_SOURCE_MANIFEST,
     OUTPUT_FIELDS,
     REQUIRED_ROUTE_COVERAGE,
-    STRATUM_ORDER,
     build_candidate_products,
     create_dpd_benchmark_slice,
     load_marketed_tables,

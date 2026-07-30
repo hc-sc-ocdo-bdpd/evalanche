@@ -1,6 +1,6 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-**Specification status:** DPD-only slice `0.1.0` complete, Product Monograph acquisition and audit pending  
+**Specification status:** DPD-only releases complete, census validation pending, Product Monograph acquisition and audit planned
 **Benchmark type:** Bilingual structured extraction  
 **Primary scoring:** Deterministic JSON and field-level metrics
 
@@ -38,6 +38,18 @@ source-row traceability, and generation compatibility. See
 
 Version `0.1.0` is not the final Product Monograph benchmark and must not be
 used as evidence of monograph-extraction performance.
+
+The full DPD-only population is frozen separately as
+`hc_dpd_structured_extraction_census` version `0.2.0`. It contains all 7,017
+product families representable by the current bilingual JSON contract and
+14,034 English and French cases. It adds the 169 multi-ingredient,
+multi-variant families deferred from slice `0.1.0` and records 13 remaining
+source-ambiguous French-brand families as exclusions. See
+[`HC_DPD_CENSUS_DEMO.md`](HC_DPD_CENSUS_DEMO.md).
+
+The census includes a fixed 24-case presentation view. It is a visible,
+bounded operational demo, not a hidden test split. Version `0.2.0` remains a
+DPD-rendering benchmark and is not evidence of Product Monograph performance.
 
 The Product Monograph pilot retains the target of **40 marketed human-drug
 products** after document availability, document quality, and manual alignment
@@ -91,8 +103,8 @@ source_metadata
 
 `evaluation_type` is `json`. The input contains the extraction instruction and monograph text or an explicitly bounded monograph section. The expected output is canonical JSON.
 
-In DPD-only version `0.1.0`, one case represents one rendered DPD
-product-family language instance. Its metadata uses `product_id`,
+In DPD-only versions `0.1.0` and `0.2.0`, one case represents one rendered
+DPD product-family language instance. Its metadata uses `product_id`,
 `drug_codes`, exact archive-member row numbers, and parent hashes instead of
 `monograph_sha256`. The expected-output contract is otherwise the same.
 
@@ -134,6 +146,14 @@ Canonicalization is applied identically to reference and model outputs.
 - retain the original raw output for audit
 
 Synonym mapping is versioned and limited to defensible equivalences. Fuzzy matching is not used for primary pass/fail decisions.
+
+For the DPD census demo, these rules are declared explicitly under
+`metrics.json_comparison` in
+`configs/evaluate_hc_dpd_census_demo.yaml`. The run metadata preserves the
+complete comparison profile. Numeric equivalence is path-scoped to
+`/active_ingredients/*/strength`; it does not coerce other fields or structural
+types. Raw parsed-JSON equality is retained as a diagnostic, while pass/fail
+uses the configured canonical comparison.
 
 ## 7. Reference-label construction
 
@@ -206,12 +226,20 @@ The pilot is ready to run only when:
 
 After the 40-product pilot:
 
-1. Review whether scores meaningfully separate candidate models.
-2. Quantify label disagreements and exclusion rates.
-3. Add harder scanned documents only if OCR is evaluated as a separate factor.
-4. Expand to at least 100 products with broader therapeutic and document coverage.
-5. Publish a benchmark card describing collection, intended use, limitations, licensing, and update policy.
-6. Develop Recalls and Summary Reports as separate task packs rather than mixing unrelated task types into one score.
+1. Use the DPD census demo to validate model connectivity, output handling, and
+   reporting before Product Monograph acquisition.
+2. Acquire, freeze, extract, and manually align the 40-product English and
+   French Product Monograph pilot.
+3. Review whether reviewed-document scores meaningfully separate candidate
+   models.
+4. Quantify label disagreements and exclusion rates.
+5. Add harder scanned documents only if OCR is evaluated as a separate factor.
+6. Expand to at least 100 monograph-backed products with broader therapeutic
+   and document coverage.
+7. Publish a benchmark card describing collection, intended use, limitations,
+   licensing, and update policy.
+8. Develop Recalls and Summary Reports as separate task packs rather than
+   mixing unrelated task types into one score.
 
 ## 12. Explicit non-goals
 

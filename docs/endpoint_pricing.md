@@ -132,3 +132,35 @@ reserved capacity, web search, file search, tools, storage, images, audio, or
 currency conversion. A rate source may also exclude negotiated discounts or
 taxes. Use a catalog entry only when its scope matches the endpoint and workload
 being evaluated.
+
+## Long-run cost guards
+
+Generation configs can require a read-only preflight and a conservative local
+stop:
+
+```yaml
+generation:
+  cost_preflight_sample_path: data/generated/pilot_outputs.csv
+  maximum_estimated_cost_usd: 30.00
+  cost_safety_multiplier: 1.50
+```
+
+The preflight prices the pilot's observed input and output tokens with the
+configured endpoint rate, assumes zero cached input tokens, scales the average
+to the pending requests, and applies the safety multiplier. It aborts before
+model calls when the projection exceeds the limit.
+
+During generation, the same limit is checked before new work is submitted.
+The runner includes completed configured cost, a worst-case reserve for
+in-flight requests, and a reserve for failed attempts whose token usage was not
+returned. Completed work is checkpointed before a budget stop.
+
+Run a preflight without model calls:
+
+```bash
+python -m evalanche.cli generate --config configs/generate.yaml --preflight-only
+```
+
+This remains a local estimate, not a provider billing hard stop. Provider calls
+without usage evidence, negotiated rates, taxes, foreign exchange, and
+non-token charges can differ from the configured calculation.

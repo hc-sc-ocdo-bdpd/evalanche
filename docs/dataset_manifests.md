@@ -90,6 +90,18 @@ table exactly match the IDs declared across both splits.
 The build, scope, source-row traceability, and limitations are documented in
 [`docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md`](hc_benchmark/HC_DPD_BENCHMARK_SLICE.md).
 
+The complete eligible-population DPD benchmark is frozen separately as:
+
+```text
+configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml
+```
+
+It records all 7,017 representable product families, 14,034 paired English and
+French cases, and a bounded 24-case demo view. Its census cases and membership
+tables use deterministic gzip compression, and the verifier checks their
+decompressed CSV record counts and membership IDs. See
+[`docs/hc_benchmark/HC_DPD_CENSUS_DEMO.md`](hc_benchmark/HC_DPD_CENSUS_DEMO.md).
+
 ## Verify a release
 
 Run the verifier from the repository root:
@@ -132,12 +144,27 @@ Verified files: 3/3
 Status: VALID
 ```
 
+Verify the full DPD census with:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml --root .
+```
+
+Expected final lines:
+
+```text
+Verified files: 4/4
+Status: VALID
+```
+
 ## Record count methods
 
 Each file declares how its record count is handled:
 
 - `csv_rows` counts CSV records after the header with Python's CSV parser.
-- `jsonl_records` parses and counts nonblank JSON Lines records.
+  Files ending in `.gz` are decompressed transparently.
+- `jsonl_records` parses and counts nonblank JSON Lines records. Files ending
+  in `.gz` are decompressed transparently.
 - `declared` records a count that the built-in verifier cannot inspect. The
   byte size and hash are still verified.
 - `not_applicable` requires a null record count.

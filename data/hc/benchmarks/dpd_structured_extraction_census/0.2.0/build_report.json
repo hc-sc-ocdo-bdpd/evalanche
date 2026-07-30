@@ -1,0 +1,146 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_id": "hc_dpd_structured_extraction_census",
+  "dataset_version": "0.2.0",
+  "release_created_at_utc": "2026-07-27T00:00:00Z",
+  "scope": "DPD-only full eligible-population bilingual structured extraction census",
+  "source": {
+    "dataset_id": "hc_dpd_source_snapshot",
+    "dataset_version": "2026.7.2",
+    "source_date": "2026-07-02",
+    "manifest_path": "configs/datasets/hc_dpd_2026-07-02_manifest.yaml",
+    "manifest_sha256": "f674732805de6a311d5882c2e7e33747a7e214beb123d9e42c944e1ad195eba0",
+    "marketed_archive_path": "data/hc/dpd/snapshots/2026-07-02/raw/allfiles.zip",
+    "marketed_archive_sha256": "94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"
+  },
+  "population": {
+    "source_drug_rows": 13538,
+    "eligible_drug_rows": 11613,
+    "eligible_product_families": 7030,
+    "candidate_product_families": 7017,
+    "candidate_product_families_by_stratum": {
+      "single_ingredient": 3123,
+      "multi_ingredient": 1528,
+      "multi_variant": 2197,
+      "multi_ingredient_multi_variant": 169
+    },
+    "drug_row_exclusions_by_reason": {
+      "not_human": 1925
+    },
+    "product_family_exclusions_by_reason": {
+      "inconsistent_french_brand_name": 13
+    },
+    "included_product_families": 7017,
+    "included_drug_rows": 11573,
+    "included_cases": 14034,
+    "included_product_families_by_stratum": {
+      "single_ingredient": 3123,
+      "multi_ingredient": 1528,
+      "multi_variant": 2197,
+      "multi_ingredient_multi_variant": 169
+    },
+    "included_cases_by_language": {
+      "en": 7017,
+      "fr": 7017
+    }
+  },
+  "census": {
+    "method": "full eligible population, no sampling",
+    "product_count": 7017,
+    "case_count": 14034,
+    "languages_per_product": 2,
+    "strata": [
+      "single_ingredient",
+      "multi_ingredient",
+      "multi_variant",
+      "multi_ingredient_multi_variant"
+    ]
+  },
+  "demo_view": {
+    "method": "deterministic stratified hash selection with route coverage and ingredient diversity",
+    "seed": 20260727,
+    "stratum_targets": {
+      "single_ingredient": 3,
+      "multi_ingredient": 3,
+      "multi_variant": 3,
+      "multi_ingredient_multi_variant": 3
+    },
+    "product_count": 12,
+    "case_count": 24,
+    "products_by_stratum": {
+      "single_ingredient": 3,
+      "multi_ingredient": 3,
+      "multi_variant": 3,
+      "multi_ingredient_multi_variant": 3
+    },
+    "cases_by_language": {
+      "en": 12,
+      "fr": 12
+    },
+    "product_ids": [
+      "hc_dpd_0967ee0010ec05d5",
+      "hc_dpd_174a231459327041",
+      "hc_dpd_22448e7fdb3f09ef",
+      "hc_dpd_235be5d7ff12a27b",
+      "hc_dpd_2ad7c1d1b83e90be",
+      "hc_dpd_382614d8f639f353",
+      "hc_dpd_765fc09e171f2276",
+      "hc_dpd_7d98a688dc9f40ce",
+      "hc_dpd_9c77360324bf5e98",
+      "hc_dpd_c71abf02402c6ad1",
+      "hc_dpd_f0e2ea92cf6230fd",
+      "hc_dpd_fc0b739cc04ad23f"
+    ],
+    "required_route_groups": {
+      "oral": true,
+      "injectable": true,
+      "topical": true,
+      "inhaled": true,
+      "ophthalmic": true
+    }
+  },
+  "size_profile": {
+    "input_characters_total": 14502890,
+    "input_characters_per_case": {
+      "minimum": 694,
+      "median": 906.0,
+      "p95": 1775,
+      "maximum": 4874
+    },
+    "expected_output_characters_total": 5183055,
+    "expected_output_characters_per_case": {
+      "minimum": 234,
+      "median": 337.0,
+      "p95": 563,
+      "maximum": 2037
+    }
+  },
+  "coverage": {
+    "required_route_groups": {
+      "oral": true,
+      "injectable": true,
+      "topical": true,
+      "inhaled": true,
+      "ophthalmic": true
+    },
+    "all_required_route_groups_present": true
+  },
+  "quality_checks": {
+    "all_candidate_product_families_included": true,
+    "unique_product_ids": true,
+    "unique_case_ids": true,
+    "two_language_cases_per_product": true,
+    "all_expected_outputs_parse_as_json": true,
+    "complex_families_included": true,
+    "demo_has_all_strata": true,
+    "demo_has_all_required_route_groups": true,
+    "manual_product_monograph_audit_status": "not_started"
+  },
+  "limitations": [
+    "Inputs are deterministic renderings of DPD relational records, not Product Monograph documents.",
+    "Thirteen otherwise eligible product families are excluded because their variants contain conflicting French brand names that cannot be represented by the current scalar brand_name field without adjudication.",
+    "Reference values have not yet been manually audited against English and French Product Monographs.",
+    "The census is a DPD extraction coverage and stress benchmark, not evidence of production Product Monograph extraction performance.",
+    "Running every case against a hosted model requires 14,034 calls per model; the 24-case demo view is provided for bounded live demonstrations."
+  ]
+}

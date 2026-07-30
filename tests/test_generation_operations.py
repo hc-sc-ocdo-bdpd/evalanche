@@ -74,6 +74,8 @@ def test_generate_one_preserves_operational_metrics(
     candidate = CandidateModelConfig(
         name="model_a",
         model="azure/model-a",
+        temperature=None,
+        reasoning_effort="none",
     )
     endpoint_price = EndpointPriceConfig(
         pricing_id="model_a_global",
@@ -114,6 +116,8 @@ def test_generate_one_preserves_operational_metrics(
     assert result["generation_pricing_id"] == "model_a_global"
     assert result["generation_pricing_effective_date"] == "2026-07-01"
     assert seen["endpoint_price"] is endpoint_price
+    assert seen["temperature"] is None
+    assert seen["reasoning_effort"] == "none"
 
 
 def test_generation_resolves_and_snapshots_explicit_endpoint_price(
@@ -139,6 +143,9 @@ def test_generation_resolves_and_snapshots_explicit_endpoint_price(
         "models:\n"
         "  - name: model_a\n"
         "    model: azure/model-a\n"
+        "    provider_model_version: '2026-03-17'\n"
+        "    deployment_type: Global Standard\n"
+        "    resource_region: Canada East\n"
         "    pricing_id: model_a_global\n",
         encoding="utf-8",
     )
@@ -221,7 +228,10 @@ def test_generation_resolves_and_snapshots_explicit_endpoint_price(
         outputs.iloc[0]["generation_pricing_catalog_sha256"]
     ) == 64
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-    assert metadata["schema_version"] == "0.4"
+    assert metadata["schema_version"] == "0.6"
+    assert metadata["execution"]["status"] == "completed"
+    assert metadata["execution"]["expected_output_count"] == 1
+    assert metadata["execution"]["completed_output_count"] == 1
     assert len(metadata["hashes"]["endpoint_pricing_sha256"]) == 64
     assert metadata["endpoint_pricing"]["catalog_version"] == (
         "2026-07-01"
@@ -229,3 +239,12 @@ def test_generation_resolves_and_snapshots_explicit_endpoint_price(
     assert metadata["endpoint_pricing"]["resolved_endpoints"][0][
         "pricing_id"
     ] == "model_a_global"
+    assert metadata["candidate_models"][0][
+        "provider_model_version"
+    ] == "2026-03-17"
+    assert metadata["candidate_models"][0]["deployment_type"] == (
+        "Global Standard"
+    )
+    assert metadata["candidate_models"][0]["resource_region"] == (
+        "Canada East"
+    )

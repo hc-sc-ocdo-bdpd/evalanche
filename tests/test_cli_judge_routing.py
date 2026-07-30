@@ -159,3 +159,20 @@ def test_run_judge_exits_cleanly_when_there_are_no_judge_cases(
 
     output = capsys.readouterr().out
     assert "No cases were routed to LLM judge evaluation" in output
+
+
+def test_generate_cli_exposes_read_only_preflight_flag() -> None:
+    parser = cli.build_parser()
+
+    args = parser.parse_args(
+        [
+            "generate",
+            "--config",
+            "configs/generate.yaml",
+            "--preflight-only",
+        ]
+    )
+
+    assert args.command == "generate"
+    assert args.config == "configs/generate.yaml"
+    assert args.preflight_only is True

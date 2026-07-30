@@ -1,0 +1,25 @@
+run:
+  name: hc_dpd_full_census_gpt_5_6_terra
+  input_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz
+  output_path: data/generated/hc_dpd_census_gpt_5_6_terra_outputs.csv
+
+candidate_models_path: configs/candidate_gpt_5_6_terra.yaml
+endpoint_pricing_path: configs/endpoint_pricing_azure_global_gpt_5_6_terra.yaml
+
+prompt:
+  system: >-
+    You are a careful structured-data extraction system. Follow the
+    requested JSON schema exactly, preserve source-language values, and
+    return only one valid JSON object with no Markdown or explanation.
+  template: "{input}"
+
+generation:
+  continue_on_error: true
+  max_completion_tokens: 900
+  max_workers: ${DPD_FULL_CENSUS_WORKERS:-4}
+  max_requests_per_minute: ${DPD_FULL_CENSUS_RPM:-60}
+  checkpoint_every: 100
+  resume: true
+  cost_preflight_sample_path: data/generated/hc_dpd_comparison_500_gpt_5_6_terra_outputs.csv
+  maximum_estimated_cost_usd: ${DPD_FULL_CENSUS_TERRA_MAX_USD:-90.00}
+  cost_safety_multiplier: 1.50

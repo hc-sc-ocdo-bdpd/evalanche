@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import gzip
 import hashlib
 import json
 import re
@@ -550,8 +551,28 @@ def load_dataset_manifest(path: str | Path) -> DatasetManifest:
     return DatasetManifest.model_validate(raw)
 
 
+def _open_text(
+    path: Path,
+    *,
+    encoding: str,
+    newline: str | None = None,
+) -> Any:
+    if path.suffix.casefold() == ".gz":
+        return gzip.open(
+            path,
+            mode="rt",
+            encoding=encoding,
+            newline=newline,
+        )
+    return path.open("r", encoding=encoding, newline=newline)
+
+
 def _count_csv_rows(path: Path) -> int:
-    with path.open("r", encoding="utf-8-sig", newline="") as file:
+    with _open_text(
+        path,
+        encoding="utf-8-sig",
+        newline="",
+    ) as file:
         reader = csv.reader(file)
         try:
             next(reader)
@@ -566,7 +587,7 @@ def _count_csv_rows(path: Path) -> int:
 
 def _count_jsonl_records(path: Path) -> int:
     count = 0
-    with path.open("r", encoding="utf-8") as file:
+    with _open_text(path, encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):
             if not line.strip():
                 continue
@@ -582,7 +603,11 @@ def _count_jsonl_records(path: Path) -> int:
 
 def _read_csv_member_ids(path: Path, column: str) -> list[str]:
     member_ids: list[str] = []
-    with path.open("r", encoding="utf-8-sig", newline="") as file:
+    with _open_text(
+        path,
+        encoding="utf-8-sig",
+        newline="",
+    ) as file:
         reader = csv.DictReader(file)
         if reader.fieldnames is None or column not in reader.fieldnames:
             raise ValueError(f"membership column {column!r} was not found")
@@ -604,7 +629,7 @@ def _read_csv_member_ids(path: Path, column: str) -> list[str]:
 
 def _read_jsonl_member_ids(path: Path, column: str) -> list[str]:
     member_ids: list[str] = []
-    with path.open("r", encoding="utf-8") as file:
+    with _open_text(path, encoding="utf-8") as file:
         for line_number, line in enumerate(file, start=1):
             if not line.strip():
                 continue

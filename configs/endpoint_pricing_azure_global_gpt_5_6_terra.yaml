@@ -1,0 +1,17 @@
+schema_version: "1.0"
+catalog_version: azure-global-standard-gpt-5-6-2026-07-28
+
+endpoints:
+  - pricing_id: azure_global_gpt_5_6_terra_2026_07_09
+    model: ${GPT_5_6_TERRA_MODEL:-azure/gpt-5.6-terra}
+    currency: USD
+    input_per_million_tokens: 2.50
+    output_per_million_tokens: 15.00
+    effective_date: 2026-07-09
+    source: https://azure.microsoft.com/en-us/blog/gpt-5-6-now-available-in-microsoft-foundry/
+    notes: >-
+      Microsoft-published GPT-5.6 Terra Standard Global rates checked
+      2026-07-28. Cached input is conservatively charged at the full input
+      rate because the cited launch table publishes only input and output
+      rates. This is an estimate, not a reconciled invoice or an
+      organization-specific effective rate.

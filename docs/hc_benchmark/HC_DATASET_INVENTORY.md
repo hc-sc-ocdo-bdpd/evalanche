@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery, manifest contract, DPD source snapshot, and first DPD-only benchmark slice complete  
-**Implementation gate:** Acquire and freeze matched Product Monographs without changing either existing release.
+**Status:** Dataset discovery, source snapshot, DPD releases, and four-model full-census evaluation complete
+**Implementation gate:** Validate the DPD result, then acquire and freeze matched Product Monographs without changing a frozen DPD release.
 
 ## Decision
 
@@ -114,6 +114,18 @@ The DPD-only slice proves the normalization, sampling, traceability, and case
 generation path. It does not replace Product Monographs as the intended source
 documents and is not evidence of monograph-extraction performance.
 
+The full eligible-population DPD release is documented in
+[`HC_DPD_CENSUS_DEMO.md`](HC_DPD_CENSUS_DEMO.md). Version `0.2.0` contains
+7,017 product families and 14,034 paired English and French cases. It includes
+all four supported complexity strata, including 169 multi-ingredient,
+multi-variant families. Thirteen source-ambiguous families with conflicting
+French brand names remain explicitly excluded pending manual adjudication.
+
+The census also contains a fixed 24-case live-demo view. It demonstrates the
+complete generation, deterministic evaluation, operational measurement, and
+reporting workflow without triggering a full 14,034-call run per model. Like
+the slice, it uses DPD renderings rather than Product Monograph documents.
+
 ## Sequencing
 
 1. Complete: materialize DPD source release `2026.7.2` and verify its schema `1.0` manifest.
@@ -121,10 +133,17 @@ documents and is not evidence of monograph-extraction performance.
 3. Complete: build the eligible human-marketed product-family backbone.
 4. Complete: materialize benchmark slice `0.1.0` with deterministic sampling,
    bilingual cases, source-row traceability, and fixed splits.
-5. Next: acquire matched English and French monographs for candidate products.
-6. Audit document-to-DPD alignment and construct deterministic JSON cases.
-7. Run the pilot across candidate models and review error patterns.
-8. Expand only after the pilot demonstrates reliable labels and useful model separation.
+5. Complete: materialize full-population DPD census `0.2.0` and bounded
+   24-case live-demo view.
+6. Complete: run GPT-5.4 mini and GPT-5.6 Luna, Terra, and Sol across the full
+   census and publish the aggregate evidence.
+7. Next: validate labels, adjudicate model disagreements, and complete grouped
+   product-family analysis.
+8. Acquire matched English and French monographs for candidate products.
+9. Audit document-to-DPD alignment and construct deterministic JSON cases.
+10. Run the reviewed monograph pilot and examine error patterns.
+11. Expand monograph coverage only after the pilot demonstrates reliable
+    labels and useful model separation.
 
 The remaining activities are implementation of this defined plan, not unresolved dataset discovery or an unowned preparation stream.
 

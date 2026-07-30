@@ -473,7 +473,14 @@ def test_run_evaluation_writes_reproducible_artifacts(
         )
     )
 
-    assert metadata["schema_version"] == "0.7"
+    assert metadata["schema_version"] == "0.9"
+    assert metadata["metrics"]["unicode_normalization"] == "NFC"
+    assert metadata["metrics"]["json_comparison"] == {
+        "unordered_list_paths": [],
+        "numeric_value_paths": [],
+        "zero_pad_numeric_string_paths": {},
+        "value_aliases": {},
+    }
     assert (
         metadata["results"]["deterministic_rows"]
         == 2

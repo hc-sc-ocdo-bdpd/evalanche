@@ -1,0 +1,11 @@
+models:
+  - name: gpt_5_6_terra
+    model: ${GPT_5_6_TERRA_MODEL:-azure/gpt-5.6-terra}
+    temperature:
+    reasoning_effort: none
+    max_retries: 3
+    max_completion_tokens: 900
+    pricing_id: azure_global_gpt_5_6_terra_2026_07_09
+    provider_model_version: "2026-07-09"
+    deployment_type: Global Standard
+    resource_region: Canada East

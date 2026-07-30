@@ -1,0 +1,223 @@
+{
+  "schema_version": "0.6",
+  "created_at_utc": "2026-07-28T23:49:41.404486+00:00",
+  "evalanche_version": "0.2.1",
+  "run": {
+    "name": "hc_dpd_full_census_gpt_5_6_luna",
+    "config_path": "configs/generate_hc_dpd_census_gpt_5_6_luna.yaml",
+    "input_path": "data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz",
+    "output_path": "data/generated/hc_dpd_census_gpt_5_6_luna_outputs.csv",
+    "candidate_models_path": "configs/candidate_gpt_5_6_luna.yaml",
+    "endpoint_pricing_path": "configs/endpoint_pricing_azure_global_gpt_5_6_luna.yaml"
+  },
+  "hashes": {
+    "config_sha256": "0658b1d52bf0d8c6fcfe84fb5be0349b031f73b25ad50a9c6e956f77d6634f31",
+    "input_sha256": "79ab483ffc12fcd81acc1d6c20cec53446b26945bd4b68ffd8f21804fe95fba1",
+    "candidate_models_sha256": "23b20b4c1dcf58065743a927071a8eb7f43c9301a71211bceb69dd128cc2e33c",
+    "endpoint_pricing_sha256": "3a95b0833d73bea5e007ff3308e5896ce76d25fdbc684ce24be6848bdc4f268d",
+    "output_sha256": "54c39c4574b3f1fc48c52b834be9e065ff35d740d1562338d32ea91e342b195d",
+    "checkpoint_sha256": "e86ff026358028b22cf7272dc44d2135f17dd95b2425e031a5225d385d404e59",
+    "cost_preflight_sample_sha256": "93367d674a9152cb05574bddb7faa287ee5c0338fbc413e0994cbc2a24643978"
+  },
+  "prompt": {
+    "system": "You are a careful structured-data extraction system. Follow the requested JSON schema exactly, preserve source-language values, and return only one valid JSON object with no Markdown or explanation.",
+    "template": "{input}"
+  },
+  "generation": {
+    "continue_on_error": true,
+    "max_completion_tokens": 900,
+    "max_workers": 4,
+    "checkpoint_every": 100,
+    "resume": true,
+    "max_requests_per_minute": 60.0,
+    "cost_preflight_sample_path": "data/generated/hc_dpd_comparison_500_gpt_5_6_luna_outputs.csv",
+    "maximum_estimated_cost_usd": 40.0,
+    "cost_safety_multiplier": 1.5
+  },
+  "candidate_models": [
+    {
+      "name": "gpt_5_6_luna",
+      "model": "azure/gpt-5.6-luna",
+      "temperature": null,
+      "reasoning_effort": "none",
+      "max_retries": 3,
+      "max_completion_tokens": 900,
+      "pricing_id": "azure_global_gpt_5_6_luna_2026_07_09",
+      "provider_model_version": "2026-07-09",
+      "deployment_type": "Global Standard",
+      "resource_region": "Canada East"
+    }
+  ],
+  "input_data": {
+    "rows": 14034,
+    "columns": [
+      "case_id",
+      "benchmark_version",
+      "snapshot_date",
+      "product_id",
+      "drug_codes",
+      "din_list",
+      "brand_name",
+      "language",
+      "split",
+      "stratum",
+      "input",
+      "expected_output",
+      "evaluation_type",
+      "source_metadata"
+    ],
+    "case_count": 14034,
+    "evaluation_types": [
+      "json"
+    ]
+  },
+  "outputs": {
+    "rows": 14034,
+    "success_count": 14034,
+    "error_count": 0,
+    "models": [
+      "gpt_5_6_luna"
+    ],
+    "failure_rate": 0.0,
+    "prompt_tokens": 4995185,
+    "completion_tokens": 1687338,
+    "total_tokens": 6682523,
+    "average_generation_seconds": 3.9714483058871526,
+    "p95_generation_seconds": 4.423034750251827,
+    "cost_usd": 15.119213,
+    "cost_coverage": 1.0,
+    "configured_cost_usd": 15.119213,
+    "configured_cost_coverage": 1.0,
+    "provider_reported_cost_usd": 15.119213,
+    "provider_reported_cost_coverage": 1.0,
+    "budget_cost_usd": 15.119213,
+    "budget_cost_observations": 14034,
+    "budgeted_cost_usd": 22.6788195
+  },
+  "execution": {
+    "status": "completed",
+    "generation_run_fingerprint": "013ae39bf900c56aa711692ad4bb7180fac3161352cb7f298d935b32b22dc58e",
+    "expected_output_count": 14034,
+    "completed_output_count": 14034,
+    "pending_output_count": 0,
+    "resumed_output_count": 0,
+    "checkpoint_path": "data/generated/hc_dpd_census_gpt_5_6_luna_outputs.csv.checkpoint.jsonl"
+  },
+  "cost_preflight": {
+    "sample_path": "data/generated/hc_dpd_comparison_500_gpt_5_6_luna_outputs.csv",
+    "sample_sha256": "93367d674a9152cb05574bddb7faa287ee5c0338fbc413e0994cbc2a24643978",
+    "assumes_cached_input_tokens": 0,
+    "existing_budget_cost_usd": 0.0,
+    "projected_remaining_cost_usd": 15.052447379999995,
+    "projected_total_cost_usd": 15.052447379999995,
+    "cost_safety_multiplier": 1.5,
+    "projected_budgeted_total_usd": 22.57867106999999,
+    "maximum_estimated_cost_usd": 40.0,
+    "within_limit": true,
+    "by_model": {
+      "gpt_5_6_luna": {
+        "model": "azure/gpt-5.6-luna",
+        "sample_rows": 500,
+        "average_sample_cost_usd": 0.0010725699999999997,
+        "pending_requests": 14034,
+        "projected_remaining_cost_usd": 15.052447379999995
+      }
+    }
+  },
+  "endpoint_pricing": {
+    "cost_policy": "configured_endpoint_pricing_then_litellm_response_metadata",
+    "catalog_path": "configs/endpoint_pricing_azure_global_gpt_5_6_luna.yaml",
+    "catalog_sha256": "3a95b0833d73bea5e007ff3308e5896ce76d25fdbc684ce24be6848bdc4f268d",
+    "catalog_schema_version": "1.0",
+    "catalog_version": "azure-global-standard-gpt-5-6-2026-07-28",
+    "resolved_endpoints": [
+      {
+        "pricing_id": "azure_global_gpt_5_6_luna_2026_07_09",
+        "model": "azure/gpt-5.6-luna",
+        "currency": "USD",
+        "input_per_million_tokens": 1.0,
+        "output_per_million_tokens": 6.0,
+        "cached_input_per_million_tokens": null,
+        "effective_date": "2026-07-09",
+        "source": "https://azure.microsoft.com/en-us/blog/gpt-5-6-now-available-in-microsoft-foundry/",
+        "notes": "Microsoft-published GPT-5.6 Luna Standard Global rates checked 2026-07-28. Cached input is conservatively charged at the full input rate because the cited launch table publishes only input and output rates. This is an estimate, not a reconciled invoice or an organization-specific effective rate."
+      }
+    ],
+    "unpriced_references": []
+  },
+  "operations": {
+    "cost_currency": "USD",
+    "cost_policy": "configured_endpoint_pricing_then_litellm_response_metadata",
+    "generation": {
+      "requests": 14034,
+      "successes": 14034,
+      "errors": 0,
+      "failure_rate": 0.0,
+      "average_seconds": 3.9714483058871526,
+      "p95_seconds": 4.423034750251827,
+      "latency_observations": 14034,
+      "latency_coverage": 1.0,
+      "api_attempts": 14034,
+      "failed_api_attempts": 0,
+      "prompt_tokens": 4995185,
+      "cached_prompt_tokens": 0,
+      "completion_tokens": 1687338,
+      "total_tokens": 6682523,
+      "token_observations": 14034,
+      "token_coverage": 1.0,
+      "cost_usd": 15.119213,
+      "cost_observations": 14034,
+      "cost_coverage": 1.0,
+      "cost_complete": true,
+      "cost_sources": "configured_endpoint_pricing",
+      "configured_cost_usd": 15.119213,
+      "configured_cost_observations": 14034,
+      "configured_cost_coverage": 1.0,
+      "configured_cost_complete": true,
+      "provider_reported_cost_usd": 15.119213,
+      "provider_reported_cost_observations": 14034,
+      "provider_reported_cost_coverage": 1.0,
+      "provider_reported_cost_complete": true
+    },
+    "by_model": {
+      "gpt_5_6_luna": {
+        "requests": 14034,
+        "successes": 14034,
+        "errors": 0,
+        "failure_rate": 0.0,
+        "average_seconds": 3.9714483058871526,
+        "p95_seconds": 4.423034750251827,
+        "latency_observations": 14034,
+        "latency_coverage": 1.0,
+        "api_attempts": 14034,
+        "failed_api_attempts": 0,
+        "prompt_tokens": 4995185,
+        "cached_prompt_tokens": 0,
+        "completion_tokens": 1687338,
+        "total_tokens": 6682523,
+        "token_observations": 14034,
+        "token_coverage": 1.0,
+        "cost_usd": 15.119213,
+        "cost_observations": 14034,
+        "cost_coverage": 1.0,
+        "cost_complete": true,
+        "cost_sources": "configured_endpoint_pricing",
+        "configured_cost_usd": 15.119213,
+        "configured_cost_observations": 14034,
+        "configured_cost_coverage": 1.0,
+        "configured_cost_complete": true,
+        "provider_reported_cost_usd": 15.119213,
+        "provider_reported_cost_observations": 14034,
+        "provider_reported_cost_coverage": 1.0,
+        "provider_reported_cost_complete": true
+      }
+    }
+  },
+  "limitations": [
+    "Generated outputs are specific to the candidate models, prompts, inputs, and API configuration used in this run.",
+    "Generated outputs should be inspected before important evaluations.",
+    "Using the same model as both candidate and judge may introduce evaluation bias.",
+    "Configured token costs are estimates from recorded usage and declared rates, not provider invoices.",
+    "The local cost guard applies a configured safety multiplier and reserves worst-case retry cost, but it is not an Azure billing hard stop and cannot price failed provider calls that return no usage."
+  ]
+}

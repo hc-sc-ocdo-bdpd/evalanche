@@ -169,6 +169,9 @@ local source release and makes no network requests.
 
 ## Boundary for the next data step
 
+Manual validation of the completed DPD census result is the immediate
+analytical boundary.
+
 Product Monograph acquisition remains incomplete. The next release must
 resolve authorized English and French monographs for candidate products,
 freeze and hash the PDFs, extract document text, audit DPD-to-document
@@ -177,3 +180,9 @@ inputs with bounded monograph text.
 
 Until that audit is complete, this release is an integration benchmark and
 reference-label slice, not the final Product Monograph benchmark.
+
+The DPD-only population expansion is frozen as census version `0.2.0`. It
+contains all 7,017 product families representable by the current contract,
+14,034 bilingual cases, and a fixed 24-case live-demo view. See
+[`HC_DPD_CENSUS_DEMO.md`](HC_DPD_CENSUS_DEMO.md). The census expands DPD
+coverage but does not change the Product Monograph boundary described above.
