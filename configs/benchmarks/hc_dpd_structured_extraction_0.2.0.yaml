@@ -1,0 +1,63 @@
+schema_version: "1.0"
+benchmark_id: hc_dpd_structured_extraction
+version: 0.2.0
+title: Health Canada DPD structured extraction
+description: >-
+  Bilingual structured extraction across the complete frozen population of
+  eligible marketed human-drug product families in the 2026-07-02 DPD
+  snapshot.
+status: frozen
+dataset:
+  dataset_id: hc_dpd_structured_extraction_census
+  version: 0.2.0
+  manifest_path: configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml
+  cases_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz
+prompt:
+  version: "1.0"
+  system: >-
+    You are a careful structured-data extraction system. Follow the requested
+    JSON schema exactly, preserve source-language values, and return only one
+    valid JSON object with no Markdown or explanation.
+  template: "{input}"
+scoring:
+  evaluation_type: json
+  version: "1.0"
+  required_output_fields:
+    - din
+    - brand_name
+    - active_ingredients
+    - dosage_forms
+    - routes
+    - schedule
+    - product_status
+    - company
+  metrics:
+    case_sensitive: false
+    trim_whitespace: true
+    collapse_whitespace: true
+    unicode_normalization: NFC
+    json_comparison:
+      unordered_list_paths:
+        - /din
+        - /active_ingredients
+        - /dosage_forms
+        - /routes
+        - /schedule
+      numeric_value_paths:
+        - /active_ingredients/*/strength
+      zero_pad_numeric_string_paths:
+        /din/*: 8
+slice_columns:
+  - language
+  - stratum
+group_key: product_id
+language_column: language
+runtime:
+  max_completion_tokens: 900
+  max_workers: 4
+  max_requests_per_minute: 60
+  checkpoint_every: 100
+  resume: true
+limitations:
+  - Inputs are normalized DPD records, not Product Monograph documents.
+  - Results describe this frozen dataset and do not imply universal model quality.

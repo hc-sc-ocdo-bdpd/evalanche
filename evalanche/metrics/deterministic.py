@@ -89,13 +89,32 @@ def normalize_text(
     trim_whitespace: bool,
     collapse_whitespace: bool,
     unicode_normalization: str = "NFC",
+    strip_diacritics: bool = False,
+    strip_punctuation: bool = False,
 ) -> str:
     if pd.isna(value):
         text = ""
     else:
         text = str(value)
 
+    text = text.translate(
+        {
+            ord("™"): " ",
+            ord("®"): " ",
+            ord("©"): " ",
+        }
+    )
     text = unicodedata.normalize(unicode_normalization, text)
+
+    if strip_diacritics:
+        text = "".join(
+            character
+            for character in unicodedata.normalize("NFKD", text)
+            if not unicodedata.combining(character)
+        )
+
+    if strip_punctuation:
+        text = re.sub(r"[^\w\s%]", " ", text, flags=re.UNICODE)
 
     if trim_whitespace:
         text = text.strip()
@@ -181,6 +200,8 @@ def _normalize_json_string(
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
         unicode_normalization=config.metrics.unicode_normalization,
+        strip_diacritics=config.metrics.strip_diacritics,
+        strip_punctuation=config.metrics.strip_punctuation,
     )
     comparison = config.metrics.json_comparison
     width = _matching_rule_value(
@@ -206,6 +227,8 @@ def _normalize_json_string(
                 unicode_normalization=(
                     config.metrics.unicode_normalization
                 ),
+                strip_diacritics=config.metrics.strip_diacritics,
+                strip_punctuation=config.metrics.strip_punctuation,
             ): normalize_text(
                 target,
                 case_sensitive=config.metrics.case_sensitive,
@@ -216,6 +239,8 @@ def _normalize_json_string(
                 unicode_normalization=(
                     config.metrics.unicode_normalization
                 ),
+                strip_diacritics=config.metrics.strip_diacritics,
+                strip_punctuation=config.metrics.strip_punctuation,
             )
             for source, target in aliases.items()
         }
@@ -508,6 +533,8 @@ def score_row(
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
         unicode_normalization=config.metrics.unicode_normalization,
+        strip_diacritics=config.metrics.strip_diacritics,
+        strip_punctuation=config.metrics.strip_punctuation,
     )
 
     output_normalized = normalize_text(
@@ -516,6 +543,8 @@ def score_row(
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
         unicode_normalization=config.metrics.unicode_normalization,
+        strip_diacritics=config.metrics.strip_diacritics,
+        strip_punctuation=config.metrics.strip_punctuation,
     )
 
     normalized_exact_match = (

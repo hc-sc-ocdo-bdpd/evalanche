@@ -1,0 +1,9 @@
+{
+  "bundle_schema_version": "1.0",
+  "benchmark_id": "hc_dpd_structured_extraction",
+  "benchmark_version": "0.2.0",
+  "model_id": "gpt_5_4_mini",
+  "run_id": "64061d23515229e9",
+  "run_metadata_path": "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/runs/gpt_5_4_mini/64061d23515229e9/run.json",
+  "run_metadata_sha256": "32d7ed89f93704898524ba2d6cffa7f8fb39e64d1f42bde070239c818ea3b368"
+}

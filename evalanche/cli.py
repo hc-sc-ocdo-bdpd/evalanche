@@ -7,6 +7,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.auto import tqdm
 
+from evalanche.benchmark_runner import run_registered_benchmark
 from evalanche.config import (
     load_config,
     load_evaluation_config,
@@ -16,6 +17,17 @@ from evalanche.config import (
 from evalanche.dataset_manifest import (
     save_dataset_verification,
     verify_dataset_manifest_file,
+)
+from evalanche.dpd_analysis import (
+    DPD_ANALYSIS_ALL_PASS_SAMPLE,
+    DPD_ANALYSIS_COMPARISON_MODEL,
+    DPD_ANALYSIS_CONFIG_PATH,
+    DPD_ANALYSIS_OUTPUT_DIR,
+    DPD_ANALYSIS_PRIMARY_MODEL,
+    DPD_ANALYSIS_RESULTS_PATH,
+    DPD_ANALYSIS_REVIEW_SEED,
+    DPD_ANALYSIS_SHARED_FAILURE_SAMPLE,
+    build_dpd_census_analysis,
 )
 from evalanche.dpd_benchmark import (
     DPD_BENCHMARK_SEED,
@@ -33,20 +45,34 @@ from evalanche.dpd_comparison import (
 from evalanche.dpd_census_comparison import (
     assemble_dpd_census_comparison_outputs,
 )
+from evalanche.dpd_evidence_audit import (
+    DPD_EVIDENCE_AUDIT_ARCHIVE_PATH,
+    DPD_EVIDENCE_AUDIT_CONFIG_PATH,
+    DPD_EVIDENCE_AUDIT_OUTPUT_PATH,
+    DPD_EVIDENCE_AUDIT_REVIEW_PATH,
+    DPD_EVIDENCE_AUDIT_SUMMARY_PATH,
+    build_dpd_evidence_audit,
+)
 from evalanche.dpd_snapshot import create_dpd_source_snapshot
 from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs, preflight_generation
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
+from evalanche.leaderboard import (
+    build_benchmark_index,
+    build_leaderboard,
+)
 from evalanche.metadata import save_run_metadata
 from evalanche.metrics import run_deterministic_metrics
 from evalanche.recommendation import save_recommendation_report
+from evalanche.registry import load_registry, validate_registry
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
     print_summary,
     save_model_summary,
 )
+from evalanche.result_bundle import register_result_bundle
 from evalanche.routing import JUDGE
 
 
@@ -489,6 +515,263 @@ def run_assemble_dpd_census_comparison(
     return result
 
 
+def run_analyze_dpd_census(
+    *,
+    root_path: str,
+    results_path: str,
+    config_path: str,
+    output_dir: str,
+    primary_model: str,
+    comparison_model: str,
+    shared_failure_sample: int,
+    all_pass_sample: int,
+    review_seed: int,
+) -> dict[str, Any]:
+    print(
+        "Analyzing saved DPD census results. "
+        "No model calls will be made."
+    )
+    try:
+        result = build_dpd_census_analysis(
+            root_path=root_path,
+            results_path=results_path,
+            config_path=config_path,
+            output_dir=output_dir,
+            primary_model=primary_model,
+            comparison_model=comparison_model,
+            shared_failure_sample=shared_failure_sample,
+            all_pass_sample=all_pass_sample,
+            review_seed=review_seed,
+        )
+    except (OSError, ValueError) as error:
+        print(f"DPD census analysis failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nHealth Canada DPD census analysis")
+    print(
+        "Models: "
+        + ", ".join(result["source"]["models"])
+    )
+    print(
+        "Cases: "
+        f"{result['benchmark']['case_count']}"
+    )
+    print(
+        "Product families: "
+        f"{result['benchmark']['product_family_count']}"
+    )
+    print(
+        "Manual review cases: "
+        f"{result['review_set']['total_unique_cases']}"
+    )
+    print(f"Output: {result['output_dir']}")
+    print(f"Manifest: {result['manifest_path']}")
+    print("Status: ANALYSIS COMPLETE")
+    print(
+        "Next: run audit-dpd-review to refresh the selected-case "
+        "evidence audit and release manifests."
+    )
+    print("No model calls were made.")
+    return result
+
+
+def run_audit_dpd_review(
+    *,
+    root_path: str,
+    review_path: str,
+    config_path: str,
+    archive_path: str,
+    output_path: str,
+    summary_path: str,
+) -> dict[str, Any]:
+    print(
+        "Auditing the DPD review set against frozen source evidence. "
+        "No model calls will be made."
+    )
+    try:
+        result = build_dpd_evidence_audit(
+            root_path=root_path,
+            review_path=review_path,
+            config_path=config_path,
+            archive_path=archive_path,
+            output_path=output_path,
+            summary_path=summary_path,
+        )
+    except (OSError, ValueError) as error:
+        print(f"DPD evidence audit failed: {error}")
+        raise SystemExit(1) from None
+
+    verification = result["verification"]
+    print("\nHealth Canada DPD evidence audit")
+    print(f"Review cases: {verification['review_cases']}")
+    print(
+        "Frozen-source rebuild matches: "
+        f"{verification['source_rebuild_matches']}"
+    )
+    print(
+        "Independent expected-answer parses: "
+        f"{verification['independent_expected_parses_match']}"
+    )
+    print(
+        "Model outputs rescored: "
+        f"{verification['model_outputs_rescored']}"
+    )
+    print(
+        "Strict-score disagreements: "
+        f"{verification['strict_score_disagreements']}"
+    )
+    print(f"Output: {result['output']['path']}")
+    print(f"Summary: {result['summary_path']}")
+    print(
+        "Release manifests refreshed: "
+        + (
+            "yes"
+            if result["release_manifests_refreshed"]
+            else "no, custom output paths were used"
+        )
+    )
+    print("Status: AUTOMATED EVIDENCE AUDIT COMPLETE")
+    print("Human sign-off: NOT CLAIMED")
+    print("No model calls were made.")
+    return result
+
+
+def run_registry_validate(*, root_path: str) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        result = validate_registry(registry)
+    except (OSError, ValueError) as error:
+        print(f"Registry validation failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nEvalanche registry")
+    print(f"Models: {result['models']}")
+    print(f"Benchmarks: {result['benchmarks']}")
+    if not result["valid"]:
+        print("Status: INVALID")
+        for issue in result["issues"]:
+            print(f"- {issue}")
+        raise SystemExit(1)
+    print("Status: VALID")
+    return result
+
+
+def run_register_result(
+    *,
+    root_path: str,
+    benchmark_reference: str,
+    model_id: str,
+    results_path: str,
+    provenance_path: str | None,
+) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        benchmark = registry.resolve_benchmark(benchmark_reference)
+        result = register_result_bundle(
+            registry=registry,
+            benchmark=benchmark,
+            model_id=model_id,
+            results_path=results_path,
+            provenance_path=provenance_path,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Result registration failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nRegistered result bundle")
+    print(
+        f"Benchmark: {benchmark.benchmark_id}@{benchmark.version}"
+    )
+    print(f"Model: {model_id}")
+    print(f"Run: {result['run_id']}")
+    print(f"Cases: {result['summary']['cases']}")
+    print(f"Output: {result['run_dir']}")
+    print("Status: REGISTERED")
+    return result
+
+
+def run_build_leaderboard(
+    *,
+    root_path: str,
+    benchmark_reference: str | None,
+    build_all: bool,
+) -> list[dict[str, Any]]:
+    try:
+        registry = load_registry(root_path)
+        if build_all:
+            benchmarks = list(registry.benchmarks.values())
+        elif benchmark_reference is not None:
+            benchmarks = [
+                registry.resolve_benchmark(benchmark_reference)
+            ]
+        else:
+            raise ValueError("Provide --benchmark or use --all.")
+        results = [
+            build_leaderboard(
+                registry=registry,
+                benchmark=benchmark,
+            )
+            for benchmark in benchmarks
+        ]
+        index_path = build_benchmark_index(registry=registry)
+    except (OSError, ValueError) as error:
+        print(f"Leaderboard build failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nEvalanche leaderboards")
+    print(f"Built leaderboards: {len(results)}")
+    for result in results:
+        print(
+            f"- {result['benchmark_id']}@"
+            f"{result['benchmark_version']}: "
+            f"{result['models']} model(s)"
+        )
+    print(f"Index: {index_path}")
+    print("Status: LEADERBOARD BUILT")
+    return results
+
+
+def run_benchmark_from_registry(
+    *,
+    root_path: str,
+    benchmark_reference: str,
+    model_id: str,
+    plan_only: bool,
+) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        benchmark = registry.resolve_benchmark(benchmark_reference)
+        model = registry.resolve_model(model_id)
+        result = run_registered_benchmark(
+            registry=registry,
+            benchmark=benchmark,
+            model=model,
+            plan_only=plan_only,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Benchmark run failed: {error}")
+        raise SystemExit(1) from None
+
+    plan = result["plan"]
+    print("\nEvalanche benchmark run")
+    print(f"Benchmark: {plan['benchmark']}")
+    print(f"Model: {plan['model_id']}")
+    print(f"Cases: {plan['case_count']}")
+    print(f"Planned model calls: {plan['planned_model_calls']}")
+    print(f"Plan: {plan['paths']['run_plan']}")
+    if plan_only:
+        print("Status: PLAN READY")
+        print("No model calls were made.")
+    else:
+        print(f"Run: {result['bundle']['run_id']}")
+        print(
+            "Leaderboard: "
+            f"{result['leaderboard']['html_path']}"
+        )
+        print("Status: COMPLETE AND REGISTERED")
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -663,6 +946,161 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
+    analyze_census_parser = subparsers.add_parser(
+        "analyze-dpd-census"
+    )
+    analyze_census_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing results and published reports.",
+    )
+    analyze_census_parser.add_argument(
+        "--results",
+        default=DPD_ANALYSIS_RESULTS_PATH.as_posix(),
+        help="Combined case-level DPD census result CSV.",
+    )
+    analyze_census_parser.add_argument(
+        "--config",
+        default=DPD_ANALYSIS_CONFIG_PATH.as_posix(),
+        help="Evaluation config that defines canonical JSON scoring.",
+    )
+    analyze_census_parser.add_argument(
+        "--output-dir",
+        default=DPD_ANALYSIS_OUTPUT_DIR.as_posix(),
+        help="Directory for compact analysis and review artifacts.",
+    )
+    analyze_census_parser.add_argument(
+        "--primary-model",
+        default=DPD_ANALYSIS_PRIMARY_MODEL,
+        help="Frontier model whose every failure must be reviewed.",
+    )
+    analyze_census_parser.add_argument(
+        "--comparison-model",
+        default=DPD_ANALYSIS_COMPARISON_MODEL,
+        help="Frontier comparator for directional disagreement review.",
+    )
+    analyze_census_parser.add_argument(
+        "--shared-failure-sample",
+        type=int,
+        default=DPD_ANALYSIS_SHARED_FAILURE_SAMPLE,
+        help="Stratified shared lower-tier failure sample size.",
+    )
+    analyze_census_parser.add_argument(
+        "--all-pass-sample",
+        type=int,
+        default=DPD_ANALYSIS_ALL_PASS_SAMPLE,
+        help="Stratified all-model pass sample size.",
+    )
+    analyze_census_parser.add_argument(
+        "--review-seed",
+        type=int,
+        default=DPD_ANALYSIS_REVIEW_SEED,
+        help="Recorded seed for deterministic review samples.",
+    )
+
+    audit_review_parser = subparsers.add_parser(
+        "audit-dpd-review"
+    )
+    audit_review_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the frozen DPD evidence.",
+    )
+    audit_review_parser.add_argument(
+        "--review",
+        default=DPD_EVIDENCE_AUDIT_REVIEW_PATH.as_posix(),
+        help="Generated DPD review worksheet.",
+    )
+    audit_review_parser.add_argument(
+        "--config",
+        default=DPD_EVIDENCE_AUDIT_CONFIG_PATH.as_posix(),
+        help="Evaluation config defining canonical JSON scoring.",
+    )
+    audit_review_parser.add_argument(
+        "--archive",
+        default=DPD_EVIDENCE_AUDIT_ARCHIVE_PATH.as_posix(),
+        help="Frozen marketed DPD source archive.",
+    )
+    audit_review_parser.add_argument(
+        "--output",
+        default=DPD_EVIDENCE_AUDIT_OUTPUT_PATH.as_posix(),
+        help="Completed automated evidence-audit CSV.",
+    )
+    audit_review_parser.add_argument(
+        "--summary",
+        default=DPD_EVIDENCE_AUDIT_SUMMARY_PATH.as_posix(),
+        help="Evidence-audit summary JSON.",
+    )
+
+    registry_parser = subparsers.add_parser("registry-validate")
+    registry_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing model and benchmark manifests.",
+    )
+
+    register_parser = subparsers.add_parser("register-result")
+    register_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the registry.",
+    )
+    register_parser.add_argument(
+        "--benchmark",
+        required=True,
+        help="Benchmark reference in benchmark_id@version form.",
+    )
+    register_parser.add_argument("--model", required=True)
+    register_parser.add_argument(
+        "--results",
+        required=True,
+        help="Completed single-model evaluation CSV.",
+    )
+    register_parser.add_argument(
+        "--provenance",
+        help=(
+            "Optional original result artifact recorded as provenance when "
+            "--results is a temporary single-model migration view."
+        ),
+    )
+
+    leaderboard_parser = subparsers.add_parser("build-leaderboard")
+    leaderboard_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the registry.",
+    )
+    leaderboard_group = leaderboard_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    leaderboard_group.add_argument(
+        "--benchmark",
+        help="Benchmark reference in benchmark_id@version form.",
+    )
+    leaderboard_group.add_argument(
+        "--all",
+        action="store_true",
+        help="Build every registered benchmark leaderboard.",
+    )
+
+    run_benchmark_parser = subparsers.add_parser("run-benchmark")
+    run_benchmark_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the registry.",
+    )
+    run_benchmark_parser.add_argument(
+        "--benchmark",
+        required=True,
+        help="Benchmark reference in benchmark_id@version form.",
+    )
+    run_benchmark_parser.add_argument("--model", required=True)
+    run_benchmark_parser.add_argument(
+        "--plan-only",
+        action="store_true",
+        help="Resolve and validate the run without making model calls.",
+    )
+
     return parser
 
 
@@ -720,6 +1158,50 @@ def main() -> None:
         run_assemble_dpd_census_comparison(
             root_path=args.root,
             required_models=args.required_models,
+        )
+    elif args.command == "analyze-dpd-census":
+        run_analyze_dpd_census(
+            root_path=args.root,
+            results_path=args.results,
+            config_path=args.config,
+            output_dir=args.output_dir,
+            primary_model=args.primary_model,
+            comparison_model=args.comparison_model,
+            shared_failure_sample=args.shared_failure_sample,
+            all_pass_sample=args.all_pass_sample,
+            review_seed=args.review_seed,
+        )
+    elif args.command == "audit-dpd-review":
+        run_audit_dpd_review(
+            root_path=args.root,
+            review_path=args.review,
+            config_path=args.config,
+            archive_path=args.archive,
+            output_path=args.output,
+            summary_path=args.summary,
+        )
+    elif args.command == "registry-validate":
+        run_registry_validate(root_path=args.root)
+    elif args.command == "register-result":
+        run_register_result(
+            root_path=args.root,
+            benchmark_reference=args.benchmark,
+            model_id=args.model,
+            results_path=args.results,
+            provenance_path=args.provenance,
+        )
+    elif args.command == "build-leaderboard":
+        run_build_leaderboard(
+            root_path=args.root,
+            benchmark_reference=args.benchmark,
+            build_all=args.all,
+        )
+    elif args.command == "run-benchmark":
+        run_benchmark_from_registry(
+            root_path=args.root,
+            benchmark_reference=args.benchmark,
+            model_id=args.model,
+            plan_only=args.plan_only,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

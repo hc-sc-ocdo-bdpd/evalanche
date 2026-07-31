@@ -1,0 +1,9 @@
+{
+  "bundle_schema_version": "1.0",
+  "benchmark_id": "hc_dpd_structured_extraction",
+  "benchmark_version": "0.2.0",
+  "model_id": "gpt_5_6_luna",
+  "run_id": "6c858ef5e4051b42",
+  "run_metadata_path": "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/runs/gpt_5_6_luna/6c858ef5e4051b42/run.json",
+  "run_metadata_sha256": "c4a609cd9fd2cf4807499b4ce8ac9ef55eb104b4b2e63d19c0fa26e01e951dc5"
+}

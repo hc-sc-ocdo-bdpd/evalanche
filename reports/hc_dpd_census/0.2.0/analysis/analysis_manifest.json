@@ -1,0 +1,137 @@
+{
+  "schema_version": "1.0",
+  "method_version": "hc_dpd_census_analysis/1.0",
+  "benchmark": {
+    "dataset_id": "hc_dpd_structured_extraction_census",
+    "dataset_version": "0.2.0",
+    "case_count": 14034,
+    "product_family_count": 7017,
+    "languages": [
+      "en",
+      "fr"
+    ]
+  },
+  "source": {
+    "results_path": "results/evaluate_hc_dpd_census_all_models_results.csv",
+    "results_size_bytes": 190637120,
+    "results_sha256": "15daf2d03116671eac7987197ffde780d530f34735bb7da5e3cad93613768e59",
+    "evaluation_config_path": "configs/evaluate_hc_dpd_census_all_models.yaml",
+    "evaluation_config_sha256": "8f6418b3e0928cd3d0a20e6a2e9bd3ed15dd1072cc3e6c71bb769bb7593266c0",
+    "rows": 56136,
+    "models": [
+      "gpt_5_4_mini",
+      "gpt_5_6_luna",
+      "gpt_5_6_terra",
+      "gpt_5_6_sol"
+    ]
+  },
+  "analysis": {
+    "primary_model": "gpt_5_6_sol",
+    "comparison_model": "gpt_5_6_terra",
+    "lower_tier_models": [
+      "gpt_5_4_mini",
+      "gpt_5_6_luna"
+    ],
+    "diagnostic_repairs_change_primary_score": false,
+    "manual_adjudication_complete": false,
+    "automated_evidence_audit_complete": true,
+    "evidence_audit_method_version": "hc_dpd_evidence_audit/1.0",
+    "leaderboard_scores_changed_by_audit": false,
+    "human_signoff_status": "not_claimed"
+  },
+  "review_set": {
+    "seed": 20260730,
+    "primary_model_failures": 13,
+    "comparison_only_failures": 42,
+    "shared_lower_tier_failure_sample": 25,
+    "all_model_pass_sample": 25,
+    "total_unique_cases": 105,
+    "status": "automated_evidence_audit_complete"
+  },
+  "published_files": [
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/model_overview.csv",
+      "size_bytes": 1329,
+      "sha256": "1f77652dfee244f8f7b8b701d087a50834772f5f2a94fc28246e4d4bd7a8a29e"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/slice_performance.csv",
+      "size_bytes": 5258,
+      "sha256": "7379ee5a259879cf7aeddea8df7088273e71dd68b5a37620eeb5601724964d71"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/field_accuracy.csv",
+      "size_bytes": 5616,
+      "sha256": "101b2f059817979168775de5f7e613d7466ed8d0d859d79eb7e87df06d0e5d55"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/error_taxonomy.csv",
+      "size_bytes": 3947,
+      "sha256": "1feb29e64a99628788e2c6dd687add99ac98aabdc44894519ad422700b844f2c"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/pairwise_tradeoffs.csv",
+      "size_bytes": 1584,
+      "sha256": "3f8bbb32801d78114f936db6b96e7150e001992a6cb822338ecb47d5b5412791"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/frontier_cases.csv",
+      "size_bytes": 279943,
+      "sha256": "197520f883c389521eb53ffddb8438ac347063bab2faa25e466292e001308ed0"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv",
+      "size_bytes": 526642,
+      "sha256": "fe423db1dc19e8486688671e5643efbb24ab161af76273a85ffd701e0b7d773e"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/README.md",
+      "size_bytes": 9033,
+      "sha256": "d089f988f00a0279f6a89029b2986f0b5fc524e51d65e15ca74098ce7eba77c4"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit.csv",
+      "size_bytes": 38760,
+      "sha256": "63679ba04ed471470e5f240a96b7429f12af8ee8a71d9673935ad840dafcf07a"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit_summary.json",
+      "size_bytes": 1470,
+      "sha256": "aac07a4a0266c0e567a18272e42cc796bdbb78feb3512dd9d31480e1be341bb6"
+    },
+    {
+      "path": "reports/hc_dpd_census/0.2.0/analysis/EVIDENCE_AUDIT.md",
+      "size_bytes": 2664,
+      "sha256": "1e3de25acbf9699192e5f004fe41e4dd78dc97ec1f34bca8c73dc769a16b172a"
+    }
+  ],
+  "evidence_audit": {
+    "status": "automated_evidence_audit_complete",
+    "human_signoff_status": "not_claimed",
+    "verification": {
+      "review_cases": 105,
+      "source_rebuild_matches": 105,
+      "independent_expected_parses_match": 105,
+      "model_outputs_rescored": 420,
+      "strict_score_disagreements": 0
+    },
+    "outcomes": {
+      "error_owner_counts": {
+        "model": 80,
+        "none": 25
+      },
+      "severity_counts": {
+        "low": 63,
+        "medium": 17,
+        "none": 25
+      },
+      "adjudication_counts": {
+        "retain_result": 105
+      },
+      "leaderboard_scores_changed": false,
+      "cases_excluded": 0,
+      "expected_answers_corrected": 0,
+      "scoring_rules_revised": 0
+    }
+  }
+}

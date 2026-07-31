@@ -9,6 +9,8 @@ examples.
 
 | Pattern | Purpose |
 | --- | --- |
+| `models/*.yaml` | Independently reusable registered model manifests |
+| `benchmarks/*.yaml` | Dataset, prompt, scoring, slice, and runtime benchmark contracts |
 | `candidate_models.yaml` | Small generic multi-model example |
 | `candidate_gpt_*.yaml` | One pinned candidate profile per deployed model |
 | `endpoint_pricing*.yaml` | Versioned public or organization-specific token rates |
@@ -21,9 +23,9 @@ examples.
 | `judge_*.yaml` | Standalone criteria-judge examples |
 | `metrics_*.yaml` | Standalone deterministic-metric examples |
 
-The root is intentionally flat for command-line discoverability and because
-completed run metadata records these paths. New benchmark families should use
-a clear family prefix instead of moving historical files.
+The historical run configurations remain flat because completed metadata
+records their paths. New extensible work uses `models/`, `benchmarks/`, and
+versioned dataset-specific configuration directories.
 
 ## Naming
 
@@ -53,6 +55,11 @@ evaluate_hc_dpd_census_all_models.yaml
 - Keep pilot, comparison, and full-census outputs isolated by filename.
 - Run `--preflight-only` before a large generation whenever the config declares
   a local cost guard.
+- Run `registry-validate` before any registered benchmark plan or run.
+- Change a benchmark version whenever case membership, prompt, or scoring
+  semantics change. Compatibility fingerprints reject silent mixing.
 
-See [`docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md`](../docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md)
-for the complete Health Canada DPD workflow.
+See [`docs/benchmark_registry.md`](../docs/benchmark_registry.md) for the
+extensible workflow and
+[`docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md`](../docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md)
+for the historical Health Canada DPD workflow.

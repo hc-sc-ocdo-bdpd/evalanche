@@ -1,0 +1,7 @@
+model_a,model_b,cases,a_only_passed,b_only_passed,both_passed,both_failed,paired_net_wins_a
+gpt_5_4_mini,gpt_5_6_luna,14034,2868,2703,7959,504,165
+gpt_5_4_mini,gpt_5_6_sol,14034,8,3202,10819,5,-3194
+gpt_5_4_mini,gpt_5_6_terra,14034,17,3176,10810,31,-3159
+gpt_5_6_luna,gpt_5_6_sol,14034,6,3365,10656,7,-3359
+gpt_5_6_luna,gpt_5_6_terra,14034,18,3342,10644,30,-3324
+gpt_5_6_sol,gpt_5_6_terra,14034,42,7,13979,6,35

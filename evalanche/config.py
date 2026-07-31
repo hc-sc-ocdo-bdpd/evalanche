@@ -364,6 +364,8 @@ class DeterministicMetricsSettingsConfig(BaseModel):
         "NFKC",
         "NFKD",
     ] = "NFC"
+    strip_diacritics: bool = False
+    strip_punctuation: bool = False
     json_comparison: JsonComparisonSettingsConfig = Field(
         default_factory=JsonComparisonSettingsConfig
     )

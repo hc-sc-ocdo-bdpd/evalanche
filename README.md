@@ -1,13 +1,15 @@
 # Mission Evalanche
 
-Evalanche is a task-grounded language-model evaluation toolkit for answering:
+Evalanche is an extensible task-grounded language-model benchmark suite for
+answering:
 
-> Which model should I use for this specific task?
+> How do candidate models compare on this specific task?
 
 It combines deterministic metrics, rubric-based LLM judging, paired
 statistics, operational evidence, cost accounting, and explicit selection
-constraints. The goal is a defensible task-specific recommendation, not a
-generic model leaderboard.
+constraints. Its primary product is a versioned, reproducible leaderboard for
+each benchmark. Model-selection policies and recommendation reports are
+optional interpretation layers.
 
 ## Current status
 
@@ -25,9 +27,12 @@ Evalanche currently supports:
   sampling, and split membership;
 - constraint-aware model selection based on quality, cost, latency,
   reliability, and declared capabilities;
+- independent model and benchmark manifests with compatibility fingerprints;
+- immutable compact result bundles and generated CSV, JSON, Markdown, and
+  sortable HTML leaderboards;
 - a reproducible bilingual Health Canada DPD benchmark with 14,034 cases.
 
-The repository includes more than 250 focused tests, plus continuous checks
+The repository includes more than 275 focused tests, plus continuous checks
 for lint, coverage, and committed benchmark integrity.
 
 ## Health Canada DPD benchmark
@@ -53,8 +58,11 @@ Four models completed the full census with no generation failures:
 | GPT-5.4 mini | 10,827 | 77.15% | 0.92344 | US$11.40 |
 | GPT-5.6 Luna | 10,662 | 75.97% | 0.95922 | US$15.12 |
 
-These results are provisional pending manual label review, grouped
-product-family analysis, and error adjudication. See the
+Automated error analysis, grouped product-family analysis, and the 105-case
+frozen-source evidence audit are complete. The audit retained every strict
+result and found no label or scoring corrections. Independent human sign-off
+is not claimed.
+See the
 [`published result release`](reports/hc_dpd_census/0.2.0/README.md) for the
 full scope, paired evidence, metadata, raw-artifact hashes, and interpretation
 limits.
@@ -118,6 +126,29 @@ On Windows PowerShell, activate with:
 ```
 
 ## Core workflow
+
+For normal benchmark work, start with the registry:
+
+```bash
+python -m evalanche.cli registry-validate
+python -m evalanche.cli build-leaderboard --all
+```
+
+Open `reports/benchmarks/index.html` for every versioned leaderboard.
+
+Plan a new model run without provider calls:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark hc_dpd_structured_extraction@0.2.0 \
+  --model gpt_5_6_sol \
+  --plan-only
+```
+
+Omit `--plan-only` only when a fresh model run is intended. Generation,
+evaluation, result registration, and leaderboard rebuilding then run as one
+workflow. Existing models are not rerun. See
+[`docs/benchmark_registry.md`](docs/benchmark_registry.md).
 
 ### 1. Define representative cases
 
@@ -225,6 +256,29 @@ A combined evaluation can produce:
 Missing latency, token, or cost evidence remains unknown. It is never silently
 treated as zero.
 
+For the completed DPD census, generate the compact analysis and selected-case
+review package from the saved case-level results:
+
+```bash
+python -m evalanche.cli analyze-dpd-census
+```
+
+This command makes no model calls. It validates four-model case coverage,
+analyzes fields, languages, complexity strata, bilingual product families,
+failure mechanisms, costs, and paired frontier cases, then writes a
+deterministic 105-case review worksheet.
+
+Audit that worksheet against the frozen source archive and rescore all
+selected outputs:
+
+```bash
+python -m evalanche.cli audit-dpd-review
+```
+
+The audit is deterministic, makes no model calls, and records its decisions
+separately from the immutable review evidence. With the default paths, it also
+refreshes the analysis and release integrity manifests.
+
 ## Dataset releases
 
 Versioned manifests freeze dataset identity and provenance. Verify the generic
@@ -255,12 +309,15 @@ documented in the
 
 The 500-case visual comparison notebook remains available at
 [`notebooks/HC_DPD_Model_Comparison_Demo.ipynb`](notebooks/HC_DPD_Model_Comparison_Demo.ipynb).
-Its dependencies are isolated in `notebooks/requirements.txt`.
+The full-census analysis notebook is
+[`notebooks/HC_DPD_Census_Analysis.ipynb`](notebooks/HC_DPD_Census_Analysis.ipynb).
+Both use the dependencies in `notebooks/requirements.txt` and make no model
+calls when run with their default settings.
 
 ## Repository layout
 
 ```text
-configs/      Candidate, pricing, dataset, generation, and evaluation configs
+configs/      Model, benchmark, dataset, pricing, and legacy run configs
 data/         Tracked examples and immutable benchmark releases
 docs/         Method definitions, benchmark specifications, and runbooks
 evalanche/    Application code
@@ -275,6 +332,7 @@ Local model outputs and case-level evaluations are written to
 ## Documentation
 
 - [Dataset manifests](docs/dataset_manifests.md)
+- [Benchmark registry and generated leaderboards](docs/benchmark_registry.md)
 - [Endpoint pricing](docs/endpoint_pricing.md)
 - [Operational metrics](docs/operational_metrics.md)
 - [Statistical methods](docs/statistical_methods.md)
@@ -283,6 +341,7 @@ Local model outputs and case-level evaluations are written to
 - [Initial DPD benchmark slice](docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md)
 - [Full DPD census and bounded demo](docs/hc_benchmark/HC_DPD_CENSUS_DEMO.md)
 - [DPD full-census runbook](docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md)
+- [DPD census analysis and validation](docs/hc_benchmark/HC_DPD_CENSUS_ANALYSIS.md)
 - [DPD model-comparison demo](docs/hc_benchmark/HC_DPD_MODEL_COMPARISON_DEMO.md)
 - [DPD and Product Monograph benchmark specification](docs/hc_benchmark/HC_DPD_PM_BENCHMARK_SPEC.md)
 - [Health Canada dataset inventory](docs/hc_benchmark/HC_DATASET_INVENTORY.md)
@@ -320,9 +379,10 @@ versions, provider configuration, and scoring policy.
 
 ## Next milestones
 
-1. Analyze and manually validate the full DPD census result.
-2. Publish the validated model comparison and operational decision report.
-3. Implement the bilingual Product Monograph extraction benchmark.
-4. Expand task families while keeping their datasets, metrics, and
-   recommendations separate.
-5. Calibrate LLM-judge tasks against human review.
+1. Implement the bilingual Product Monograph extraction benchmark through the
+   registry without changing generic core code.
+2. Onboard one additional real model through a manifest-only change.
+3. Test API-enforced structured outputs on the DPD task.
+4. Expand task families while keeping datasets, metrics, and leaderboards
+   separate.
+5. Calibrate subjective LLM-judge tasks against human review.

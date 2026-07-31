@@ -66,6 +66,19 @@ def test_normalize_text_applies_requested_normalization() -> None:
     assert normalized == "multi line text"
 
 
+def test_normalize_text_can_ignore_diacritics_and_punctuation() -> None:
+    normalized = normalize_text(
+        "  Shampoing Reddy-Clobétasol™  ",
+        case_sensitive=False,
+        trim_whitespace=True,
+        collapse_whitespace=True,
+        strip_diacritics=True,
+        strip_punctuation=True,
+    )
+
+    assert normalized == "shampoing reddy clobetasol"
+
+
 def test_try_parse_json_accepts_json_code_fence() -> None:
     parsed, value = try_parse_json('```json\n{"name": "Jordan"}\n```')
 

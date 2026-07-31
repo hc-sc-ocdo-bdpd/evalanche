@@ -1,0 +1,18 @@
+schema_version: "1.0"
+model_id: gpt_5_6_sol
+display_name: GPT-5.6 Sol
+provider_route: ${GPT_5_6_SOL_MODEL:-azure/gpt-5.6-sol}
+request:
+  temperature:
+  reasoning_effort: none
+  max_retries: 3
+  max_completion_tokens: 900
+pricing_catalog_path: configs/endpoint_pricing_azure_global_gpt_5_6_sol.yaml
+pricing_id: azure_global_gpt_5_6_sol_2026_07_09
+provider_model_version: "2026-07-09"
+deployment_type: Global Standard
+resource_region: Canada East
+capabilities:
+  - structured_output
+  - bilingual
+
