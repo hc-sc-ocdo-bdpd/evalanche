@@ -60,14 +60,24 @@ A changed case, prompt, scorer, or dataset release cannot silently enter an
 existing leaderboard. The leaderboard build fails with the expected and
 observed compatibility hashes.
 
-## Run a registered benchmark
+## Plan models without calls
 
-Resolve a run without making provider calls:
+Resolve every registered model that declares the required capabilities:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
-  --model gpt_5_6_sol \
+  --benchmark <benchmark_id>@<version> \
+  --all-compatible \
+  --plan-only
+```
+
+Use repeated `--model` arguments to select a shortlist instead:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --model <first_model_id> \
+  --model <second_model_id> \
   --plan-only
 ```
 
@@ -76,29 +86,73 @@ under ignored local run directories. It reports the exact case and model-call
 count. Planning also refuses a model that does not declare every capability
 required by the benchmark.
 
-Only `ready` and `frozen` benchmarks can execute. A `draft` benchmark can be
-planned for review, but an execution attempt is blocked until its documented
-promotion gates pass.
+## Run a publishable benchmark
 
-After reviewing the plan, omit `--plan-only`:
+Only `ready` and `frozen` benchmarks can register results and publish
+leaderboards. After reviewing the plan, run selected models:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
-  --model gpt_5_6_sol
+  --benchmark <benchmark_id>@<version> \
+  --model <model_id>
 ```
 
 The command generates responses, evaluates them, registers an immutable
 compact result bundle, rebuilds that benchmark's leaderboard, and refreshes
 the benchmark index. Existing models are not rerun.
 
+## Run a local experiment
+
+Use `--experiment` when the evidence is still exploratory or the benchmark is
+draft:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --model <model_id> \
+  --experiment
+```
+
+The command performs generation and evaluation, then writes a generic local
+comparison. It never registers a result, rebuilds a leaderboard, or changes
+the benchmark's status. This is the only execution mode allowed for a draft
+benchmark. `--all-compatible --experiment` and repeated `--model` arguments
+are supported, but review each generated plan and price card first because an
+aggregate multi-model budget preflight is not implemented yet.
+
+Summarize all completed compatible local runs at any time:
+
+```bash
+python -m evalanche.cli summarize-benchmark \
+  --benchmark <benchmark_id>@<version>
+```
+
+This makes no model calls and writes under:
+
+```text
+results/benchmark_experiments/<benchmark_id>/<version>/
+  model_summary.csv
+  pairwise_comparisons.csv
+  slice_summary.csv
+  field_summary.csv
+  case_outcomes.csv
+  experiment.md
+  experiment.json
+```
+
+The command discovers evaluations through compatibility-checked run plans. It
+includes every completed compatible model by default, so adding another model
+does not require changing an analysis file or naming existing models again.
+Use repeated `--model` arguments only when a deliberately narrower view is
+needed.
+
 To apply an updated deterministic scorer to the saved model outputs, without
 making generation calls, run:
 
 ```bash
 python -m evalanche.cli rescore-benchmark \
-  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
-  --model gpt_5_6_sol
+  --benchmark <benchmark_id>@<version> \
+  --model <model_id>
 ```
 
 The command writes a fresh evaluation artifact, registers a new compatible
@@ -112,7 +166,7 @@ Completed single-model evaluation results can be registered separately:
 ```bash
 python -m evalanche.cli register-result \
   --benchmark hc_dpd_structured_extraction@0.2.0 \
-  --model gpt_5_6_sol \
+  --model <model_id> \
   --results results/example_single_model_evaluation.csv
 ```
 
@@ -122,7 +176,7 @@ original artifact as provenance:
 ```bash
 python -m evalanche.cli register-result \
   --benchmark hc_dpd_structured_extraction@0.2.0 \
-  --model gpt_5_6_sol \
+  --model <model_id> \
   --results results/temporary_single_model_view.csv \
   --provenance results/evaluate_hc_dpd_census_all_models_results.csv
 ```
@@ -187,8 +241,10 @@ recommendation.
 2. Validate the registry.
 3. Plan or run any compatible benchmark by model ID.
 
-No benchmark manifest, Python module, notebook, combined-output file, or
-existing result needs to change.
+No benchmark manifest, Python module, notebook, combined-output file, existing
+result, or list of model names needs to change. Re-run `summarize-benchmark`
+after the new evaluation completes and every aggregate, slice, field, case,
+and pairwise output is rebuilt for the discovered set.
 
 Tests add a synthetic model through a manifest and register it without a
 Python edit to the engine.

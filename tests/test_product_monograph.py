@@ -12,6 +12,9 @@ import yaml
 import evalanche.product_monograph as pm
 from evalanche import __version__
 from evalanche.dataset_manifest import verify_dataset_manifest_file
+from evalanche.product_monograph_review import (
+    check_product_monograph_label_review,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = (
@@ -93,6 +96,12 @@ def test_native_pdf_release_is_hash_locked_but_stays_draft() -> None:
         "vision",
     }
 
+    status = check_product_monograph_label_review(root_path=ROOT)
+    assert status["valid"] is True
+    assert status["promotion_ready"] is False
+    assert status["approved"] == 0
+    assert status["remaining"] == 390
+
 
 def test_native_pdf_builder_is_deterministic_and_preserves_review(
     tmp_path: Path,
@@ -141,6 +150,19 @@ def test_native_pdf_builder_is_deterministic_and_preserves_review(
     assert approved.iloc[0]["reviewer"] == "reviewer@example.test"
     assert second["approved_review_item_count"] == 1
     assert (tmp_path / pm.PM_NATIVE_PDF_CASES_PATH).read_bytes() == first_cases
+
+    status = check_product_monograph_label_review(root_path=tmp_path)
+    assert status["valid"] is True
+    assert status["reviewed"] == 1
+    assert status["approved"] == 1
+    assert status["remaining"] == 389
+
+    review.loc[0, "source_page"] = "999"
+    review.to_csv(review_path, index=False, lineterminator="\n")
+    with pytest.raises(ValueError, match="immutable source or label"):
+        pm.build_product_monograph_native_pdf_benchmark(
+            root_path=tmp_path,
+        )
 
 
 def test_product_monograph_cohort_contract() -> None:

@@ -68,7 +68,7 @@ or to publish its scores as document-understanding results.
 | Evidence windows could be mistaken for full-document input | Claims would exceed what the benchmark measured | Renamed and documented the release as an evidence-window diagnostic |
 | Input modality and model compatibility were implicit | An incompatible route could be treated like a bad model | Added benchmark-required capability gates for PDF input, Responses, and vision |
 | No native file-input path existed | Complete-PDF evaluation could not run through the registry | Added hash-verified Base64 PDF input through the Responses adapter |
-| A draft benchmark could execute and create publishable-looking output | Provisional labels and untested transport could leak into a leaderboard | Registry execution is blocked for `draft`; plan-only validation remains available |
+| A draft benchmark could create publishable-looking output | Provisional labels and untested transport could leak into a leaderboard | Registered execution remains blocked for `draft`; explicit local experiments are unregistered and cannot change leaderboards |
 | The benchmark index linked to missing draft leaderboards | The generated report surface contained a broken link | Drafts without leaderboards now render as non-clickable status cards |
 
 ## Options considered

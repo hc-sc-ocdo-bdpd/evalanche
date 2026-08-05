@@ -299,6 +299,67 @@ def run_registered_benchmark(
     }
 
 
+def run_experimental_benchmark(
+    *,
+    registry: LoadedRegistry,
+    benchmark: BenchmarkManifest,
+    model: ModelManifest,
+) -> dict[str, Any]:
+    """Run a local benchmark experiment without registration or publication."""
+
+    plan = build_run_plan(
+        registry=registry,
+        benchmark=benchmark,
+        model=model,
+    )
+    if benchmark.status == "retired":
+        raise ValueError(
+            f"Retired benchmark {_benchmark_reference(benchmark)} cannot run"
+        )
+
+    generation_config_path = registry.root / plan["paths"][
+        "generation_config"
+    ]
+    evaluation_config_path = registry.root / plan["paths"][
+        "evaluation_config"
+    ]
+    generation_config = load_generation_config(generation_config_path)
+    generation_outputs, _, _ = generate_outputs(
+        config=generation_config,
+        config_path=generation_config_path,
+    )
+    run_status = generation_outputs.attrs.get("run_status", "completed")
+    if run_status != "completed":
+        raise ValueError(
+            f"Generation did not complete, status={run_status}"
+        )
+
+    evaluation_config = load_evaluation_config(evaluation_config_path)
+    evaluation_cases = load_eval_cases(evaluation_config.run.input_path)
+    evaluation_results = evaluate_cases(
+        evaluation_cases,
+        evaluation_config,
+    )
+    evaluation_path = registry.root / plan["paths"]["evaluation_output"]
+    evaluation_path.parent.mkdir(parents=True, exist_ok=True)
+    evaluation_results.to_csv(
+        evaluation_path,
+        index=False,
+        lineterminator="\n",
+    )
+    return {
+        "plan": plan,
+        "executed": True,
+        "registered": False,
+        "evaluation_path": evaluation_path,
+        "evaluation_results": evaluation_results,
+    }
+
+
+def _benchmark_reference(benchmark: BenchmarkManifest) -> str:
+    return f"{benchmark.benchmark_id}@{benchmark.version}"
+
+
 def rescore_registered_benchmark(
     *,
     registry: LoadedRegistry,

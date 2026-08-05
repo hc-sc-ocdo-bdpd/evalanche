@@ -1,115 +1,84 @@
-# Mission Evalanche
+# Evalanche
 
-Evalanche is an extensible task-grounded language-model benchmark suite for
-answering:
+Evalanche is a practical resource for answering:
 
-> How do candidate models compare on this specific task?
+> Which model should I use for my problem, and what evidence supports that
+> choice?
 
-It combines deterministic metrics, rubric-based LLM judging, paired
-statistics, operational evidence, cost accounting, and explicit selection
-constraints. Its primary product is a versioned, reproducible leaderboard for
-each benchmark. Model-selection policies and recommendation reports are
-optional interpretation layers.
+It does not claim that one model is best in general. It connects three kinds
+of evidence:
 
-## Current status
+1. task requirements and hard deployment constraints;
+2. curated public benchmark evidence that helps create a shortlist;
+3. reproducible local comparisons when public evidence is not specific enough.
 
-Evalanche currently supports:
+Health Canada benchmarks are optional task packs and case studies. They prove
+that the evaluation system can handle large structured datasets, bilingual
+work, source-locked documents, and complete PDFs. They are not Evalanche's
+main product or the only kind of benchmark it is intended to support.
 
-- candidate generation with separate, reusable output artifacts;
-- exact, normalized string, and configurable canonical JSON evaluation;
-- rubric-based criteria judging for open-ended tasks;
-- case-level results, model summaries, paired comparisons, and recommendation
-  reports;
-- latency, retry, token, cost, and failure accounting;
-- explicit endpoint price catalogs and local cost guardrails;
-- durable checkpoints and safe resume for large generation runs;
-- versioned dataset manifests with file hashes, record counts, provenance,
-  sampling, and split membership;
-- constraint-aware model selection based on quality, cost, latency,
-  reliability, and declared capabilities;
-- independent model and benchmark manifests with compatibility fingerprints;
-- immutable compact result bundles and generated CSV, JSON, Markdown, and
-  sortable HTML leaderboards;
-- a reproducible bilingual Health Canada DPD benchmark with 14,034 cases;
-- a frozen 40-product, 80-case Product Monograph evidence-window diagnostic;
-- a separate draft native-PDF benchmark for end-to-end document retrieval,
-  visual reading, and structured extraction.
+## Start here
 
-The repository includes more than 280 focused tests, plus continuous checks
-for lint, coverage, and committed benchmark integrity.
+| What you need | Where to start |
+| --- | --- |
+| I do not know which model to consider | [Choosing a model with Evalanche](docs/choosing_a_model.md) |
+| I want relevant public benchmark evidence | [Public benchmark evidence guide](docs/public_benchmark_evidence.md) |
+| I have a shortlist and representative cases | [Core workflow](#core-workflow) |
+| I need hard cost, latency, reliability, or capability rules | [Constraint-aware selection](docs/model_selection.md) |
+| I want to see complete benchmark examples | [Optional Health Canada case studies](#optional-health-canada-case-studies) |
 
-## Health Canada DPD benchmark
+The normal decision path is:
 
-The current benchmark release contains:
+```text
+Define the task and constraints
+        ↓
+Use relevant public evidence
+        ↓
+Create a small credible shortlist
+        ↓
+Run a local comparison only if needed
+        ↓
+Choose using quality, cost, latency, reliability, and risk
+```
 
-| Property | Value |
-| --- | ---: |
-| Dataset | `hc_dpd_structured_extraction_census` |
-| Version | `0.2.0` |
-| Product families | 7,017 |
-| English cases | 7,017 |
-| French cases | 7,017 |
-| Total cases per model | 14,034 |
-| Scoring | Deterministic canonical JSON |
+## What Evalanche supports today
 
-Four models completed the full census with no generation failures:
+- independent model, dataset, benchmark, and result contracts;
+- exact text, canonical JSON, and rubric-based LLM-judge evaluation;
+- complete case results, field and slice summaries, paired statistics, and
+  recommendation reports;
+- token, cost, latency, retry, failure, and evidence-coverage accounting;
+- explicit price catalogs, cost guardrails, checkpoints, and safe resume;
+- compatibility fingerprints that prevent unlike runs from being mixed;
+- local draft experiments that cannot alter published leaderboards;
+- registry-discovered summaries that automatically include every completed
+  compatible model, including models added later;
+- immutable result bundles and CSV, JSON, Markdown, and sortable HTML
+  leaderboards for ready or frozen benchmarks;
+- optional Health Canada DPD and Product Monograph task packs.
 
-| Model | Strict passes | Pass rate | Average field score | Estimated run cost |
-| --- | ---: | ---: | ---: | ---: |
-| GPT-5.6 Sol | 14,021 | 99.91% | 0.99988 | US$75.52 |
-| GPT-5.6 Terra | 13,986 | 99.66% | 0.99952 | US$37.76 |
-| GPT-5.4 mini | 10,827 | 77.15% | 0.92344 | US$11.40 |
-| GPT-5.6 Luna | 10,662 | 75.97% | 0.95922 | US$15.12 |
+The largest remaining product gap is deeper task-based guidance backed by a
+maintained public-evidence catalog. The first useful catalog and model-choice
+workflow now exist in `docs/`, but they do not yet ingest current public scores
+or generate an interactive shortlist.
 
-Automated error analysis, grouped product-family analysis, and the 105-case
-frozen-source evidence audit are complete. The audit retained every strict
-result and found no label or scoring corrections. Independent human sign-off
-is not claimed.
-See the
-[`published result release`](reports/hc_dpd_census/0.2.0/README.md) for the
-full scope, paired evidence, metadata, raw-artifact hashes, and interpretation
-limits.
+## Extensibility rule
 
-## Product Monograph benchmarks
+The set of models is data, not application code. Adding a model means adding
+one manifest under `configs/models/`, then running it by ID. Benchmark analysis
+must never contain a fixed list of current model names.
 
-Evalanche now keeps two Product Monograph questions separate:
+The generic experiment summary discovers compatible completed results from
+their run plans and rebuilds:
 
-| Benchmark | Model input | What it measures | Status |
-| --- | --- | --- | --- |
-| `hc_product_monograph_structured_extraction@0.1.0` | Label-selected text pages | Extraction and JSON fidelity after the relevant evidence is supplied | Frozen diagnostic |
-| `hc_product_monograph_native_pdf_extraction@0.1.0` | Complete official PDF | End-to-end retrieval, visual reading, and extraction | Draft, blocked from ranked runs |
+- overall quality and confidence intervals;
+- total cost, cost per request, cost coverage, tokens, and latency;
+- arbitrary benchmark slices;
+- required JSON-field accuracy;
+- all-model case outcomes;
+- every pairwise comparison for however many models are present.
 
-The evidence-window release contains:
-
-| Property | Value |
-| --- | ---: |
-| Product families | 40 |
-| Official English PDFs | 40 |
-| Official French PDFs | 40 |
-| Development products | 30 |
-| Held-out products | 10 |
-| Scored source-evidence items | 390 |
-| Maximum evidence pages per case | 3 |
-
-All 80 PDF hashes are distinct, every scored item has a recorded source page,
-and the dataset manifest verifies 6 of 6 files. This diagnostic deliberately
-uses pages selected with knowledge of the reference labels. It is useful for
-isolating extraction quality, but it must not be described as full-document
-retrieval or PDF understanding.
-
-The active evidence-window runs show GPT-5.6 Sol at 64/80 strict passes and
-GPT-5.6 Terra and Luna at 56/80 each. GPT-5.4 Mini's saved run contains 80 API
-configuration failures and is visible but ineligible for rank. The corrected
-model config omits unsupported temperature sampling so that model must be run
-again before comparison.
-
-The native-PDF release reuses the same cohort and provisional labels but sends
-the complete hash-verified PDF through the Responses API. It remains draft
-until the 390-item human label review, local source verification, provider
-smoke test, and prompt lock are complete. See the
-[`evidence-window benchmark card`](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
-and the
-[`native-PDF benchmark plan`](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md).
+No existing model output must be regenerated when a new model is added.
 
 ## Quick start
 
@@ -180,18 +149,41 @@ python -m evalanche.cli build-leaderboard --all
 
 Open `reports/benchmarks/index.html` for every versioned leaderboard.
 
-Plan a new model run without provider calls:
+Plan every currently compatible model without provider calls:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
-  --model gpt_5_6_sol \
+  --benchmark <benchmark_id>@<version> \
+  --all-compatible \
   --plan-only
 ```
 
-Omit `--plan-only` after reviewing the 80-call plan. Generation, evaluation,
-result registration, and leaderboard rebuilding then run as one workflow.
-Existing models are not rerun. See
+Use one or more repeated `--model <model_id>` arguments when only a shortlist
+should run. For a `ready` or `frozen` benchmark, omitting `--plan-only` runs,
+registers, and publishes each selected model. For a draft benchmark, use the
+explicit local experiment mode instead:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --model <model_id> \
+  --experiment
+```
+
+Draft experiments save outputs and evaluations locally but cannot register a
+result or alter a leaderboard. Review the generated plans and pricing before
+execution. The multi-model command does not yet calculate one aggregate
+projected budget.
+
+Rebuild a comparison from every completed compatible local evaluation:
+
+```bash
+python -m evalanche.cli summarize-benchmark \
+  --benchmark <benchmark_id>@<version>
+```
+
+This command makes no provider calls. A newly registered and completed model
+appears automatically the next time the command runs. See
 [`docs/benchmark_registry.md`](docs/benchmark_registry.md).
 
 After a deterministic scorer or canonicalization rule changes, rescore saved
@@ -200,7 +192,7 @@ outputs without repeating provider generation calls:
 ```bash
 python -m evalanche.cli rescore-benchmark \
   --benchmark hc_product_monograph_structured_extraction@0.1.0 \
-  --model gpt_5_6_sol
+  --model <model_id>
 ```
 
 Offline rescoring rejects benchmarks containing LLM-judge cases so the command
@@ -312,6 +304,15 @@ A combined evaluation can produce:
 Missing latency, token, or cost evidence remains unknown. It is never silently
 treated as zero.
 
+The terminal summary includes total cost, average cost per request, cost
+coverage, token use, and p95 latency alongside quality.
+
+## Optional Health Canada case studies
+
+The following workflows are complete task-specific examples and research
+assets. They are useful demonstrations of Evalanche, but completing or
+expanding them is not required for the main model-selection product.
+
 For the completed DPD census, generate the compact analysis and selected-case
 review package from the saved case-level results:
 
@@ -379,13 +380,26 @@ python -m evalanche.cli verify-dataset \
   --root .
 python -m evalanche.cli run-benchmark \
   --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 \
-  --model gpt_5_6_sol \
+  --all-compatible \
   --plan-only
 ```
 
-The plan is allowed, but execution is intentionally blocked while the
-benchmark status is `draft`. The field-level review queue is
+Run a selected model as an unregistered local experiment by replacing
+`--all-compatible --plan-only` with `--model <model_id> --experiment`.
+Summarize existing native-PDF evaluations, including runs made before this
+command existed, with:
+
+```bash
+python -m evalanche.cli summarize-benchmark \
+  --benchmark hc_product_monograph_native_pdf_extraction@0.1.0
+```
+
+Registered publication remains blocked while the benchmark status is `draft`.
+The optional publication review queue is
 `data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/label_review.csv`.
+It contains 390 scored facts across 80 PDFs, not 390 documents. You only need
+to complete it if you decide that this HC task pack should become a published,
+ranked benchmark. See the native-PDF benchmark plan for exact review steps.
 
 ## Full DPD workflow
 
@@ -418,6 +432,8 @@ Local model outputs and case-level evaluations are written to
 
 ## Documentation
 
+- [Choosing a model with Evalanche](docs/choosing_a_model.md)
+- [Public benchmark evidence for model selection](docs/public_benchmark_evidence.md)
 - [Dataset manifests](docs/dataset_manifests.md)
 - [Benchmark registry and generated leaderboards](docs/benchmark_registry.md)
 - [Endpoint pricing](docs/endpoint_pricing.md)
@@ -469,10 +485,14 @@ versions, provider configuration, and scoring policy.
 
 ## Next milestones
 
-1. Complete and sign off the 390-item native-PDF label review queue.
-2. Verify all 80 local PDFs, smoke-test the Azure Responses path, and lock the
-   native-PDF prompt before promoting the draft.
-3. Rerun GPT-5.4 Mini with the corrected request settings.
-4. Run all compatible models on the promoted native-PDF benchmark and compare
-   the paired score change against the evidence-window diagnostic.
-5. Add broader monograph tasks only as separate benchmark contracts.
+1. Expand the task-based public-evidence catalog and keep every source dated,
+   scoped, and linked to the model-choice question it can answer.
+2. Turn the decision worksheet into a simple shortlist workflow that applies
+   hard capability and deployment filters before showing benchmark evidence.
+3. Add smoke, screen, and standard local-run tiers with aggregate cost
+   preflight, a maximum budget, and safe multi-model resume.
+4. Add worked model-choice examples that combine public evidence, local
+   results, cost, latency, reliability, and an explicit decision record.
+5. Treat HC publication as an optional parallel track. Complete its label
+   review and promote a new frozen release only if a public HC leaderboard or
+   research contribution is actually worth the review and run cost.

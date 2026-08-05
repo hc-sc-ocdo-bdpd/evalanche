@@ -248,24 +248,27 @@ The native-PDF benchmark additionally requires all 390 field-level labels to
 receive human approval, all source PDFs to pass local verification, an English
 and French development case to succeed through every intended provider route,
 token and cost reporting to be checked, and the prompt to be locked before any
-held-out run. Until then, registry execution remains blocked.
+held-out run. Until then, registration and leaderboard publication remain
+blocked. Explicit local experiments may run, but stay provisional and
+unranked.
 
 ## 11. Expansion plan
 
 After the 40-product pilot:
 
-1. Complete the native-PDF label-review and provider-smoke-test gates.
-2. Rerun GPT-5.4 Mini on the evidence-window diagnostic with its corrected
-   request configuration.
-3. Run the four compatible models against the promoted native-PDF release.
-4. Compare paired native-PDF and evidence-window outcomes without combining
-   their ranks.
-5. Quantify field, language, split, stratum, and document-length behavior.
+1. Use the registry-discovered experiment summary for any completed compatible
+   model. Do not create an analysis tied to the current model inventory.
+2. Preserve the 80-document release as the standard pilot while smoke and
+   smaller screening tiers are designed for cheaper candidate triage.
+3. Complete label review, provider smoke tests, and prompt locking only if a
+   public HC benchmark release is an active goal.
+4. If promoted, run any compatible model against the same frozen release and
+   keep native-PDF and evidence-window rankings separate.
+5. Expand the HC corpus only when more precision or document diversity can
+   change a real decision. Expansion creates a new release.
 6. Add harder scanned documents only if OCR is evaluated as a separate factor.
-7. Expand to at least 100 monograph-backed products with broader therapeutic
-   and document coverage.
-8. Develop Recalls and Summary Reports as separate task packs rather than
-   mixing unrelated task types into one score.
+7. Develop Recalls and Summary Reports as separate optional task packs rather
+   than mixing unrelated task types into one score.
 
 ## 12. Explicit non-goals
 

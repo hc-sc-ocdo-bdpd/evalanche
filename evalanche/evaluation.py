@@ -456,6 +456,13 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
             group,
             "generation",
         )
+        generation_requests = int(generation_operations["requests"])
+        generation_cost = generation_operations["cost_usd"]
+        generation_average_cost = (
+            float(generation_cost) / generation_requests
+            if generation_cost is not None and generation_requests > 0
+            else None
+        )
         judge_operations = summarize_stage(
             group,
             "judge",
@@ -496,6 +503,9 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
                 f"generation_{key}": value
                 for key, value in generation_operations.items()
             }
+        )
+        record["generation_average_cost_usd"] = (
+            generation_average_cost
         )
         record.update(
             {
@@ -541,6 +551,7 @@ def build_evaluation_summary(results: pd.DataFrame) -> pd.DataFrame:
         "generation_completion_tokens",
         "generation_total_tokens",
         "generation_cost_usd",
+        "generation_average_cost_usd",
         "generation_cost_coverage",
         "generation_cost_sources",
         "generation_configured_cost_usd",
@@ -606,6 +617,11 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
     table.add_column("95% range")
     table.add_column("Avg score")
     table.add_column("Gen failures")
+    table.add_column("Cost USD")
+    table.add_column("Cost/request")
+    table.add_column("Cost coverage")
+    table.add_column("Tokens")
+    table.add_column("p95 seconds")
     table.add_column("Judge failures")
 
     for _, row in summary.iterrows():
@@ -613,6 +629,11 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
         interval_low = row["pass_rate_ci_low"]
         interval_high = row["pass_rate_ci_high"]
         average_score = row["average_score"]
+        total_cost = row["generation_cost_usd"]
+        average_cost = row["generation_average_cost_usd"]
+        cost_coverage = row["generation_cost_coverage"]
+        total_tokens = row["generation_total_tokens"]
+        p95_seconds = row["generation_p95_seconds"]
         interval = (
             f"{interval_low:.1%}-{interval_high:.1%}"
             if pd.notna(interval_low) and pd.notna(interval_high)
@@ -633,6 +654,31 @@ def print_evaluation_summary(results: pd.DataFrame) -> None:
             (
                 f"{row['generation_errors']}/"
                 f"{row['generation_requests']}"
+            ),
+            (
+                f"${total_cost:.4f}"
+                if pd.notna(total_cost)
+                else "Unknown"
+            ),
+            (
+                f"${average_cost:.4f}"
+                if pd.notna(average_cost)
+                else "Unknown"
+            ),
+            (
+                f"{cost_coverage:.0%}"
+                if pd.notna(cost_coverage)
+                else "Unknown"
+            ),
+            (
+                f"{int(total_tokens):,}"
+                if pd.notna(total_tokens)
+                else "Unknown"
+            ),
+            (
+                f"{p95_seconds:.2f}"
+                if pd.notna(p95_seconds)
+                else "Unknown"
             ),
             f"{row['judge_errors']}/{row['judge_requests']}",
         )

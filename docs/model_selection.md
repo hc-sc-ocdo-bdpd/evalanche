@@ -1,5 +1,9 @@
 # Constraint-aware model selection
 
+If you are still deciding which evidence and candidates matter, start with
+[Choosing a model with Evalanche](choosing_a_model.md). This page documents the
+policy engine used after relevant evidence has been collected.
+
 Evalanche can apply explicit client requirements and weighted preferences after
 it calculates model quality and operational metrics. The selection policy is
 configured under `selection` in a combined evaluation YAML file.

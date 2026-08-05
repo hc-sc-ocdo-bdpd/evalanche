@@ -15,7 +15,12 @@ from evalanche.config import (
 )
 from evalanche.benchmark_runner import (
     rescore_registered_benchmark,
+    run_experimental_benchmark,
     run_registered_benchmark,
+)
+from evalanche.benchmark_experiment import (
+    build_benchmark_experiment_summary,
+    print_benchmark_experiment_summary,
 )
 from evalanche.dataset_manifest import (
     save_dataset_verification,
@@ -85,6 +90,9 @@ from evalanche.product_monograph import (
     build_product_monograph_native_pdf_benchmark,
     build_product_monograph_benchmark,
     verify_product_monograph_sources,
+)
+from evalanche.product_monograph_review import (
+    check_product_monograph_label_review,
 )
 from evalanche.routing import JUDGE
 
@@ -750,40 +758,133 @@ def run_benchmark_from_registry(
     *,
     root_path: str,
     benchmark_reference: str,
-    model_id: str,
+    model_ids: list[str] | None,
+    all_compatible: bool,
     plan_only: bool,
+    experiment: bool,
 ) -> dict[str, Any]:
     try:
         registry = load_registry(root_path)
         benchmark = registry.resolve_benchmark(benchmark_reference)
-        model = registry.resolve_model(model_id)
-        result = run_registered_benchmark(
-            registry=registry,
-            benchmark=benchmark,
-            model=model,
-            plan_only=plan_only,
+        required_capabilities = set(benchmark.required_capabilities)
+        compatible_ids = sorted(
+            model_id
+            for model_id, model in registry.models.items()
+            if required_capabilities.issubset(model.capabilities)
         )
+        selected_ids = (
+            compatible_ids
+            if all_compatible
+            else list(dict.fromkeys(model_ids or []))
+        )
+        if not selected_ids:
+            raise ValueError("No compatible models were selected.")
+        models = [registry.resolve_model(model_id) for model_id in selected_ids]
+        incompatible = [
+            model.model_id
+            for model in models
+            if not required_capabilities.issubset(model.capabilities)
+        ]
+        if incompatible:
+            raise ValueError(
+                "Selected models do not satisfy benchmark capabilities: "
+                f"{incompatible}"
+            )
+
+        results = []
+        for model in models:
+            if experiment and not plan_only:
+                result = run_experimental_benchmark(
+                    registry=registry,
+                    benchmark=benchmark,
+                    model=model,
+                )
+            else:
+                result = run_registered_benchmark(
+                    registry=registry,
+                    benchmark=benchmark,
+                    model=model,
+                    plan_only=plan_only,
+                )
+            results.append(result)
     except (OSError, ValueError) as error:
         print(f"Benchmark run failed: {error}")
         raise SystemExit(1) from None
 
-    plan = result["plan"]
-    print("\nEvalanche benchmark run")
-    print(f"Benchmark: {plan['benchmark']}")
-    print(f"Model: {plan['model_id']}")
-    print(f"Cases: {plan['case_count']}")
-    print(f"Planned model calls: {plan['planned_model_calls']}")
-    print(f"Plan: {plan['paths']['run_plan']}")
+    print("\nEvalanche benchmark runs")
+    for result in results:
+        plan = result["plan"]
+        print(f"\nBenchmark: {plan['benchmark']}")
+        print(f"Model: {plan['model_id']}")
+        print(f"Cases: {plan['case_count']}")
+        print(f"Planned model calls: {plan['planned_model_calls']}")
+        print(f"Plan: {plan['paths']['run_plan']}")
+        if plan_only:
+            print("Status: PLAN READY")
+        elif experiment:
+            path = result["evaluation_path"].relative_to(registry.root)
+            print(f"Evaluation: {path}")
+            print("Status: LOCAL EXPERIMENT, NOT REGISTERED")
+        else:
+            print(f"Run: {result['bundle']['run_id']}")
+            print(
+                "Leaderboard: "
+                f"{result['leaderboard']['html_path']}"
+            )
+            print("Status: COMPLETE AND REGISTERED")
+
+    experiment_summary = None
     if plan_only:
-        print("Status: PLAN READY")
-        print("No model calls were made.")
-    else:
-        print(f"Run: {result['bundle']['run_id']}")
-        print(
-            "Leaderboard: "
-            f"{result['leaderboard']['html_path']}"
+        print("\nNo model calls were made.")
+    elif experiment:
+        try:
+            experiment_summary = build_benchmark_experiment_summary(
+                registry=registry,
+                benchmark=benchmark,
+            )
+        except (OSError, ValueError) as error:
+            print(f"Experiment summary failed: {error}")
+            raise SystemExit(1) from None
+        print_benchmark_experiment_summary(experiment_summary)
+        report = experiment_summary["paths"]["report"].relative_to(
+            registry.root
         )
-        print("Status: COMPLETE AND REGISTERED")
+        print(f"Experiment report: {report}")
+        print("No leaderboard was published or changed.")
+    return {
+        "runs": results,
+        "experiment_summary": experiment_summary,
+    }
+
+
+def run_summarize_benchmark(
+    *,
+    root_path: str,
+    benchmark_reference: str,
+    model_ids: list[str] | None,
+    output_dir: str | None,
+) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        benchmark = registry.resolve_benchmark(benchmark_reference)
+        result = build_benchmark_experiment_summary(
+            registry=registry,
+            benchmark=benchmark,
+            model_ids=model_ids,
+            output_dir=output_dir,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Benchmark summary failed: {error}")
+        raise SystemExit(1) from None
+
+    print_benchmark_experiment_summary(result)
+    print(
+        "\nModels discovered: "
+        + ", ".join(result["summary"]["model_name"].astype(str))
+    )
+    print(f"Status: {result['comparison_status'].upper()}")
+    print(f"Report: {result['paths']['report']}")
+    print("No model calls were made.")
     return result
 
 
@@ -961,6 +1062,54 @@ def run_build_product_monograph_native_pdf(
         f"{verification['files_checked']}"
     )
     print("Status: DRAFT, NOT RANKABLE")
+    return result
+
+
+def run_check_product_monograph_label_review(
+    *,
+    root_path: str,
+    review_path: str,
+    require_complete: bool,
+) -> dict[str, Any]:
+    try:
+        result = check_product_monograph_label_review(
+            root_path=root_path,
+            review_path=review_path,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph label review check failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nProduct Monograph native-PDF label review")
+    print(f"Items reviewed: {result['reviewed']}/{result['items']}")
+    print(f"Items approved: {result['approved']}/{result['items']}")
+    print(
+        "Cases fully approved: "
+        f"{result['cases_approved']}/{result['cases']}"
+    )
+    print(
+        "Statuses: "
+        + ", ".join(
+            f"{status}={count}"
+            for status, count in result["status_counts"].items()
+        )
+    )
+    print(f"Review file: {result['review_path']}")
+    if result["issues"]:
+        print("Status: INVALID REVIEW METADATA")
+        for issue in result["issues"]:
+            print(f"- {issue}")
+        raise SystemExit(1)
+    if result["promotion_ready"]:
+        print("Status: LABEL REVIEW COMPLETE")
+    else:
+        print("Status: REVIEW INCOMPLETE")
+        print(
+            f"Remaining approvals: {result['remaining']}. "
+            "No model calls were made."
+        )
+        if require_complete:
+            raise SystemExit(2)
     return result
 
 
@@ -1286,11 +1435,67 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Benchmark reference in benchmark_id@version form.",
     )
-    run_benchmark_parser.add_argument("--model", required=True)
-    run_benchmark_parser.add_argument(
+    run_model_group = run_benchmark_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    run_model_group.add_argument(
+        "--model",
+        action="append",
+        dest="models",
+        help=(
+            "Registered model ID. Repeat to run multiple models in one "
+            "command."
+        ),
+    )
+    run_model_group.add_argument(
+        "--all-compatible",
+        action="store_true",
+        help=(
+            "Use every registered model that declares the benchmark's "
+            "required capabilities."
+        ),
+    )
+    execution_group = run_benchmark_parser.add_mutually_exclusive_group()
+    execution_group.add_argument(
         "--plan-only",
         action="store_true",
         help="Resolve and validate the run without making model calls.",
+    )
+    execution_group.add_argument(
+        "--experiment",
+        action="store_true",
+        help=(
+            "Execute locally without registration or leaderboard changes. "
+            "This is the only execution mode allowed for a draft benchmark."
+        ),
+    )
+
+    summarize_parser = subparsers.add_parser("summarize-benchmark")
+    summarize_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing run plans and local results.",
+    )
+    summarize_parser.add_argument(
+        "--benchmark",
+        required=True,
+        help="Benchmark reference in benchmark_id@version form.",
+    )
+    summarize_parser.add_argument(
+        "--model",
+        action="append",
+        dest="models",
+        help=(
+            "Limit the summary to this model. Repeat for more models. "
+            "The default discovers every completed compatible evaluation."
+        ),
+    )
+    summarize_parser.add_argument(
+        "--output-dir",
+        help=(
+            "Optional repository-relative output directory. The default is "
+            "under ignored results/benchmark_experiments/."
+        ),
     )
 
     rescore_benchmark_parser = subparsers.add_parser(
@@ -1374,6 +1579,25 @@ def build_parser() -> argparse.ArgumentParser:
     build_pm_pdf_parser.add_argument(
         "--raw-dir",
         default=PM_RAW_DIR.as_posix(),
+    )
+
+    check_pm_review_parser = subparsers.add_parser(
+        "check-product-monograph-label-review"
+    )
+    check_pm_review_parser.add_argument("--root", default=".")
+    check_pm_review_parser.add_argument(
+        "--review",
+        default=(
+            "data/hc/benchmarks/"
+            "product_monograph_native_pdf_extraction/0.1.0/"
+            "label_review.csv"
+        ),
+        help="Review CSV whose human-only columns were edited.",
+    )
+    check_pm_review_parser.add_argument(
+        "--require-complete",
+        action="store_true",
+        help="Exit unsuccessfully unless every label item is approved.",
     )
 
     return parser
@@ -1475,8 +1699,17 @@ def main() -> None:
         run_benchmark_from_registry(
             root_path=args.root,
             benchmark_reference=args.benchmark,
-            model_id=args.model,
+            model_ids=args.models,
+            all_compatible=args.all_compatible,
             plan_only=args.plan_only,
+            experiment=args.experiment,
+        )
+    elif args.command == "summarize-benchmark":
+        run_summarize_benchmark(
+            root_path=args.root,
+            benchmark_reference=args.benchmark,
+            model_ids=args.models,
+            output_dir=args.output_dir,
         )
     elif args.command == "rescore-benchmark":
         run_rescore_benchmark_from_registry(
@@ -1511,6 +1744,12 @@ def main() -> None:
             source_cases_path=args.source_cases,
             sources_path=args.sources,
             raw_dir=args.raw_dir,
+        )
+    elif args.command == "check-product-monograph-label-review":
+        run_check_product_monograph_label_review(
+            root_path=args.root,
+            review_path=args.review,
+            require_complete=args.require_complete,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

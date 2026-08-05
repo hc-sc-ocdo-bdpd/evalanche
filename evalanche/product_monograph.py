@@ -1139,6 +1139,7 @@ def _build_native_pdf_review_queue(
     native_cases: pd.DataFrame,
     evidence: pd.DataFrame,
     sources: pd.DataFrame,
+    review_path: str | Path = PM_NATIVE_PDF_REVIEW_PATH,
 ) -> pd.DataFrame:
     case_by_dpd_id: dict[str, dict[str, Any]] = {}
     for case in native_cases.to_dict(orient="records"):
@@ -1199,14 +1200,15 @@ def _build_native_pdf_review_queue(
         "reviewed_at_utc",
         "notes",
     ]
-    review_path = root / PM_NATIVE_PDF_REVIEW_PATH
-    if review_path.is_file():
+    resolved_review_path = root / review_path
+    if resolved_review_path.is_file():
         previous = pd.read_csv(
-            review_path,
+            resolved_review_path,
             dtype=str,
             keep_default_na=False,
         )
-        required = {"review_item_id", *mutable_columns}
+        immutable_columns = list(queue.columns)
+        required = {*immutable_columns, *mutable_columns}
         missing = required - set(previous.columns)
         if missing:
             raise ValueError(
@@ -1221,6 +1223,24 @@ def _build_native_pdf_review_queue(
             raise ValueError(
                 "Existing native-PDF label review does not match the "
                 "current evidence inventory"
+            )
+        expected_immutable = queue[immutable_columns].fillna("").sort_values(
+            "review_item_id",
+            kind="stable",
+        )
+        observed_immutable = previous[
+            immutable_columns
+        ].fillna("").sort_values(
+            "review_item_id",
+            kind="stable",
+        )
+        expected_immutable = expected_immutable.reset_index(drop=True)
+        observed_immutable = observed_immutable.reset_index(drop=True)
+        if not expected_immutable.equals(observed_immutable):
+            raise ValueError(
+                "Existing native-PDF label review changed immutable source "
+                "or label columns. Only the human review columns may be "
+                "edited."
             )
         queue = queue.merge(
             previous[["review_item_id", *mutable_columns]],

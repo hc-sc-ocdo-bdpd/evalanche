@@ -1,6 +1,6 @@
 # Health Canada Product Monograph native-PDF benchmark 0.1.0
 
-- **Status:** Draft, execution blocked by the registry
+- **Status:** Draft, local experiments allowed, publication blocked
 - **Dataset:** `hc_product_monograph_native_pdf_extraction@0.1.0`
 - **Cases:** 80 complete official PDFs, 40 English and 40 French
 - **Scoring:** Deterministic canonical JSON
@@ -77,6 +77,66 @@ hash, source page, automated support method, and human review fields. Allowed
 review states are `pending`, `approved`, `rejected`, and `needs_correction`.
 The builder preserves completed review columns when it refreshes artifacts.
 
+The queue is 390 facts across 80 documents, not 390 PDFs. A fact might be one
+active ingredient, one strength, one dosage form, or one route that appears in
+the expected JSON.
+
+### Do you need to complete this now?
+
+No. Label review is required only if this optional HC task pack is going to be
+promoted and published as a ranked benchmark. It is not required to keep the
+current local runs as useful experimental evidence, test another model, or
+continue building Evalanche's general model-selection product.
+
+Until review is complete, describe results as local, provisional, and
+unranked. Do not copy them into a public benchmark leaderboard.
+
+### How to review the labels
+
+Only these four CSV columns may be edited:
+
+```text
+human_review_status
+reviewer
+reviewed_at_utc
+notes
+```
+
+For each row:
+
+1. Open the exact source PDF identified by `monograph_id`, `monograph_sha256`,
+   and `source_url`.
+2. Go to `source_page` and confirm that `expected_item` is supported for the
+   named `field`, product, and language.
+3. Set `human_review_status` to `approved` only when the item is correct.
+4. Use `needs_correction` when the intended source is right but the expected
+   item needs a data correction. Use `rejected` when the cited evidence or
+   document alignment does not support the item.
+5. For every nonpending row, enter a reviewer identifier and an ISO 8601 UTC
+   time such as `2026-08-05T18:30:00Z`.
+6. Add a specific note for every `needs_correction` or `rejected` row. Notes
+   are optional for an approval.
+
+Do not edit `expected_item`, `source_page`, hashes, IDs, or source metadata in
+the review CSV. The checker treats those as immutable. A correction belongs in
+the upstream label construction or override, followed by a new dataset
+version.
+
+Check progress at any time without model calls:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli check-product-monograph-label-review
+```
+
+When every item is expected to be approved, enforce completeness:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli check-product-monograph-label-review --require-complete
+```
+
+Rebuild and verify the dataset after review edits so the release report and
+manifest hashes are refreshed before promotion.
+
 ## Docker workflow
 
 Build the container and download the exact source-locked PDFs:
@@ -94,16 +154,37 @@ docker compose run --rm evalanche python -m evalanche.cli build-product-monograp
 docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml --root .
 ```
 
-Validate model compatibility and inspect the 80-call plan without provider
-calls:
+Validate model compatibility and inspect every compatible 80-call plan without
+provider calls:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --model gpt_5_6_sol --plan-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --all-compatible --plan-only
 ```
 
-An execution attempt without `--plan-only` is rejected while the benchmark is
-draft. This prevents provisional labels or an untested provider route from
-creating a publishable-looking leaderboard.
+Run any selected registered model as a local experiment:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --model <model_id> --experiment
+```
+
+This is allowed while the benchmark is draft, but it does not register the
+result or create a leaderboard. To combine every completed compatible local
+evaluation, including results generated before the experiment command was
+added, run:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0
+```
+
+The summary discovers model IDs from compatible run plans. It includes a new
+model automatically after that model completes the benchmark. Its terminal and
+file outputs include quality, cost, cost per request, cost coverage, tokens,
+latency, language and split slices, field accuracy, case outcomes, and every
+model pair. It makes no model calls.
+
+Normal execution without `--experiment` remains rejected while the benchmark
+is draft. This prevents provisional labels from creating a
+publishable-looking leaderboard.
 
 ## Promotion gates
 
@@ -121,11 +202,11 @@ Promote a new release to `ready` only after all of these are recorded:
 - the benchmark and dataset manifests are rehashed and verified;
 - failed or partial infrastructure runs remain visible but unranked.
 
-After promotion, run one model at a time and let the registered workflow score,
-bundle, and rebuild the leaderboard:
+After promotion, run any selected model or all compatible models and let the
+registered workflow score, bundle, and rebuild the leaderboard:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --model gpt_5_6_sol
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark <promoted_benchmark_id>@<version> --all-compatible
 ```
 
 ## Comparison policy

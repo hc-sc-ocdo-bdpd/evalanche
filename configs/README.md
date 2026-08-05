@@ -28,6 +28,25 @@ The historical run configurations remain flat because completed metadata
 records their paths. New extensible work uses `models/`, `benchmarks/`, and
 versioned dataset-specific configuration directories.
 
+## Adding a model
+
+The active model inventory is the set of valid YAML manifests in `models/`.
+There is no central model list in Python and no benchmark analysis should
+encode the currently available IDs.
+
+1. Copy an existing manifest whose provider route is similar.
+2. Give it a new stable `model_id`, provider deployment, declared capabilities,
+   request settings, version metadata, and pricing reference.
+3. Run `python -m evalanche.cli registry-validate`.
+4. Plan a compatible benchmark by ID, or use `--all-compatible --plan-only`.
+5. After evaluation, run `summarize-benchmark` to rebuild the discovered local
+   comparison.
+
+Do not add a new model to `candidate_models.yaml` or create a new combined
+analysis configuration merely to make the registry workflow see it. Those
+flat files are retained for historical provenance and the small generic
+example.
+
 ## Naming
 
 Use lowercase snake case and order the identifying parts from broad to

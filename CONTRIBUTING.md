@@ -44,6 +44,9 @@ partial failures, and reproducibility guards.
 - Keep generation separate from evaluation. Saved model outputs must remain
   reusable without another provider call.
 - Make benchmark and scoring behavior configuration driven where practical.
+- Treat the active model set as registry data. Generic run, summary, and
+  reporting code must not contain a fixed list of model IDs or require edits
+  when another compatible model manifest is added.
 - Preserve exact prompts, model routes, pricing evidence, input hashes, and
   output hashes in run metadata.
 - Treat frozen dataset versions and published result releases as immutable.
