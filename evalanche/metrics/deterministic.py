@@ -188,14 +188,29 @@ def _matching_rule_value(
     return None
 
 
+def _matches_any_path(
+    pointers: list[str],
+    path: tuple[str, ...],
+) -> bool:
+    return any(_path_matches(pointer, path) for pointer in pointers)
+
+
 def _normalize_json_string(
     value: str,
     *,
     config: MetricsConfig,
     path: tuple[str, ...],
 ) -> str:
+    comparison = config.metrics.json_comparison
+    source = value
+    if _matches_any_path(
+        comparison.strip_parenthetical_paths,
+        path,
+    ):
+        source = re.sub(r"\s*\([^)]*\)\s*", " ", source)
+
     normalized = normalize_text(
-        value,
+        source,
         case_sensitive=config.metrics.case_sensitive,
         trim_whitespace=config.metrics.trim_whitespace,
         collapse_whitespace=config.metrics.collapse_whitespace,
@@ -203,7 +218,6 @@ def _normalize_json_string(
         strip_diacritics=config.metrics.strip_diacritics,
         strip_punctuation=config.metrics.strip_punctuation,
     )
-    comparison = config.metrics.json_comparison
     width = _matching_rule_value(
         comparison.zero_pad_numeric_string_paths,
         path,
@@ -320,12 +334,15 @@ def normalize_json_value(
             )
             for index, nested in enumerate(value)
         ]
-        if any(
-            _path_matches(pointer, path)
-            for pointer in (
-                config.metrics.json_comparison.unordered_list_paths
-            )
-        ):
+        comparison = config.metrics.json_comparison
+        if _matches_any_path(comparison.set_list_paths, path):
+            unique_items = {
+                canonical_json(item): item for item in normalized_items
+            }
+            return [
+                unique_items[key] for key in sorted(unique_items)
+            ]
+        if _matches_any_path(comparison.unordered_list_paths, path):
             return sorted(normalized_items, key=canonical_json)
         return normalized_items
 
@@ -335,20 +352,18 @@ def normalize_json_value(
             config=config,
             path=path,
         )
-        if any(
-            _path_matches(pointer, path)
-            for pointer in (
-                config.metrics.json_comparison.numeric_value_paths
-            )
+        if _matches_any_path(
+            config.metrics.json_comparison.numeric_value_paths,
+            path,
         ):
             canonical_number = _canonical_json_number(normalized)
             if canonical_number is not None:
                 return canonical_number
         return normalized
 
-    if any(
-        _path_matches(pointer, path)
-        for pointer in config.metrics.json_comparison.numeric_value_paths
+    if _matches_any_path(
+        config.metrics.json_comparison.numeric_value_paths,
+        path,
     ):
         canonical_number = _canonical_json_number(value)
         if canonical_number is not None:

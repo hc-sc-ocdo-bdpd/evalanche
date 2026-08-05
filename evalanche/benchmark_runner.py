@@ -25,6 +25,7 @@ from evalanche.registry import (
     dump_yaml,
 )
 from evalanche.result_bundle import register_result_bundle
+from evalanche.routing import JUDGE
 
 RUN_PLAN_SCHEMA_VERSION = "1.0"
 
@@ -59,6 +60,15 @@ def build_run_plan(
     benchmark: BenchmarkManifest,
     model: ModelManifest,
 ) -> dict[str, Any]:
+    missing_capabilities = sorted(
+        set(benchmark.required_capabilities) - set(model.capabilities)
+    )
+    if missing_capabilities:
+        raise ValueError(
+            f"Model {model.model_id!r} does not declare benchmark-required "
+            f"capabilities: {missing_capabilities}"
+        )
+
     cases_path = registry.root / benchmark.dataset.cases_path
     cases = pd.read_csv(cases_path)
     paths = _paths(
@@ -104,6 +114,7 @@ def build_run_plan(
         "prompt": benchmark.prompt.model_dump(mode="json"),
         "generation": {
             "continue_on_error": True,
+            "request_api": benchmark.runtime.request_api,
             "max_completion_tokens": (
                 model.request.max_completion_tokens
                 or benchmark.runtime.max_completion_tokens
@@ -185,6 +196,8 @@ def build_run_plan(
             f"{benchmark.benchmark_id}@{benchmark.version}"
         ),
         "model_id": model.model_id,
+        "benchmark_status": benchmark.status,
+        "required_capabilities": benchmark.required_capabilities,
         "case_count": int(len(cases)),
         "planned_model_calls": int(len(cases)),
         "compatibility": fingerprint,
@@ -224,6 +237,14 @@ def run_registered_benchmark(
             "executed": False,
             "registered": False,
         }
+
+    if benchmark.status not in {"ready", "frozen"}:
+        raise ValueError(
+            "Only ready or frozen benchmarks may execute. "
+            f"{benchmark.benchmark_id}@{benchmark.version} is "
+            f"{benchmark.status!r}. Use --plan-only while it is under "
+            "review."
+        )
 
     generation_config_path = registry.root / plan["paths"][
         "generation_config"
@@ -272,6 +293,90 @@ def run_registered_benchmark(
         "plan": plan,
         "executed": True,
         "registered": True,
+        "bundle": bundle,
+        "leaderboard": leaderboard,
+        "index_path": index_path,
+    }
+
+
+def rescore_registered_benchmark(
+    *,
+    registry: LoadedRegistry,
+    benchmark: BenchmarkManifest,
+    model: ModelManifest,
+) -> dict[str, Any]:
+    """Re-evaluate saved model outputs without making provider calls.
+
+    Rescoring is intentionally limited to deterministic benchmarks. A judge
+    case would require a fresh model call and would make the command's offline
+    behavior ambiguous.
+    """
+
+    plan = build_run_plan(
+        registry=registry,
+        benchmark=benchmark,
+        model=model,
+    )
+    generation_path = registry.root / plan["paths"][
+        "generation_output"
+    ]
+    if not generation_path.is_file():
+        raise FileNotFoundError(
+            "Saved generation output not found for rescoring: "
+            f"{generation_path}"
+        )
+
+    evaluation_config_path = registry.root / plan["paths"][
+        "evaluation_config"
+    ]
+    evaluation_config = load_evaluation_config(evaluation_config_path)
+    evaluation_cases = load_eval_cases(generation_path)
+
+    observed_models = set(evaluation_cases["model_name"].astype(str))
+    if observed_models != {model.model_id}:
+        raise ValueError(
+            f"Saved outputs for {model.model_id!r} must contain exactly "
+            f"that model, found {sorted(observed_models)}"
+        )
+
+    judge_cases = evaluation_cases[
+        evaluation_cases["evaluation_type"] == JUDGE
+    ]
+    if not judge_cases.empty:
+        raise ValueError(
+            "Offline rescoring only supports deterministic exact/json "
+            f"benchmarks; found {len(judge_cases)} judge case(s)."
+        )
+
+    evaluation_results = evaluate_cases(
+        evaluation_cases,
+        evaluation_config,
+    )
+    evaluation_path = registry.root / plan["paths"][
+        "evaluation_output"
+    ]
+    evaluation_path.parent.mkdir(parents=True, exist_ok=True)
+    evaluation_results.to_csv(
+        evaluation_path,
+        index=False,
+        lineterminator="\n",
+    )
+    bundle = register_result_bundle(
+        registry=registry,
+        benchmark=benchmark,
+        model_id=model.model_id,
+        results_path=evaluation_path,
+    )
+    leaderboard = build_leaderboard(
+        registry=registry,
+        benchmark=benchmark,
+    )
+    index_path = build_benchmark_index(registry=registry)
+    return {
+        "plan": plan,
+        "executed": True,
+        "registered": True,
+        "generation_calls": 0,
         "bundle": bundle,
         "leaderboard": leaderboard,
         "index_path": index_path,

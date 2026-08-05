@@ -66,26 +66,44 @@ Resolve a run without making provider calls:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_dpd_structured_extraction@0.2.0 \
+  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
   --model gpt_5_6_sol \
   --plan-only
 ```
 
 The plan materializes candidate, generation, and evaluation configurations
 under ignored local run directories. It reports the exact case and model-call
-count.
+count. Planning also refuses a model that does not declare every capability
+required by the benchmark.
+
+Only `ready` and `frozen` benchmarks can execute. A `draft` benchmark can be
+planned for review, but an execution attempt is blocked until its documented
+promotion gates pass.
 
 After reviewing the plan, omit `--plan-only`:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_dpd_structured_extraction@0.2.0 \
+  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
   --model gpt_5_6_sol
 ```
 
 The command generates responses, evaluates them, registers an immutable
 compact result bundle, rebuilds that benchmark's leaderboard, and refreshes
 the benchmark index. Existing models are not rerun.
+
+To apply an updated deterministic scorer to the saved model outputs, without
+making generation calls, run:
+
+```bash
+python -m evalanche.cli rescore-benchmark \
+  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
+  --model gpt_5_6_sol
+```
+
+The command writes a fresh evaluation artifact, registers a new compatible
+result bundle, and rebuilds the benchmark leaderboard. It refuses judge cases
+because those would require a new provider call.
 
 ## Register an existing evaluation
 
@@ -156,9 +174,11 @@ python -m evalanche.cli build-leaderboard --all
 Open `reports/benchmarks/index.html` in a browser. Each standalone HTML table
 is sortable and also has CSV, JSON, and Markdown equivalents.
 
-Rank is strict case pass rate. Field score, arbitrary dataset slices, paired
-wins and losses, generation reliability, cost, and latency remain separate.
-Evalanche does not collapse those dimensions into an unexplained universal
+Rank is strict case pass rate among complete runs. A run with any generation
+failure or unscored case remains visible for diagnosis but is ineligible for
+rank and excluded from paired comparisons. Field score, arbitrary dataset
+slices, generation reliability, cost, and latency remain separate. Evalanche
+does not collapse those dimensions into an unexplained universal
 recommendation.
 
 ## Add another model
@@ -182,7 +202,8 @@ Python edit to the engine.
 4. Add a benchmark manifest that binds the dataset to its prompt and scorer.
 5. Validate, plan, and run.
 
-The automated tests construct a second synthetic dataset, benchmark, and two
-models entirely through manifests. The next production proof is the Product
-Monograph benchmark, whose source acquisition and labels can remain outside
-the generic runner, bundle, and leaderboard engine.
+The Product Monograph work proves both text and native-file paths. The frozen
+evidence-window diagnostic uses label-selected page text. The separate draft
+native-PDF benchmark uses hash-verified complete files through the Responses
+API and declares `pdf_input`, `responses_api`, and `vision` as required model
+capabilities. Their input contracts and leaderboards remain separate.

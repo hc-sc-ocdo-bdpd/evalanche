@@ -179,6 +179,9 @@ class BenchmarkScoring(RegistryModel):
 
 
 class BenchmarkRuntime(RegistryModel):
+    request_api: Literal["chat_completions", "responses"] = (
+        "chat_completions"
+    )
     max_completion_tokens: int = Field(default=900, ge=1)
     max_workers: int = Field(default=4, ge=1, le=64)
     max_requests_per_minute: float | None = Field(default=60, gt=0)
@@ -199,6 +202,7 @@ class BenchmarkManifest(RegistryModel):
     slice_columns: list[str] = Field(default_factory=list)
     group_key: str
     language_column: str | None = "language"
+    required_capabilities: list[str] = Field(default_factory=list)
     runtime: BenchmarkRuntime = Field(default_factory=BenchmarkRuntime)
     limitations: list[str] = Field(default_factory=list)
 
@@ -226,6 +230,20 @@ class BenchmarkManifest(RegistryModel):
         normalized = [_nonblank(value, "slice column") for value in values]
         if len(normalized) != len(set(normalized)):
             raise ValueError("slice_columns must be unique")
+        return normalized
+
+    @field_validator("required_capabilities")
+    @classmethod
+    def validate_required_capabilities(
+        cls,
+        values: list[str],
+    ) -> list[str]:
+        normalized = [
+            _identifier(value.casefold(), "required capability")
+            for value in values
+        ]
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("required_capabilities must be unique")
         return normalized
 
 

@@ -1,14 +1,16 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-**Specification status:** DPD-only releases complete, census validation pending, Product Monograph acquisition and audit planned
-**Benchmark type:** Bilingual structured extraction  
-**Primary scoring:** Deterministic JSON and field-level metrics
+- **Specification status:** DPD census and Product Monograph evidence-window releases complete; native-PDF release draft
+- **Benchmark type:** Bilingual structured extraction
+- **Primary scoring:** Deterministic JSON and field-level metrics
 
 ## 1. Research question
 
-How reliably can candidate language models extract auditable drug-product facts from Health Canada-authorized English and French product monographs?
+How reliably can candidate language models extract auditable drug-product facts from Health Canada-authorized English and French Product Monographs?
 
-The benchmark is intended to support a task-specific model-selection decision. It is not a general medical-knowledge test and does not evaluate whether a model can independently make regulatory or clinical judgments.
+The benchmark produces task-specific evidence and a versioned leaderboard. It
+does not declare a universal model recommendation, test general medical
+knowledge, or evaluate independent regulatory or clinical judgment.
 
 ## 2. Why this benchmark comes first
 
@@ -51,15 +53,24 @@ The census includes a fixed 24-case presentation view. It is a visible,
 bounded operational demo, not a hidden test split. Version `0.2.0` remains a
 DPD-rendering benchmark and is not evidence of Product Monograph performance.
 
-The Product Monograph pilot retains the target of **40 marketed human-drug
-products** after document availability, document quality, and manual alignment
-checks.
+The Product Monograph evidence-window diagnostic is frozen as
+`hc_product_monograph_structured_extraction` version `0.1.0`. It contains
+**40 marketed human-drug products** after document availability, document
+quality, language, and scope-alignment checks. Its inputs are extracted text
+from label-selected source pages, not PDF files, so its scores isolate
+extraction and JSON fidelity rather than end-to-end document retrieval.
 
 - 20 single-ingredient products
 - 10 multi-ingredient products
 - 10 products with multiple strengths, dosage forms, routes, or DINs
 - English and French monographs where both are available
-- target size of 80 document-language cases before exclusions
+- 80 document-language cases after documented replacements
+
+A separate `hc_product_monograph_native_pdf_extraction` version `0.1.0`
+release sends one complete, hash-verified PDF per case through the Responses
+API. It reuses the same cohort and provisional labels, but it is deliberately
+`draft` until human label review, provider smoke testing, and prompt locking
+are complete. The two input contracts must have separate leaderboards.
 
 The materialized DPD slice includes varied oral, injectable, topical, inhaled,
 ophthalmic, and other routes and dosage forms. Sampling is reproducible from
@@ -81,8 +92,8 @@ These exclusions reduce infrastructure and label-noise risk in the first release
 
 ## 4. Unit of evaluation
 
-In the final pilot, one case represents one Product Monograph language
-instance.
+In each Product Monograph version `0.1.0`, one case represents one Product
+Monograph language instance.
 
 Each case contains:
 
@@ -96,12 +107,18 @@ brand_name
 language
 monograph_sha256
 input
+input_files
 expected_output
 evaluation_type
 source_metadata
 ```
 
-`evaluation_type` is `json`. The input contains the extraction instruction and monograph text or an explicitly bounded monograph section. The expected output is canonical JSON.
+`evaluation_type` is `json`. In the evidence-window contract, `input` contains
+the extraction instruction and bounded page text and `input_files` is absent.
+In the native-PDF contract, `input` contains only the task instruction and
+`input_files` contains the repository-relative path, filename, media type, and
+frozen SHA-256 for the complete PDF. The expected output is canonical JSON in
+both contracts.
 
 In DPD-only versions `0.1.0` and `0.2.0`, one case represents one rendered
 DPD product-family language instance. Its metadata uses `product_id`,
@@ -112,7 +129,6 @@ DPD product-family language instance. Its metadata uses `product_id`,
 
 ```json
 {
-  "din": ["00000000"],
   "brand_name": "EXAMPLE",
   "active_ingredients": [
     {
@@ -122,10 +138,7 @@ DPD product-family language instance. Its metadata uses `product_id`,
     }
   ],
   "dosage_forms": ["TABLET"],
-  "routes": ["ORAL"],
-  "schedule": ["PRESCRIPTION"],
-  "product_status": "MARKETED",
-  "company": "EXAMPLE COMPANY"
+  "routes": ["ORAL"]
 }
 ```
 
@@ -165,16 +178,20 @@ uses the configured canonical comparison.
 6. Identify the authorized monograph URLs through the DPD Online Query.
 7. Download English and French documents separately and hash every file.
 8. Match each document to its DPD product/DIN set.
-9. Manually audit all 40 pilot products against the source document.
-10. Exclude or adjudicate any unresolved source disagreement before case generation.
+9. Audit document language and product scope before case generation.
+10. Record a PDF page for every scored reference item and exclude unresolved cases.
 
-The audit records whether each field is:
+The audit records whether each candidate field is:
 
 - confirmed in both DPD and the monograph
 - present in DPD but not found in the monograph
 - present in the monograph but represented differently in DPD
 - ambiguous
 - excluded from scoring
+
+DIN, schedule, product status, and sponsor are retained as alignment metadata
+but are not scored in version `0.1.0`. They are not stated consistently in the
+source documents. Independent human sign-off is not claimed.
 
 ## 8. Scoring
 
@@ -204,6 +221,11 @@ A case passes only when the output is valid, schema-compliant JSON and every req
 ## 9. Leakage and independence controls
 
 - Freeze the benchmark before final model comparison.
+- Treat the evidence-window benchmark as an oracle-page extraction diagnostic:
+  its page selection used the reference labels and cannot support a retrieval
+  claim.
+- Do not include selected evidence text, page numbers, expected outputs, or
+  source metadata in the native-PDF model prompt.
 - Keep a 10-product held-out set that is not used for prompt development.
 - Group related products by active ingredient and reference-product family when dividing development and held-out cases.
 - Do not tune prompts against held-out outputs.
@@ -211,33 +233,37 @@ A case passes only when the output is valid, schema-compliant JSON and every req
 
 ## 10. Quality gates
 
-The pilot is ready to run only when:
+The evidence-window diagnostic is ready to run only when:
 
 - the dataset manifest uses schema `1.0` and passes `verify-dataset`
 - all source files have hashes and retrieval metadata
 - all DPD tables pass schema and join validation
 - every case has a traceable source document and DPD record
-- every expected output has been manually audited
+- every scored expected item has a recorded source-evidence page
 - English and French pairing has been verified where applicable
 - no held-out product family appears in the development subset
 - deterministic metrics pass unit tests on representative one-to-one and one-to-many cases
+
+The native-PDF benchmark additionally requires all 390 field-level labels to
+receive human approval, all source PDFs to pass local verification, an English
+and French development case to succeed through every intended provider route,
+token and cost reporting to be checked, and the prompt to be locked before any
+held-out run. Until then, registry execution remains blocked.
 
 ## 11. Expansion plan
 
 After the 40-product pilot:
 
-1. Use the DPD census demo to validate model connectivity, output handling, and
-   reporting before Product Monograph acquisition.
-2. Acquire, freeze, extract, and manually align the 40-product English and
-   French Product Monograph pilot.
-3. Review whether reviewed-document scores meaningfully separate candidate
-   models.
-4. Quantify label disagreements and exclusion rates.
-5. Add harder scanned documents only if OCR is evaluated as a separate factor.
-6. Expand to at least 100 monograph-backed products with broader therapeutic
+1. Complete the native-PDF label-review and provider-smoke-test gates.
+2. Rerun GPT-5.4 Mini on the evidence-window diagnostic with its corrected
+   request configuration.
+3. Run the four compatible models against the promoted native-PDF release.
+4. Compare paired native-PDF and evidence-window outcomes without combining
+   their ranks.
+5. Quantify field, language, split, stratum, and document-length behavior.
+6. Add harder scanned documents only if OCR is evaluated as a separate factor.
+7. Expand to at least 100 monograph-backed products with broader therapeutic
    and document coverage.
-7. Publish a benchmark card describing collection, intended use, limitations,
-   licensing, and update policy.
 8. Develop Recalls and Summary Reports as separate task packs rather than
    mixing unrelated task types into one score.
 

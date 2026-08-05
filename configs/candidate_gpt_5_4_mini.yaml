@@ -1,7 +1,8 @@
 models:
   - name: gpt_5_4_mini
     model: ${CANDIDATE_MODEL:-azure/gpt-5.4-mini}
-    temperature: 0
+    temperature:
+    reasoning_effort: none
     max_retries: 3
     max_completion_tokens: 900
     pricing_id: azure_global_gpt_5_4_mini_2026_03_17

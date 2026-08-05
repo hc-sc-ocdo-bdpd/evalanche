@@ -7,3 +7,4 @@ tenacity==9.0.0
 tqdm==4.67.1
 rich==13.9.4
 inspect-ai==0.3.251
+pypdf==6.14.2

@@ -205,6 +205,56 @@ def test_json_unordered_list_comparison_rejects_duplicates() -> None:
     assert result["metric_passed"] is False
 
 
+def test_json_set_list_comparison_deduplicates_aliases() -> None:
+    metrics = DeterministicMetricsSettingsConfig(
+        json_comparison=JsonComparisonSettingsConfig(
+            set_list_paths=["/items"],
+            value_aliases={
+                "/items/*": {
+                    "oral rinse": "mouthwash",
+                }
+            },
+        )
+    )
+    result = score_row(
+        make_row(
+            evaluation_type="json",
+            expected_output='{"items": ["MOUTHWASH"]}',
+            model_output=(
+                '{"items": ["Oral Rinse", "mouthwash"]}'
+            ),
+        ),
+        make_config(metrics=metrics),
+    )
+
+    assert result["json_canonical_match"] is True
+    assert result["metric_passed"] is True
+
+
+def test_json_metric_can_strip_parenthetical_qualifiers() -> None:
+    metrics = DeterministicMetricsSettingsConfig(
+        json_comparison=JsonComparisonSettingsConfig(
+            strip_parenthetical_paths=["/ingredients/*/name"],
+            set_list_paths=["/ingredients"],
+        )
+    )
+    result = score_row(
+        make_row(
+            evaluation_type="json",
+            expected_output=(
+                '{"ingredients": [{"name": "Pertactin"}]}'
+            ),
+            model_output=(
+                '{"ingredients": [{"name": "Pertactin (PRN)"}]}'
+            ),
+        ),
+        make_config(metrics=metrics),
+    )
+
+    assert result["json_canonical_match"] is True
+    assert result["metric_passed"] is True
+
+
 def test_json_metric_applies_wildcard_zero_padding() -> None:
     metrics = DeterministicMetricsSettingsConfig(
         json_comparison=JsonComparisonSettingsConfig(

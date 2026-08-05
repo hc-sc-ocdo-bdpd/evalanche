@@ -1,0 +1,57 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_id": "hc_product_monograph_native_pdf_extraction",
+  "dataset_version": "0.1.0",
+  "status": "draft",
+  "population": {
+    "products": 40,
+    "cases": 80,
+    "languages": {
+      "en": 40,
+      "fr": 40
+    },
+    "splits": {
+      "development": 60,
+      "heldout": 20
+    }
+  },
+  "input_contract": {
+    "mode": "native_full_pdf",
+    "request_api": "responses",
+    "files_per_case": 1,
+    "pdfs_committed": false,
+    "pdfs_required": 80,
+    "hash_verification_required_at_request_time": true
+  },
+  "label_review": {
+    "items": 390,
+    "approved": 0,
+    "status_counts": {
+      "pending": 390
+    },
+    "all_items_approved": false
+  },
+  "promotion_gates": {
+    "human_label_review_complete": false,
+    "local_source_hash_verification_required": true,
+    "provider_pdf_smoke_test_required": true,
+    "heldout_prompt_lock_required": true
+  },
+  "artifacts": {
+    "cases": {
+      "path": "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/cases.csv.gz",
+      "sha256": "f1859ec86e26eef4e7bd58dc5f952abff181315a77ffad7e177429d6931d5e74",
+      "bytes": 15496
+    },
+    "label_review": {
+      "path": "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/label_review.csv",
+      "sha256": "ab09a26bbc5c204abc6ba228c6d6f4a68d8b12633f70b43cdca472b43d94e9a0",
+      "bytes": 123374
+    },
+    "source_documents": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/source_documents.csv",
+      "sha256": "065a58d17e65907469194619f4e7f5cf99d591fc4d43a292ba205885e61be968",
+      "bytes": 21083
+    }
+  }
+}

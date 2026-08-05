@@ -1,0 +1,64 @@
+schema_version: "1.0"
+dataset_id: hc_product_monograph_structured_extraction
+version: 0.1.0
+source_dpd_dataset:
+  dataset_id: hc_dpd_structured_extraction_census
+  version: 0.2.0
+  products_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/products.csv.gz
+  cases_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz
+selection:
+  seed: "20260730"
+  method: >-
+    Begin with the frozen 40-product DPD pilot, require distinct official
+    English and French PDFs, exclude monographs whose product scope does not
+    align with the selected DPD family, then fill each split and stratum quota
+    using SHA-256(seed|product_id) order.
+  product_count: 40
+  language_case_count: 80
+  development_products: 30
+  heldout_products: 10
+  strata:
+    single_ingredient: 20
+    multi_ingredient: 10
+    multi_variant: 10
+products:
+  - {product_id: hc_dpd_1bcde8f71d81c99f, split: development, stratum: multi_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_2dcb457e633b3402, split: development, stratum: multi_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_467237d19b6080fa, split: development, stratum: multi_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_5966e2911f55e6b1, split: development, stratum: multi_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_832be5088084b7fa, split: development, stratum: multi_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_90c34aee86855e30, split: development, stratum: multi_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_9ad870d869b86719, split: development, stratum: multi_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_d98eb0afeeb72237, split: development, stratum: multi_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_0e64b57edf3df6c4, split: development, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_1189b6a74cab5ab2, split: development, stratum: multi_variant, selection_status: scope_replacement}
+  - {product_id: hc_dpd_368497cc07261e3e, split: development, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_57f05e10f203066a, split: development, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_af71ca70a95d1a2d, split: development, stratum: multi_variant, selection_status: scope_replacement}
+  - {product_id: hc_dpd_d56491f43e6d2377, split: development, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_f8e67f7fbd96cbac, split: development, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_28787c405835368e, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_2c2174190b036b5a, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_30aba3a7347bf952, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_32f64d7617d42b75, split: development, stratum: single_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_59866f3bf88da67c, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_7c564b021ccc75e5, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_83027a6372dd02be, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_b2ae33ee64e13a77, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_b2e29a0786795152, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_b35e1ec6cb452259, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_b9d6fcfa334ba454, split: development, stratum: single_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_c8e96c44873b5890, split: development, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_ce8c2274074c61e1, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_d8f5db885f46fa2d, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_dafdf1c71fef5967, split: development, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_486e43c7e5c72b57, split: heldout, stratum: multi_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_57efb40bc22ca21c, split: heldout, stratum: multi_ingredient, selection_status: availability_replacement}
+  - {product_id: hc_dpd_3c7a02c6dfa581f0, split: heldout, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_524f46556d9e7ecb, split: heldout, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_771eaf63bd1bf1d7, split: heldout, stratum: multi_variant, selection_status: retained}
+  - {product_id: hc_dpd_2fc21f129a5c9b0a, split: heldout, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_3188d041219430c6, split: heldout, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_7549c78320e483e3, split: heldout, stratum: single_ingredient, selection_status: retained}
+  - {product_id: hc_dpd_853162ea2c353ecb, split: heldout, stratum: single_ingredient, selection_status: scope_replacement}
+  - {product_id: hc_dpd_e2756ab087d7a22b, split: heldout, stratum: single_ingredient, selection_status: availability_replacement}

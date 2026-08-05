@@ -3,7 +3,8 @@ model_id: gpt_5_4_mini
 display_name: GPT-5.4 Mini
 provider_route: ${CANDIDATE_MODEL:-azure/gpt-5.4-mini}
 request:
-  temperature: 0
+  temperature:
+  reasoning_effort: none
   max_retries: 3
   max_completion_tokens: 900
 pricing_catalog_path: configs/endpoint_pricing_azure_global_gpt_5_4_mini.yaml
@@ -14,4 +15,6 @@ resource_region: Canada East
 capabilities:
   - structured_output
   - bilingual
-
+  - pdf_input
+  - responses_api
+  - vision

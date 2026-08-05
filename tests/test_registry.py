@@ -7,7 +7,11 @@ import pandas as pd
 import pytest
 import yaml
 
-from evalanche.benchmark_runner import build_run_plan
+from evalanche.benchmark_runner import (
+    build_run_plan,
+    rescore_registered_benchmark,
+    run_registered_benchmark,
+)
 from evalanche.leaderboard import build_benchmark_index, build_leaderboard
 from evalanche.registry import (
     benchmark_fingerprint,
@@ -114,6 +118,8 @@ def test_repository_registry_is_valid() -> None:
     }
     assert set(registry.benchmarks) == {
         "hc_dpd_structured_extraction@0.2.0",
+        "hc_product_monograph_native_pdf_extraction@0.1.0",
+        "hc_product_monograph_structured_extraction@0.1.0",
     }
 
 
@@ -159,10 +165,38 @@ def test_manifest_only_model_and_dataset_extension(
     assert leaderboard["model_id"].tolist() == ["model_b", "model_a"]
     pairwise = pd.read_csv(built["pairwise_path"])
     assert pairwise.loc[0, "b_only_passed"] == 1
-    assert build_benchmark_index(
+    index_path = build_benchmark_index(
         registry=registry,
         reports_root="reports",
-    ).is_file()
+    )
+    assert index_path.is_file()
+    index_html = index_path.read_text(encoding="utf-8")
+    assert "Status: frozen" in index_html
+    assert 'href="synthetic/1.0.0/leaderboard.html"' in index_html
+
+    draft_config = yaml.safe_load(
+        (tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml").read_text(
+            encoding="utf-8"
+        )
+    )
+    draft_config.update(
+        {
+            "benchmark_id": "synthetic_draft",
+            "title": "Synthetic draft",
+            "status": "draft",
+        }
+    )
+    _write_yaml(
+        tmp_path / "configs/benchmarks/synthetic_draft_1.0.0.yaml",
+        draft_config,
+    )
+    draft_index = build_benchmark_index(
+        registry=load_registry(tmp_path),
+        reports_root="reports",
+    ).read_text(encoding="utf-8")
+    assert "Status: draft" in draft_index
+    assert 'href="synthetic_draft/1.0.0/leaderboard.html"' not in draft_index
+    assert '<div class="card unavailable">' in draft_index
 
     plan = build_run_plan(
         registry=registry,
@@ -174,6 +208,127 @@ def test_manifest_only_model_and_dataset_extension(
         "generation_complete": False,
         "evaluation_complete": False,
     }
+
+
+def test_registered_benchmark_can_rescore_saved_outputs_offline(
+    tmp_path: Path,
+) -> None:
+    _synthetic_registry(tmp_path)
+    registry = load_registry(tmp_path)
+    benchmark = registry.resolve_benchmark("synthetic@1.0.0")
+    model = registry.resolve_model("model_a")
+    plan = build_run_plan(
+        registry=registry,
+        benchmark=benchmark,
+        model=model,
+    )
+    generation_path = tmp_path / plan["paths"]["generation_output"]
+    generation_path.parent.mkdir(parents=True, exist_ok=True)
+    cases = pd.read_csv(tmp_path / "data/cases.csv")
+    cases["model_name"] = "model_a"
+    cases["model_output"] = [
+        '{"answer":"ONE"}',
+        '{"answer":"incorrect"}',
+    ]
+    cases["generation_status"] = "success"
+    cases.to_csv(generation_path, index=False)
+
+    result = rescore_registered_benchmark(
+        registry=registry,
+        benchmark=benchmark,
+        model=model,
+    )
+
+    assert result["generation_calls"] == 0
+    evaluation_path = tmp_path / plan["paths"]["evaluation_output"]
+    rescored = pd.read_csv(evaluation_path)
+    assert rescored["final_passed"].tolist() == [True, False]
+    assert result["bundle"]["active_path"].is_file()
+    assert result["leaderboard"]["html_path"].is_file()
+
+
+def test_draft_and_capability_gates_prevent_accidental_execution(
+    tmp_path: Path,
+) -> None:
+    _synthetic_registry(tmp_path)
+    benchmark_path = (
+        tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
+    )
+    benchmark_document = yaml.safe_load(
+        benchmark_path.read_text(encoding="utf-8")
+    )
+    benchmark_document["status"] = "draft"
+    benchmark_document["required_capabilities"] = ["pdf_input"]
+    _write_yaml(benchmark_path, benchmark_document)
+
+    registry = load_registry(tmp_path)
+    benchmark = registry.resolve_benchmark("synthetic@1.0.0")
+    with pytest.raises(ValueError, match="pdf_input"):
+        build_run_plan(
+            registry=registry,
+            benchmark=benchmark,
+            model=registry.resolve_model("model_a"),
+        )
+
+    model_path = tmp_path / "configs/models/model_a.yaml"
+    model_document = yaml.safe_load(model_path.read_text(encoding="utf-8"))
+    model_document["capabilities"] = ["pdf_input"]
+    _write_yaml(model_path, model_document)
+    registry = load_registry(tmp_path)
+    benchmark = registry.resolve_benchmark("synthetic@1.0.0")
+    model = registry.resolve_model("model_a")
+
+    planned = run_registered_benchmark(
+        registry=registry,
+        benchmark=benchmark,
+        model=model,
+        plan_only=True,
+    )
+    assert planned["executed"] is False
+    with pytest.raises(ValueError, match="Only ready or frozen"):
+        run_registered_benchmark(
+            registry=registry,
+            benchmark=benchmark,
+            model=model,
+        )
+
+
+def test_generation_failed_bundle_is_visible_but_unranked(
+    tmp_path: Path,
+) -> None:
+    _synthetic_registry(tmp_path)
+    registry = load_registry(tmp_path)
+    benchmark = registry.resolve_benchmark("synthetic@1.0.0")
+    result_path = tmp_path / "failed.csv"
+    pd.DataFrame(
+        {
+            "case_id": ["case_en", "case_fr"],
+            "model_name": ["model_a", "model_a"],
+            "final_passed": [False, False],
+            "final_score": [0.0, 0.0],
+            "evaluation_source": ["deterministic", "deterministic"],
+            "generation_status": ["error", "error"],
+        }
+    ).to_csv(result_path, index=False)
+    register_result_bundle(
+        registry=registry,
+        benchmark=benchmark,
+        model_id="model_a",
+        results_path=result_path,
+        reports_root="reports",
+    )
+
+    built = build_leaderboard(
+        registry=registry,
+        benchmark=benchmark,
+        reports_root="reports",
+    )
+    leaderboard = pd.read_csv(built["leaderboard_path"])
+    assert leaderboard.loc[0, "ranking_status"] == "ineligible"
+    assert pd.isna(leaderboard.loc[0, "rank"])
+    document = json.loads(built["json_path"].read_text(encoding="utf-8"))
+    assert document["models"][0]["rank"] is None
+    assert document["pairwise"] == []
 
 
 def test_result_registration_is_byte_reproducible(

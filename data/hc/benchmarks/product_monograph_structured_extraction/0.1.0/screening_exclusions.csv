@@ -1,0 +1,24 @@
+product_id,brand_name,stratum,exclusion_stage,reason
+hc_dpd_0f1a531b78cc9e20,GAS-X EXTRA STRENGTH,single_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_1eb04c6cacf8e2c0,ERYTHROMYCIN,single_ingredient,document_availability,An English PDF was posted but no French PDF was available.
+hc_dpd_223195da11d0850d,EXTRA STRENGTH TYLENOL COLD NIGHTTIME,multi_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_289ed49d533b9d9b,SENNA LAXATIVE AND DOCUSATE SODIUM TABLETS,multi_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_2f405ba36abb65d5,MUSCLE & JOINT NO ODOUR EXTRA STRENGTH,single_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_65a23fd38726245c,ACT PROGESTERONE INJECTION,single_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_7130dde82a11689c,BENYLIN SLEEP TIME,single_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_7a25872371a726a2,KIDS MOISTURIZING SUNSCREEN LOTION FOR FACE AND BODY,multi_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_8eff929469606201,CEPACOL SENSATIONS SORE THROAT & COUGH,multi_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_f0cd29136b724eec,PRILOCAINE HCL 4% EPINEPH 1:200000INJ,multi_ingredient,document_availability,No current official Product Monograph PDF was posted in either language.
+hc_dpd_0877be2ddea56d10,RAMIPRIL,multi_variant,scope_alignment,The monograph includes additional 1.25 mg and 15 mg products outside the selected DPD family.
+hc_dpd_e71246402187af99,MINIMS CYCLOPENTOLATE HYDROCHLORIDE,single_ingredient,scope_alignment,The monograph covers both 0.5% and 1% products while the selected DPD family contains only 1%.
+hc_dpd_b29dea9ca047de3e,CLINDOXYL ADV GEL,multi_ingredient,scope_alignment,The monograph also covers CLINDOXYL 1%/5% beyond the selected CLINDOXYL ADV family.
+hc_dpd_36e7c644e36eece6,SANDOZ OLANZAPINE ODT,multi_variant,scope_alignment,The monograph also covers regular Sandoz olanzapine tablets.
+hc_dpd_5935efeaed9c44f5,MICATIN POWDER SPRAY - UNSCENTED 2%,single_ingredient,scope_alignment,The monograph covers both spray and cream products.
+hc_dpd_53ccfe07a1d5acd7,VAQTA,single_ingredient,scope_alignment,The monograph covers adult and pediatric strengths while the selected DPD family contains only the adult product.
+hc_dpd_6ffd2316b35f9403,(20 MMOL/L) POTASSIUM CHLORIDE IN 5% DEXTROSE INJECTION USP,multi_ingredient,scope_alignment,The monograph covers 20 mmol/L and 40 mmol/L products while the selected family contains only 20 mmol/L.
+hc_dpd_83c23d1f8ed38293,JAMTEKI I.V.,single_ingredient,scope_alignment,The monograph also covers the subcutaneous JAMTEKI product.
+hc_dpd_8d256a8ea08f5dad,HUMALOG 200 UNITS/ML KWIKPEN,single_ingredient,scope_alignment,The monograph includes HUMALOG 100 and 200 plus MIX25 and MIX50 sibling products.
+hc_dpd_9ca23a49789e0651,MOTRIN 400MG,single_ingredient,scope_alignment,The monograph covers 200 mg 300 mg and 400 mg products.
+hc_dpd_a718725b15dfa81f,POSITIVE SKIN TEST CONTROL-HISTAMINE,single_ingredient,language_validation,The posted French PDF contains the same English document rather than a French monograph.
+hc_dpd_d69abb82e0ea64c5,COVERSYL PLUS,multi_ingredient,scope_alignment,The monograph covers COVERSYL PLUS LD PLUS and HD sibling products.
+hc_dpd_fdbaa3af81b1e7cd,HYDROMORPHONE HYDROCHLORIDE INJECTION HP FORTE,single_ingredient,scope_alignment,The monograph includes HP 10 HP 50 and FORTE sibling products.

@@ -36,4 +36,5 @@ Thumbs.db
 data/raw/
 data/processed/
 data/generated/
+data/hc/product_monographs/
 results/

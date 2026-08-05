@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Canada Product Monograph evidence-window extraction</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f7fb;
+      --card: #fff;
+      --ink: #12233f;
+      --muted: #5b6b82;
+      --line: #dce4ef;
+      --accent: #1768ac;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e1726;
+        --card: #172338;
+        --ink: #eef5ff;
+        --muted: #aebcd0;
+        --line: #33445e;
+        --accent: #77bdf2;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.5 system-ui, sans-serif;
+    }
+    main { max-width: 1240px; margin: 0 auto; padding: 48px 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(30px, 5vw, 50px); }
+    .kicker { color: var(--accent); font-weight: 700; }
+    .intro { color: var(--muted); max-width: 850px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 16px; margin-top: 28px; padding: 20px;
+      box-shadow: 0 12px 30px rgb(20 50 80 / 7%);
+    }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 850px; }
+    th, td {
+      padding: 12px 10px; border-bottom: 1px solid var(--line);
+      text-align: right; white-space: nowrap;
+    }
+    th { cursor: pointer; color: var(--muted); font-size: 12px; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+    .empty { color: var(--muted); padding: 24px 0; }
+    footer { color: var(--muted); margin-top: 24px; }
+    code { font-size: 0.95em; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="kicker">Evalanche benchmark leaderboard</div>
+  <h1>Health Canada Product Monograph evidence-window extraction</h1>
+  <p class="intro">Bilingual extraction from label-selected text windows taken from 80 official English and French Product Monographs representing 40 marketed human-drug product families. This benchmark does not send PDFs to the model.</p>
+  <p><code>hc_product_monograph_structured_extraction@0.1.0</code></p>
+  <section class="card">
+    <h2>Results</h2>
+    <div class="scroll"><table id="leaderboard"><thead><tr><th data-key="rank">Rank</th><th data-key="model">Model</th><th data-key="ranking_status">Ranking status</th><th data-key="passed_cases">Passed</th><th data-key="pass_rate">Strict pass</th><th data-key="average_field_score">Field score</th><th data-key="en_pass_rate">English</th><th data-key="fr_pass_rate">French</th><th data-key="generation_failure_rate">Gen failures</th><th data-key="total_cost_usd">Cost USD</th><th data-key="p95_latency_seconds">p95 seconds</th></tr></thead><tbody><tr><td data-value="1">1</td><td data-value="GPT-5.6 Sol">GPT-5.6 Sol</td><td data-value="eligible">eligible</td><td data-value="64">64/80</td><td data-value="0.8">80.00%</td><td data-value="0.9375">93.75%</td><td data-value="0.8">80.00%</td><td data-value="0.8">80.00%</td><td data-value="0.0">0.00%</td><td data-value="0.43645500000000004">0.436</td><td data-value="5.190448465503866">5.190</td></tr><tr><td data-value="2">2</td><td data-value="GPT-5.6 Luna">GPT-5.6 Luna</td><td data-value="eligible">eligible</td><td data-value="56">56/80</td><td data-value="0.7">70.00%</td><td data-value="0.9125">91.25%</td><td data-value="0.7">70.00%</td><td data-value="0.7">70.00%</td><td data-value="0.0">0.00%</td><td data-value="0.08633700000000001">0.086</td><td data-value="5.01004556974512">5.010</td></tr><tr><td data-value="2">2</td><td data-value="GPT-5.6 Terra">GPT-5.6 Terra</td><td data-value="eligible">eligible</td><td data-value="56">56/80</td><td data-value="0.7">70.00%</td><td data-value="0.9">90.00%</td><td data-value="0.725">72.50%</td><td data-value="0.675">67.50%</td><td data-value="0.0">0.00%</td><td data-value="0.21540750000000003">0.215</td><td data-value="5.631790275311502">5.632</td></tr><tr><td data-value=""></td><td data-value="GPT-5.4 Mini">GPT-5.4 Mini</td><td data-value="ineligible">ineligible</td><td data-value="0">0/80</td><td data-value="0.0">0.00%</td><td data-value="0.0">0.00%</td><td data-value="0.0">0.00%</td><td data-value="0.0">0.00%</td><td data-value="1.0">100.00%</td><td data-value=""></td><td data-value="12.97896904775116">12.979</td></tr></tbody></table></div>
+  </section>
+  <section class="card">
+    <h2>How to read this</h2>
+    <p class="intro">
+      Rank uses strict case pass rate among complete runs. Runs with any
+      generation failures or unscored cases remain visible but are ineligible
+      for rank. Field score, language slices, cost, and latency remain separate.
+    </p>
+  </section>
+  <footer>Generated from compatible, versioned result bundles.</footer>
+</main>
+<script id="leaderboard-data" type="application/json">{"leaderboard": [{"rank": 1, "ranking_status": "eligible", "model_id": "gpt_5_6_sol", "model": "GPT-5.6 Sol", "run_id": "0e5d2986f5a63ec7", "cases": 80, "passed_cases": 64, "failed_cases": 16, "pass_rate": 0.8, "average_field_score": 0.9375, "generation_failure_rate": 0.0, "total_cost_usd": 0.436455, "average_cost_usd": 0.0054556875, "median_latency_seconds": 3.955377768, "p95_latency_seconds": 5.1904484655, "en_cases": 40, "en_pass_rate": 0.8, "fr_cases": 40, "fr_pass_rate": 0.8}, {"rank": 2, "ranking_status": "eligible", "model_id": "gpt_5_6_luna", "model": "GPT-5.6 Luna", "run_id": "fde781564aad7b46", "cases": 80, "passed_cases": 56, "failed_cases": 24, "pass_rate": 0.7, "average_field_score": 0.9125, "generation_failure_rate": 0.0, "total_cost_usd": 0.086337, "average_cost_usd": 0.0010792125, "median_latency_seconds": 3.967716505, "p95_latency_seconds": 5.0100455697, "en_cases": 40, "en_pass_rate": 0.7, "fr_cases": 40, "fr_pass_rate": 0.7}, {"rank": 2, "ranking_status": "eligible", "model_id": "gpt_5_6_terra", "model": "GPT-5.6 Terra", "run_id": "237018ef86e693a0", "cases": 80, "passed_cases": 56, "failed_cases": 24, "pass_rate": 0.7, "average_field_score": 0.9, "generation_failure_rate": 0.0, "total_cost_usd": 0.2154075, "average_cost_usd": 0.0026925938, "median_latency_seconds": 3.9160042815, "p95_latency_seconds": 5.6317902753, "en_cases": 40, "en_pass_rate": 0.725, "fr_cases": 40, "fr_pass_rate": 0.675}, {"rank": null, "ranking_status": "ineligible", "model_id": "gpt_5_4_mini", "model": "GPT-5.4 Mini", "run_id": "1895d4b7a4df216c", "cases": 80, "passed_cases": 0, "failed_cases": 80, "pass_rate": 0.0, "average_field_score": 0.0, "generation_failure_rate": 1.0, "total_cost_usd": null, "average_cost_usd": null, "median_latency_seconds": 11.977982756, "p95_latency_seconds": 12.9789690478, "en_cases": 40, "en_pass_rate": 0.0, "fr_cases": 40, "fr_pass_rate": 0.0}], "slices": [{"model_id": "gpt_5_6_luna", "slice": "document_complexity", "value": "long", "cases": 16, "scored_cases": 16, "passed_cases": 14, "pass_rate": 0.875, "average_score": 0.96875}, {"model_id": "gpt_5_6_sol", "slice": "document_complexity", "value": "long", "cases": 16, "scored_cases": 16, "passed_cases": 14, "pass_rate": 0.875, "average_score": 0.96875}, {"model_id": "gpt_5_6_terra", "slice": "document_complexity", "value": "long", "cases": 16, "scored_cases": 16, "passed_cases": 14, "pass_rate": 0.875, "average_score": 0.96875}, {"model_id": "gpt_5_6_luna", "slice": "document_complexity", "value": "medium", "cases": 40, "scored_cases": 40, "passed_cases": 31, "pass_rate": 0.775, "average_score": 0.94375}, {"model_id": "gpt_5_6_sol", "slice": "document_complexity", "value": "medium", "cases": 40, "scored_cases": 40, "passed_cases": 37, "pass_rate": 0.925, "average_score": 0.975}, {"model_id": "gpt_5_6_terra", "slice": "document_complexity", "value": "medium", "cases": 40, "scored_cases": 40, "passed_cases": 31, "pass_rate": 0.775, "average_score": 0.93125}, {"model_id": "gpt_5_6_luna", "slice": "document_complexity", "value": "short", "cases": 24, "scored_cases": 24, "passed_cases": 11, "pass_rate": 0.4583333333333333, "average_score": 0.8229166666666666}, {"model_id": "gpt_5_6_sol", "slice": "document_complexity", "value": "short", "cases": 24, "scored_cases": 24, "passed_cases": 13, "pass_rate": 0.5416666666666666, "average_score": 0.8541666666666666}, {"model_id": "gpt_5_6_terra", "slice": "document_complexity", "value": "short", "cases": 24, "scored_cases": 24, "passed_cases": 11, "pass_rate": 0.4583333333333333, "average_score": 0.8020833333333334}, {"model_id": "gpt_5_6_luna", "slice": "language", "value": "en", "cases": 40, "scored_cases": 40, "passed_cases": 28, "pass_rate": 0.7, "average_score": 0.9125}, {"model_id": "gpt_5_6_sol", "slice": "language", "value": "en", "cases": 40, "scored_cases": 40, "passed_cases": 32, "pass_rate": 0.8, "average_score": 0.9375}, {"model_id": "gpt_5_6_terra", "slice": "language", "value": "en", "cases": 40, "scored_cases": 40, "passed_cases": 29, "pass_rate": 0.725, "average_score": 0.9125}, {"model_id": "gpt_5_6_luna", "slice": "language", "value": "fr", "cases": 40, "scored_cases": 40, "passed_cases": 28, "pass_rate": 0.7, "average_score": 0.9125}, {"model_id": "gpt_5_6_sol", "slice": "language", "value": "fr", "cases": 40, "scored_cases": 40, "passed_cases": 32, "pass_rate": 0.8, "average_score": 0.9375}, {"model_id": "gpt_5_6_terra", "slice": "language", "value": "fr", "cases": 40, "scored_cases": 40, "passed_cases": 27, "pass_rate": 0.675, "average_score": 0.8875}, {"model_id": "gpt_5_6_luna", "slice": "split", "value": "development", "cases": 60, "scored_cases": 60, "passed_cases": 44, "pass_rate": 0.7333333333333333, "average_score": 0.9166666666666666}, {"model_id": "gpt_5_6_sol", "slice": "split", "value": "development", "cases": 60, "scored_cases": 60, "passed_cases": 46, "pass_rate": 0.7666666666666667, "average_score": 0.925}, {"model_id": "gpt_5_6_terra", "slice": "split", "value": "development", "cases": 60, "scored_cases": 60, "passed_cases": 43, "pass_rate": 0.7166666666666667, "average_score": 0.9}, {"model_id": "gpt_5_6_luna", "slice": "split", "value": "heldout", "cases": 20, "scored_cases": 20, "passed_cases": 12, "pass_rate": 0.6, "average_score": 0.9}, {"model_id": "gpt_5_6_sol", "slice": "split", "value": "heldout", "cases": 20, "scored_cases": 20, "passed_cases": 18, "pass_rate": 0.9, "average_score": 0.975}, {"model_id": "gpt_5_6_terra", "slice": "split", "value": "heldout", "cases": 20, "scored_cases": 20, "passed_cases": 13, "pass_rate": 0.65, "average_score": 0.9}, {"model_id": "gpt_5_6_luna", "slice": "stratum", "value": "multi_ingredient", "cases": 20, "scored_cases": 20, "passed_cases": 15, "pass_rate": 0.75, "average_score": 0.925}, {"model_id": "gpt_5_6_sol", "slice": "stratum", "value": "multi_ingredient", "cases": 20, "scored_cases": 20, "passed_cases": 15, "pass_rate": 0.75, "average_score": 0.925}, {"model_id": "gpt_5_6_terra", "slice": "stratum", "value": "multi_ingredient", "cases": 20, "scored_cases": 20, "passed_cases": 15, "pass_rate": 0.75, "average_score": 0.9125}, {"model_id": "gpt_5_6_luna", "slice": "stratum", "value": "multi_variant", "cases": 20, "scored_cases": 20, "passed_cases": 19, "pass_rate": 0.95, "average_score": 0.9875}, {"model_id": "gpt_5_6_sol", "slice": "stratum", "value": "multi_variant", "cases": 20, "scored_cases": 20, "passed_cases": 19, "pass_rate": 0.95, "average_score": 0.9875}, {"model_id": "gpt_5_6_terra", "slice": "stratum", "value": "multi_variant", "cases": 20, "scored_cases": 20, "passed_cases": 18, "pass_rate": 0.9, "average_score": 0.975}, {"model_id": "gpt_5_6_luna", "slice": "stratum", "value": "single_ingredient", "cases": 40, "scored_cases": 40, "passed_cases": 22, "pass_rate": 0.55, "average_score": 0.86875}, {"model_id": "gpt_5_6_sol", "slice": "stratum", "value": "single_ingredient", "cases": 40, "scored_cases": 40, "passed_cases": 30, "pass_rate": 0.75, "average_score": 0.91875}, {"model_id": "gpt_5_6_terra", "slice": "stratum", "value": "single_ingredient", "cases": 40, "scored_cases": 40, "passed_cases": 23, "pass_rate": 0.575, "average_score": 0.85625}], "pairwise": [{"model_a": "gpt_5_6_luna", "model_b": "gpt_5_6_sol", "cases": 80, "a_only_passed": 4, "b_only_passed": 12, "both_passed": 52, "both_failed": 12, "paired_net_wins_a": -8}, {"model_a": "gpt_5_6_luna", "model_b": "gpt_5_6_terra", "cases": 80, "a_only_passed": 4, "b_only_passed": 4, "both_passed": 52, "both_failed": 20, "paired_net_wins_a": 0}, {"model_a": "gpt_5_6_sol", "model_b": "gpt_5_6_terra", "cases": 80, "a_only_passed": 12, "b_only_passed": 4, "both_passed": 52, "both_failed": 12, "paired_net_wins_a": 8}]}</script>
+<script>
+  const table = document.querySelector("#leaderboard");
+  if (table) {
+    table.querySelectorAll("th").forEach((header, index) => {
+      let ascending = true;
+      header.addEventListener("click", () => {
+        const body = table.tBodies[0];
+        const rows = Array.from(body.rows);
+        rows.sort((a, b) => {
+          const av = a.cells[index].dataset.value || "";
+          const bv = b.cells[index].dataset.value || "";
+          const an = Number(av), bn = Number(bv);
+          const numeric = av !== "" && bv !== "" &&
+            Number.isFinite(an) && Number.isFinite(bn);
+          const result = numeric ? an - bn :
+            av.localeCompare(bv, undefined, {numeric: true});
+          return ascending ? result : -result;
+        });
+        rows.forEach(row => body.appendChild(row));
+        ascending = !ascending;
+      });
+    });
+  }
+</script>
+</body>
+</html>

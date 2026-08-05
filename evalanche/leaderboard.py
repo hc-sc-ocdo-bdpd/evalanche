@@ -10,7 +10,20 @@ import pandas as pd
 from evalanche.registry import BenchmarkManifest, LoadedRegistry
 from evalanche.result_bundle import load_active_bundles
 
-LEADERBOARD_SCHEMA_VERSION = "1.0"
+LEADERBOARD_SCHEMA_VERSION = "1.1"
+
+
+def _ranking_eligible(bundle: dict[str, Any]) -> bool:
+    summary = bundle["metadata"]["summary"]
+    return (
+        summary.get("generation_failure_rate") == 0
+        and summary.get("scored_cases") == summary.get("cases")
+    )
+
+
+def _json_records(frame: pd.DataFrame) -> list[dict[str, Any]]:
+    """Convert a frame to strict-JSON-compatible records."""
+    return json.loads(frame.to_json(orient="records"))
 
 
 def _format_percent(value: Any) -> str:
@@ -34,6 +47,9 @@ def _bundle_rows(
         metadata = bundle["metadata"]
         summary = metadata["summary"]
         row: dict[str, Any] = {
+            "ranking_status": (
+                "eligible" if _ranking_eligible(bundle) else "ineligible"
+            ),
             "model_id": metadata["model"]["model_id"],
             "model": metadata["model"]["display_name"],
             "run_id": metadata["run_id"],
@@ -66,6 +82,7 @@ def _bundle_rows(
         return pd.DataFrame(
             columns=[
                 "rank",
+                "ranking_status",
                 "model_id",
                 "model",
                 "run_id",
@@ -83,13 +100,20 @@ def _bundle_rows(
         )
 
     leaderboard = pd.DataFrame(rows)
-    leaderboard["rank"] = (
-        leaderboard["pass_rate"]
+    eligible = leaderboard["ranking_status"] == "eligible"
+    leaderboard["rank"] = pd.Series(
+        pd.NA,
+        index=leaderboard.index,
+        dtype="Int64",
+    )
+    leaderboard.loc[eligible, "rank"] = (
+        leaderboard.loc[eligible, "pass_rate"]
         .rank(method="min", ascending=False)
         .astype("Int64")
     )
     ordered = [
         "rank",
+        "ranking_status",
         "model_id",
         "model",
         "run_id",
@@ -105,10 +129,12 @@ def _bundle_rows(
         "p95_latency_seconds",
     ]
     extra = [column for column in leaderboard if column not in ordered]
-    return leaderboard[ordered + sorted(extra)].sort_values(
-        ["rank", "model_id"],
+    leaderboard["_eligible_order"] = (~eligible).astype(int)
+    ordered_frame = leaderboard.sort_values(
+        ["_eligible_order", "rank", "model_id"],
         kind="stable",
     )
+    return ordered_frame[ordered + sorted(extra)]
 
 
 def _pairwise(
@@ -219,9 +245,9 @@ def _markdown(
 
     lines.extend(
         [
-            "| Rank | Model | Passed | Pass rate | Field score | "
+            "| Rank | Model | Status | Passed | Pass rate | Field score | "
             "Generation failures | Cost (USD) | p95 latency (s) |",
-            "|---:|---|---:|---:|---:|---:|---:|---:|",
+            "|---:|---|---|---:|---:|---:|---:|---:|---:|",
         ]
     )
     for _, row in leaderboard.iterrows():
@@ -229,8 +255,9 @@ def _markdown(
             "| "
             + " | ".join(
                 [
-                    str(row["rank"]),
+                    "" if pd.isna(row["rank"]) else str(row["rank"]),
                     str(row["model"]),
+                    str(row["ranking_status"]),
                     f"{int(row['passed_cases'])}/{int(row['cases'])}",
                     _format_percent(row["pass_rate"]),
                     _format_percent(row["average_field_score"]),
@@ -245,7 +272,9 @@ def _markdown(
         [
             "",
             "Ranks use strict pass rate. Cost and latency are displayed "
-            "separately and are not collapsed into a recommendation score.",
+            "separately and are not collapsed into a recommendation score. "
+            "Runs with any generation failures or unscored cases are shown "
+            "but are not ranked.",
             "",
         ]
     )
@@ -262,6 +291,7 @@ def _table_html(leaderboard: pd.DataFrame) -> str:
     columns = [
         ("rank", "Rank"),
         ("model", "Model"),
+        ("ranking_status", "Ranking status"),
         ("passed_cases", "Passed"),
         ("pass_rate", "Strict pass"),
         ("average_field_score", "Field score"),
@@ -321,14 +351,12 @@ def _html(
 ) -> str:
     payload = json.dumps(
         {
-            "leaderboard": leaderboard.where(
-                pd.notna(leaderboard),
-                None,
-            ).to_dict(orient="records"),
+            "leaderboard": _json_records(leaderboard),
             "slices": slices,
             "pairwise": pairwise.to_dict(orient="records"),
         },
         ensure_ascii=False,
+        allow_nan=False,
     ).replace("</", "<\\/")
     return f"""<!doctype html>
 <html lang="en">
@@ -397,9 +425,9 @@ def _html(
   <section class="card">
     <h2>How to read this</h2>
     <p class="intro">
-      Rank uses strict case pass rate. Field score, language slices,
-      reliability, cost, and latency remain separate so the table does
-      not imply a universal model recommendation.
+      Rank uses strict case pass rate among complete runs. Runs with any
+      generation failures or unscored cases remain visible but are ineligible
+      for rank. Field score, language slices, cost, and latency remain separate.
     </p>
   </section>
   <footer>Generated from compatible, versioned result bundles.</footer>
@@ -446,8 +474,11 @@ def build_leaderboard(
         reports_root=reports_root,
     )
     leaderboard = _bundle_rows(bundles, benchmark)
-    pairwise = _pairwise(bundles, benchmark)
-    slices = _slice_records(bundles, benchmark)
+    eligible_bundles = [
+        bundle for bundle in bundles if _ranking_eligible(bundle)
+    ]
+    pairwise = _pairwise(eligible_bundles, benchmark)
+    slices = _slice_records(eligible_bundles, benchmark)
     output_dir = (
         registry.root
         / reports_root
@@ -471,18 +502,23 @@ def build_leaderboard(
             "title": benchmark.title,
             "status": benchmark.status,
         },
-        "models": leaderboard.where(pd.notna(leaderboard), None).to_dict(
-            orient="records"
-        ),
+        "models": _json_records(leaderboard),
         "slices": slices,
         "pairwise": pairwise.to_dict(orient="records"),
         "ranking_policy": (
-            "Strict case pass rate only. Cost, latency, reliability, and "
-            "slice metrics are descriptive."
+            "Strict case pass rate among complete runs only. Runs with any "
+            "generation failures or unscored cases are ineligible. Cost, "
+            "latency, reliability, and slice metrics are descriptive."
         ),
     }
     json_path.write_text(
-        json.dumps(document, indent=2, ensure_ascii=False) + "\n",
+        json.dumps(
+            document,
+            indent=2,
+            ensure_ascii=False,
+            allow_nan=False,
+        )
+        + "\n",
         encoding="utf-8",
     )
     markdown_path.write_text(
@@ -527,16 +563,24 @@ def build_benchmark_index(
                 leaderboard_path.read_text(encoding="utf-8")
             )
             model_count = len(document.get("models", []))
-        href = (
-            f"{benchmark.benchmark_id}/{benchmark.version}/"
-            "leaderboard.html"
-        )
+            href = (
+                f"{benchmark.benchmark_id}/{benchmark.version}/"
+                "leaderboard.html"
+            )
+            opening = f'<a class="card" href="{html.escape(href)}">'
+            closing = "</a>"
+        else:
+            opening = '<div class="card unavailable">'
+            closing = "</div>"
         cards.append(
-            f'<a class="card" href="{html.escape(href)}">'
+            opening
+            +
             f"<strong>{html.escape(benchmark.title)}</strong>"
             f"<span>{html.escape(key)}</span>"
+            f"<span>Status: {html.escape(benchmark.status)}</span>"
             f"<span>{model_count} registered model"
-            f"{'' if model_count == 1 else 's'}</span></a>"
+            f"{'' if model_count == 1 else 's'}</span>"
+            + closing
         )
     content = f"""<!doctype html>
 <html lang="en">
@@ -564,6 +608,8 @@ def build_benchmark_index(
     }}
     .card:hover {{ border-color: #1768ac; transform: translateY(-2px); }}
     .card span {{ color: #5b6b82; font-size: 14px; }}
+    .card.unavailable {{ opacity: 0.72; }}
+    .card.unavailable:hover {{ border-color: #dce4ef; transform: none; }}
   </style>
 </head>
 <body>

@@ -158,6 +158,50 @@ def test_complete_text_sends_reasoning_and_omits_temperature(
     assert "temperature" not in seen
 
 
+def test_complete_response_maps_responses_usage_and_output(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: dict[str, Any] = {}
+
+    def fake_responses(**kwargs: Any) -> SimpleNamespace:
+        seen.update(kwargs)
+        return SimpleNamespace(
+            output_text='{"answer":"pdf"}',
+            usage=SimpleNamespace(
+                input_tokens=120,
+                output_tokens=8,
+                total_tokens=128,
+                input_tokens_details=SimpleNamespace(cached_tokens=20),
+            ),
+            _hidden_params={},
+        )
+
+    monkeypatch.setattr(llm_module, "_responses", fake_responses)
+
+    result = LLMClient(
+        model="azure/gpt-5.6-sol",
+        temperature=None,
+        reasoning_effort="none",
+        max_retries=1,
+    ).complete_response(
+        [{"role": "user", "content": "Read the PDF"}],
+        instructions="Use only the attached source.",
+        max_output_tokens=900,
+    )
+
+    assert result["content"] == '{"answer":"pdf"}'
+    assert result["usage"] == {
+        "prompt_tokens": 120,
+        "cached_prompt_tokens": 20,
+        "completion_tokens": 8,
+        "total_tokens": 128,
+    }
+    assert seen["reasoning"] == {"effort": "none"}
+    assert seen["instructions"] == "Use only the attached source."
+    assert seen["max_output_tokens"] == 900
+    assert "temperature" not in seen
+
+
 def test_installed_litellm_supports_gpt_5_6_azure_reasoning_effort(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

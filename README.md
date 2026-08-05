@@ -30,9 +30,12 @@ Evalanche currently supports:
 - independent model and benchmark manifests with compatibility fingerprints;
 - immutable compact result bundles and generated CSV, JSON, Markdown, and
   sortable HTML leaderboards;
-- a reproducible bilingual Health Canada DPD benchmark with 14,034 cases.
+- a reproducible bilingual Health Canada DPD benchmark with 14,034 cases;
+- a frozen 40-product, 80-case Product Monograph evidence-window diagnostic;
+- a separate draft native-PDF benchmark for end-to-end document retrieval,
+  visual reading, and structured extraction.
 
-The repository includes more than 275 focused tests, plus continuous checks
+The repository includes more than 280 focused tests, plus continuous checks
 for lint, coverage, and committed benchmark integrity.
 
 ## Health Canada DPD benchmark
@@ -66,6 +69,47 @@ See the
 [`published result release`](reports/hc_dpd_census/0.2.0/README.md) for the
 full scope, paired evidence, metadata, raw-artifact hashes, and interpretation
 limits.
+
+## Product Monograph benchmarks
+
+Evalanche now keeps two Product Monograph questions separate:
+
+| Benchmark | Model input | What it measures | Status |
+| --- | --- | --- | --- |
+| `hc_product_monograph_structured_extraction@0.1.0` | Label-selected text pages | Extraction and JSON fidelity after the relevant evidence is supplied | Frozen diagnostic |
+| `hc_product_monograph_native_pdf_extraction@0.1.0` | Complete official PDF | End-to-end retrieval, visual reading, and extraction | Draft, blocked from ranked runs |
+
+The evidence-window release contains:
+
+| Property | Value |
+| --- | ---: |
+| Product families | 40 |
+| Official English PDFs | 40 |
+| Official French PDFs | 40 |
+| Development products | 30 |
+| Held-out products | 10 |
+| Scored source-evidence items | 390 |
+| Maximum evidence pages per case | 3 |
+
+All 80 PDF hashes are distinct, every scored item has a recorded source page,
+and the dataset manifest verifies 6 of 6 files. This diagnostic deliberately
+uses pages selected with knowledge of the reference labels. It is useful for
+isolating extraction quality, but it must not be described as full-document
+retrieval or PDF understanding.
+
+The active evidence-window runs show GPT-5.6 Sol at 64/80 strict passes and
+GPT-5.6 Terra and Luna at 56/80 each. GPT-5.4 Mini's saved run contains 80 API
+configuration failures and is visible but ineligible for rank. The corrected
+model config omits unsupported temperature sampling so that model must be run
+again before comparison.
+
+The native-PDF release reuses the same cohort and provisional labels but sends
+the complete hash-verified PDF through the Responses API. It remains draft
+until the 390-item human label review, local source verification, provider
+smoke test, and prompt lock are complete. See the
+[`evidence-window benchmark card`](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
+and the
+[`native-PDF benchmark plan`](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md).
 
 ## Quick start
 
@@ -140,15 +184,27 @@ Plan a new model run without provider calls:
 
 ```bash
 python -m evalanche.cli run-benchmark \
-  --benchmark hc_dpd_structured_extraction@0.2.0 \
+  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
   --model gpt_5_6_sol \
   --plan-only
 ```
 
-Omit `--plan-only` only when a fresh model run is intended. Generation,
-evaluation, result registration, and leaderboard rebuilding then run as one
-workflow. Existing models are not rerun. See
+Omit `--plan-only` after reviewing the 80-call plan. Generation, evaluation,
+result registration, and leaderboard rebuilding then run as one workflow.
+Existing models are not rerun. See
 [`docs/benchmark_registry.md`](docs/benchmark_registry.md).
+
+After a deterministic scorer or canonicalization rule changes, rescore saved
+outputs without repeating provider generation calls:
+
+```bash
+python -m evalanche.cli rescore-benchmark \
+  --benchmark hc_product_monograph_structured_extraction@0.1.0 \
+  --model gpt_5_6_sol
+```
+
+Offline rescoring rejects benchmarks containing LLM-judge cases so the command
+always keeps its zero-generation-call contract explicit.
 
 ### 1. Define representative cases
 
@@ -300,6 +356,37 @@ python -m evalanche.cli verify-dataset \
 
 Dataset verification makes no model calls.
 
+Acquire, rebuild, and verify the Product Monograph release:
+
+```bash
+python -m evalanche.cli acquire-product-monographs
+python -m evalanche.cli build-product-monograph-benchmark
+python -m evalanche.cli verify-dataset \
+  --manifest configs/datasets/hc_product_monograph_structured_extraction_0.1.0_manifest.yaml \
+  --root .
+```
+
+The 80 source PDFs are verified locally but not committed. The tracked source
+lock preserves their official URLs, hashes, byte sizes, page counts, and
+alignment checks.
+
+Build and inspect the separate native-PDF draft:
+
+```bash
+python -m evalanche.cli build-product-monograph-native-pdf-benchmark
+python -m evalanche.cli verify-dataset \
+  --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml \
+  --root .
+python -m evalanche.cli run-benchmark \
+  --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 \
+  --model gpt_5_6_sol \
+  --plan-only
+```
+
+The plan is allowed, but execution is intentionally blocked while the
+benchmark status is `draft`. The field-level review queue is
+`data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/label_review.csv`.
+
 ## Full DPD workflow
 
 The complete full-census workflow, including cost preflight, model-specific
@@ -344,6 +431,9 @@ Local model outputs and case-level evaluations are written to
 - [DPD census analysis and validation](docs/hc_benchmark/HC_DPD_CENSUS_ANALYSIS.md)
 - [DPD model-comparison demo](docs/hc_benchmark/HC_DPD_MODEL_COMPARISON_DEMO.md)
 - [DPD and Product Monograph benchmark specification](docs/hc_benchmark/HC_DPD_PM_BENCHMARK_SPEC.md)
+- [Product Monograph benchmark card and runbook](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
+- [Native-PDF Product Monograph benchmark plan](docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
+- [Product Monograph architecture review and decision record](docs/hc_benchmark/PRODUCT_MONOGRAPH_ARCHITECTURE_REVIEW.md)
 - [Health Canada dataset inventory](docs/hc_benchmark/HC_DATASET_INVENTORY.md)
 - [Contribution and release rules](CONTRIBUTING.md)
 
@@ -379,10 +469,10 @@ versions, provider configuration, and scoring policy.
 
 ## Next milestones
 
-1. Implement the bilingual Product Monograph extraction benchmark through the
-   registry without changing generic core code.
-2. Onboard one additional real model through a manifest-only change.
-3. Test API-enforced structured outputs on the DPD task.
-4. Expand task families while keeping datasets, metrics, and leaderboards
-   separate.
-5. Calibrate subjective LLM-judge tasks against human review.
+1. Complete and sign off the 390-item native-PDF label review queue.
+2. Verify all 80 local PDFs, smoke-test the Azure Responses path, and lock the
+   native-PDF prompt before promoting the draft.
+3. Rerun GPT-5.4 Mini with the corrected request settings.
+4. Run all compatible models on the promoted native-PDF benchmark and compare
+   the paired score change against the evidence-window diagnostic.
+5. Add broader monograph tasks only as separate benchmark contracts.

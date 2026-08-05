@@ -31,6 +31,14 @@ def _completion(**kwargs: Any) -> Any:
     return completion(**kwargs)
 
 
+def _responses(**kwargs: Any) -> Any:
+    # Keep provider initialization at the actual network boundary. This makes
+    # offline commands and unit tests independent of LiteLLM client startup.
+    from litellm import responses
+
+    return responses(**kwargs)
+
+
 def _value(container: Any, name: str) -> Any:
     if isinstance(container, dict):
         return container.get(name)
@@ -79,14 +87,24 @@ def _usage_to_dict(response: Any) -> dict[str, Any]:
         }
 
     prompt_details = _value(usage, "prompt_tokens_details")
+    if prompt_details is None:
+        prompt_details = _value(usage, "input_tokens_details")
 
     return {
-        "prompt_tokens": _value(usage, "prompt_tokens"),
+        "prompt_tokens": (
+            _value(usage, "prompt_tokens")
+            if _value(usage, "prompt_tokens") is not None
+            else _value(usage, "input_tokens")
+        ),
         "cached_prompt_tokens": _value(
             prompt_details,
             "cached_tokens",
         ),
-        "completion_tokens": _value(usage, "completion_tokens"),
+        "completion_tokens": (
+            _value(usage, "completion_tokens")
+            if _value(usage, "completion_tokens") is not None
+            else _value(usage, "output_tokens")
+        ),
         "total_tokens": _value(usage, "total_tokens"),
     }
 
@@ -111,14 +129,18 @@ class _CallTracker:
     known_provider_cost_responses: int = 0
     provider_reported_cost_usd: float = 0.0
 
-    def completion(self, **kwargs: Any) -> Any:
+    def _call(
+        self,
+        boundary: Callable[..., Any],
+        **kwargs: Any,
+    ) -> Any:
         if self.before_attempt is not None:
             self.before_attempt()
         self.attempts += 1
         attempt_started_at = perf_counter()
 
         try:
-            response = _completion(**kwargs)
+            response = boundary(**kwargs)
         except Exception:
             self.failed_attempts += 1
             raise
@@ -144,6 +166,12 @@ class _CallTracker:
             self.provider_reported_cost_usd += cost
 
         return response
+
+    def completion(self, **kwargs: Any) -> Any:
+        return self._call(_completion, **kwargs)
+
+    def responses(self, **kwargs: Any) -> Any:
+        return self._call(_responses, **kwargs)
 
     def _record_tokens(self, kind: str, value: Any) -> None:
         numeric = _nonnegative_number(value)
@@ -357,6 +385,47 @@ class LLMClient:
         result["operational"] = telemetry
         return result
 
+    def complete_response(
+        self,
+        input_items: list[dict[str, Any]],
+        instructions: str | None = None,
+        max_output_tokens: int | None = None,
+    ) -> dict[str, Any]:
+        """Return text from LiteLLM's Responses API adapter."""
+        tracker = _CallTracker(
+            endpoint_price=self.endpoint_price,
+            before_attempt=self.before_attempt,
+        )
+        retrying_call = retry(
+            stop=stop_after_attempt(self.max_retries),
+            wait=wait_exponential(multiplier=1, min=1, max=10),
+            reraise=True,
+        )(self._single_complete_response_call)
+
+        try:
+            result = retrying_call(
+                input_items,
+                instructions,
+                max_output_tokens,
+                tracker,
+            )
+        except Exception as error:
+            _attach_operational_metrics(error, tracker.snapshot())
+            raise
+
+        telemetry = tracker.snapshot()
+        result["usage"] = {
+            key: telemetry.get(key)
+            for key in (
+                "prompt_tokens",
+                "cached_prompt_tokens",
+                "completion_tokens",
+                "total_tokens",
+            )
+        }
+        result["operational"] = telemetry
+        return result
+
     def _single_complete_json_call(
         self,
         messages: list[dict[str, str]],
@@ -394,6 +463,44 @@ class LLMClient:
         response = tracker.completion(**kwargs)
         content = response.choices[0].message.content or ""
         return {"content": content}
+
+    def _single_complete_response_call(
+        self,
+        input_items: list[dict[str, Any]],
+        instructions: str | None,
+        max_output_tokens: int | None,
+        tracker: _CallTracker,
+    ) -> dict[str, Any]:
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "input": input_items,
+        }
+        if instructions is not None:
+            kwargs["instructions"] = instructions
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
+        if self.reasoning_effort is not None:
+            kwargs["reasoning"] = {"effort": self.reasoning_effort}
+        if max_output_tokens is not None:
+            kwargs["max_output_tokens"] = max_output_tokens
+
+        response = tracker.responses(**kwargs)
+        return {"content": _response_output_text(response)}
+
+
+def _response_output_text(response: Any) -> str:
+    output_text = _value(response, "output_text")
+    if isinstance(output_text, str):
+        return output_text
+
+    fragments: list[str] = []
+    for item in _value(response, "output") or []:
+        for content in _value(item, "content") or []:
+            if _value(content, "type") == "output_text":
+                text = _value(content, "text")
+                if isinstance(text, str):
+                    fragments.append(text)
+    return "".join(fragments)
 
 
 def _parse_json_content(content: str) -> dict[str, Any]:

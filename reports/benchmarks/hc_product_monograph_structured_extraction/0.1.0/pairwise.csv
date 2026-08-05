@@ -1,0 +1,4 @@
+model_a,model_b,cases,a_only_passed,b_only_passed,both_passed,both_failed,paired_net_wins_a
+gpt_5_6_luna,gpt_5_6_sol,80,4,12,52,12,-8
+gpt_5_6_luna,gpt_5_6_terra,80,4,4,52,20,0
+gpt_5_6_sol,gpt_5_6_terra,80,12,4,52,12,8

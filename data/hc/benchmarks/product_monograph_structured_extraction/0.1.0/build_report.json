@@ -1,0 +1,102 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_id": "hc_product_monograph_structured_extraction",
+  "dataset_version": "0.1.0",
+  "source_documents": {
+    "documents": 80,
+    "languages": {
+      "en": 40,
+      "fr": 40
+    },
+    "unique_hashes": 80,
+    "issues": [],
+    "valid": true
+  },
+  "population": {
+    "products": 40,
+    "cases": 80,
+    "languages": {
+      "en": 40,
+      "fr": 40
+    },
+    "splits": {
+      "development": 30,
+      "heldout": 10
+    },
+    "strata": {
+      "single_ingredient": 20,
+      "multi_variant": 10,
+      "multi_ingredient": 10
+    },
+    "document_complexity": {
+      "medium": 40,
+      "short": 24,
+      "long": 16
+    }
+  },
+  "screening": {
+    "documented_exclusions": 23,
+    "by_stage": {
+      "scope_alignment": 12,
+      "document_availability": 10,
+      "language_validation": 1
+    }
+  },
+  "evidence": {
+    "field_items": 390,
+    "support_methods": {
+      "normalized_exact": 240,
+      "normalized_name_and_strength": 146,
+      "declared_alias": 4
+    },
+    "maximum_pages_per_case": 3,
+    "all_scored_items_have_source_pages": true,
+    "automated_source_evidence_audit": "complete",
+    "independent_human_signoff": "not_claimed"
+  },
+  "scoring_contract": {
+    "scored_fields": [
+      "brand_name",
+      "active_ingredients",
+      "dosage_forms",
+      "routes"
+    ],
+    "unscored_alignment_fields": [
+      "din",
+      "schedule",
+      "product_status",
+      "company"
+    ]
+  },
+  "software": {
+    "evalanche_version": "0.3.0",
+    "pypdf_version": "6.14.2"
+  },
+  "artifacts": {
+    "products": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/products.csv",
+      "sha256": "cfa46e067ec94b37a73c711af5e203a4f8cf240a2cfcf6db86598ff339965ec1",
+      "bytes": 17766
+    },
+    "cases": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/cases.csv.gz",
+      "sha256": "fc50960d8087cedba81f5eb6938825c134037bd78115c9f8344f02fb2e4b6d15",
+      "bytes": 64901
+    },
+    "field_evidence": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/field_evidence.csv.gz",
+      "sha256": "afbce07b29eba164f12be38d10db5f33c32579dee9f41aaa914d2a35e247f0f9",
+      "bytes": 4557
+    },
+    "source_documents": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/source_documents.csv",
+      "sha256": "065a58d17e65907469194619f4e7f5cf99d591fc4d43a292ba205885e61be968",
+      "bytes": 21083
+    },
+    "screening_exclusions": {
+      "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/screening_exclusions.csv",
+      "sha256": "0d554c9c1b028f4b9be72df6680a1414530dff35b127091df2d9858981a3f4a4",
+      "bytes": 3844
+    }
+  }
+}

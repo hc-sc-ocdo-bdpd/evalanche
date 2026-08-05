@@ -477,7 +477,9 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert metadata["metrics"]["unicode_normalization"] == "NFC"
     assert metadata["metrics"]["json_comparison"] == {
         "unordered_list_paths": [],
+        "set_list_paths": [],
         "numeric_value_paths": [],
+        "strip_parenthetical_paths": [],
         "zero_pad_numeric_string_paths": {},
         "value_aliases": {},
     }

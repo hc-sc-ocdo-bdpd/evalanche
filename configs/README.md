@@ -10,7 +10,8 @@ examples.
 | Pattern | Purpose |
 | --- | --- |
 | `models/*.yaml` | Independently reusable registered model manifests |
-| `benchmarks/*.yaml` | Dataset, prompt, scoring, slice, and runtime benchmark contracts |
+| `benchmarks/*.yaml` | Dataset, prompt, scoring, required capability, input API, slice, and runtime benchmark contracts |
+| `product_monograph/<version>/*.yaml` | Source-locked Product Monograph cohort and label-construction overrides |
 | `candidate_models.yaml` | Small generic multi-model example |
 | `candidate_gpt_*.yaml` | One pinned candidate profile per deployed model |
 | `endpoint_pricing*.yaml` | Versioned public or organization-specific token rates |
@@ -60,6 +61,10 @@ evaluate_hc_dpd_census_all_models.yaml
   semantics change. Compatibility fingerprints reject silent mixing.
 
 See [`docs/benchmark_registry.md`](../docs/benchmark_registry.md) for the
-extensible workflow and
+extensible workflow,
 [`docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md`](../docs/hc_benchmark/HC_DPD_CENSUS_RUNBOOK.md)
-for the historical Health Canada DPD workflow.
+for the historical DPD workflow, and
+[`docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md`](../docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
+for the evidence-window release, and see
+[`docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md`](../docs/hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
+for the draft native-PDF path.

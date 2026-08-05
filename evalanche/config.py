@@ -64,7 +64,7 @@ class RunConfig(BaseModel):
 
 class JudgeConfig(BaseModel):
     model: str
-    temperature: float = 0
+    temperature: float | None = 0
     max_retries: int = 3
     continue_on_error: bool = False
     pricing_id: str | None = None
@@ -144,6 +144,9 @@ class GenerationSettingsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     continue_on_error: bool = True
+    request_api: Literal["chat_completions", "responses"] = (
+        "chat_completions"
+    )
     max_completion_tokens: int | None = None
     max_workers: int = Field(default=1, ge=1, le=64)
     checkpoint_every: int = Field(default=100, ge=1)
@@ -296,7 +299,9 @@ class JsonComparisonSettingsConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     unordered_list_paths: list[str] = Field(default_factory=list)
+    set_list_paths: list[str] = Field(default_factory=list)
     numeric_value_paths: list[str] = Field(default_factory=list)
+    strip_parenthetical_paths: list[str] = Field(default_factory=list)
     zero_pad_numeric_string_paths: dict[str, int] = Field(
         default_factory=dict
     )
@@ -304,15 +309,19 @@ class JsonComparisonSettingsConfig(BaseModel):
         default_factory=dict
     )
 
-    @field_validator("unordered_list_paths")
+    @field_validator(
+        "unordered_list_paths",
+        "set_list_paths",
+        "strip_parenthetical_paths",
+    )
     @classmethod
-    def validate_unordered_list_paths(
+    def validate_unique_list_paths(
         cls,
         values: list[str],
     ) -> list[str]:
         validated = [_validate_json_pointer(value) for value in values]
         if len(validated) != len(set(validated)):
-            raise ValueError("unordered_list_paths must be unique")
+            raise ValueError("JSON comparison paths must be unique")
         return validated
 
     @field_validator("numeric_value_paths")
@@ -350,6 +359,20 @@ class JsonComparisonSettingsConfig(BaseModel):
                 "zero-pad widths must be positive integers"
             )
         return values
+
+    @model_validator(mode="after")
+    def validate_list_comparison_modes(
+        self,
+    ) -> "JsonComparisonSettingsConfig":
+        overlap = set(self.unordered_list_paths) & set(
+            self.set_list_paths
+        )
+        if overlap:
+            raise ValueError(
+                "A JSON list path cannot be both unordered and set-like: "
+                f"{sorted(overlap)}"
+            )
+        return self
 
 
 class DeterministicMetricsSettingsConfig(BaseModel):

@@ -232,6 +232,7 @@ def test_generation_resolves_and_snapshots_explicit_endpoint_price(
     assert metadata["execution"]["status"] == "completed"
     assert metadata["execution"]["expected_output_count"] == 1
     assert metadata["execution"]["completed_output_count"] == 1
+    assert metadata["generation"]["request_api"] == "chat_completions"
     assert len(metadata["hashes"]["endpoint_pricing_sha256"]) == 64
     assert metadata["endpoint_pricing"]["catalog_version"] == (
         "2026-07-01"

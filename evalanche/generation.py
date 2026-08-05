@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
+import re
 from concurrent.futures import (
     FIRST_COMPLETED,
     Future,
@@ -160,10 +162,17 @@ def generate_one(
 
     started_at = perf_counter()
 
-    response = client.complete_text(
-        messages=build_messages(config, row),
-        max_completion_tokens=max_completion_tokens,
-    )
+    if config.generation.request_api == "responses":
+        response = client.complete_response(
+            input_items=build_response_input(config, row),
+            instructions=config.prompt.system,
+            max_output_tokens=max_completion_tokens,
+        )
+    else:
+        response = client.complete_text(
+            messages=build_messages(config, row),
+            max_completion_tokens=max_completion_tokens,
+        )
 
     finished_at = datetime.now(timezone.utc)
     usage = response.get("usage", {})
@@ -243,9 +252,159 @@ def generate_one(
 
 
 GENERATION_CHECKPOINT_SCHEMA_VERSION = "1.0"
-GENERATION_FINGERPRINT_SCHEMA_VERSION = "1.0"
+GENERATION_FINGERPRINT_SCHEMA_VERSION = "1.1"
 _CHECKPOINT_SUFFIX = ".checkpoint.jsonl"
 _PROMPT_TOKEN_OVERHEAD_CEILING = 256
+_MAX_FILE_INPUT_BYTES = 50 * 1024 * 1024
+_MAX_FILE_INPUT_COUNT = 50
+_FILE_INPUT_DETAILS = {"auto", "low", "high"}
+
+
+def _is_missing(value: Any) -> bool:
+    if value is None:
+        return True
+    try:
+        missing = pd.isna(value)
+    except (TypeError, ValueError):
+        return False
+    return isinstance(missing, bool) and missing
+
+
+def load_input_file_descriptors(
+    row: dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Load and verify local file descriptors stored in a case row.
+
+    The CSV stores descriptors, never file bytes. Every descriptor must carry
+    the expected SHA-256 so a changed download cannot silently enter a run.
+    Paths follow the same repository-root-relative convention as other
+    Evalanche config paths.
+    """
+    raw_value = row.get("input_files")
+    if _is_missing(raw_value) or str(raw_value).strip() == "":
+        return []
+
+    try:
+        raw_descriptors = json.loads(str(raw_value))
+    except json.JSONDecodeError as error:
+        raise ValueError("input_files must contain a JSON list") from error
+    if not isinstance(raw_descriptors, list) or not raw_descriptors:
+        raise ValueError("input_files must contain a non-empty JSON list")
+    if len(raw_descriptors) > _MAX_FILE_INPUT_COUNT:
+        raise ValueError("input_files cannot contain more than 50 files")
+
+    descriptors: list[dict[str, Any]] = []
+    total_bytes = 0
+    root = Path.cwd().resolve()
+    for index, raw in enumerate(raw_descriptors):
+        if not isinstance(raw, dict):
+            raise ValueError(
+                f"input_files[{index}] must be a JSON object"
+            )
+        path_value = raw.get("path")
+        expected_sha256 = str(raw.get("sha256", "")).casefold()
+        media_type = str(
+            raw.get("media_type", "application/pdf")
+        ).casefold()
+        raw_detail = raw.get("detail")
+        detail = (
+            None
+            if _is_missing(raw_detail) or str(raw_detail).strip() == ""
+            else str(raw_detail).casefold()
+        )
+        if not isinstance(path_value, str) or not path_value.strip():
+            raise ValueError(f"input_files[{index}].path is required")
+        if not re.fullmatch(r"[0-9a-f]{64}", expected_sha256):
+            raise ValueError(
+                f"input_files[{index}].sha256 must be 64 hex characters"
+            )
+        if media_type != "application/pdf":
+            raise ValueError(
+                "Native file generation currently supports only "
+                "application/pdf"
+            )
+        if detail is not None and detail not in _FILE_INPUT_DETAILS:
+            raise ValueError(
+                f"input_files[{index}].detail must be one of "
+                f"{sorted(_FILE_INPUT_DETAILS)}"
+            )
+
+        path = Path(path_value)
+        if path.is_absolute():
+            raise ValueError(
+                f"input_files[{index}].path must be repository-relative"
+            )
+        path = (root / path).resolve()
+        try:
+            path.relative_to(root)
+        except ValueError as error:
+            raise ValueError(
+                f"input_files[{index}].path resolves outside the "
+                "repository root"
+            ) from error
+        if not path.is_file():
+            raise FileNotFoundError(f"Input file not found: {path}")
+        byte_size = path.stat().st_size
+        total_bytes += byte_size
+        if byte_size > _MAX_FILE_INPUT_BYTES:
+            raise ValueError(f"Input file exceeds 50 MB: {path}")
+        actual_sha256 = sha256_file(path)
+        if actual_sha256 != expected_sha256:
+            raise ValueError(
+                f"Input file SHA-256 mismatch for {path}: expected "
+                f"{expected_sha256}, found {actual_sha256}"
+            )
+        filename = str(raw.get("filename") or path.name).strip()
+        if (
+            not filename
+            or "/" in filename
+            or "\\" in filename
+            or Path(filename).name != filename
+        ):
+            raise ValueError(
+                f"input_files[{index}].filename must be a basename"
+            )
+        descriptor = {
+            "path": path,
+            "filename": filename,
+            "media_type": media_type,
+            "byte_size": byte_size,
+            "sha256": expected_sha256,
+        }
+        if detail is not None:
+            descriptor["detail"] = detail
+        descriptors.append(descriptor)
+
+    if total_bytes > _MAX_FILE_INPUT_BYTES:
+        raise ValueError("Combined input files exceed 50 MB")
+    return descriptors
+
+
+def build_response_input(
+    config: GenerationConfig,
+    row: dict[str, Any],
+) -> list[dict[str, Any]]:
+    content: list[dict[str, Any]] = [
+        {
+            "type": "input_text",
+            "text": render_prompt(config.prompt.template, row),
+        }
+    ]
+    for descriptor in load_input_file_descriptors(row):
+        encoded = base64.b64encode(
+            descriptor["path"].read_bytes()
+        ).decode("ascii")
+        file_item = {
+            "type": "input_file",
+            "filename": descriptor["filename"],
+            "file_data": (
+                f"data:{descriptor['media_type']};base64,{encoded}"
+            ),
+        }
+        if descriptor.get("detail") is not None:
+            file_item["detail"] = descriptor["detail"]
+        content.append(file_item)
+    return [{"role": "user", "content": content}]
 
 
 class _RequestStartLimiter:
@@ -435,6 +594,7 @@ def _generation_fingerprint(
         "schema_version": GENERATION_FINGERPRINT_SCHEMA_VERSION,
         "input_sha256": input_sha256,
         "prompt": config.prompt.model_dump(mode="json"),
+        "request_api": config.generation.request_api,
         "max_completion_tokens": (
             config.generation.max_completion_tokens
         ),
@@ -509,6 +669,13 @@ def _request_cost_ceiling(
 ) -> float | None:
     if endpoint_price is None:
         return None
+
+    # PDF tokenization includes rendered page images. A byte-count estimate
+    # would materially understate retry reserves, so only observed provider
+    # usage is treated as valid for native-file requests.
+    if not _is_missing(row.get("input_files")):
+        if str(row.get("input_files")).strip():
+            return None
 
     completion_limit = (
         candidate.max_completion_tokens
@@ -1365,6 +1532,7 @@ def save_generation_metadata(
             "template": config.prompt.template,
         },
         "generation": {
+            "request_api": config.generation.request_api,
             "continue_on_error": (
                 config.generation.continue_on_error
             ),

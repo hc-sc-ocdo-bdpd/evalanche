@@ -15,4 +15,6 @@ resource_region: Canada East
 capabilities:
   - structured_output
   - bilingual
-
+  - pdf_input
+  - responses_api
+  - vision

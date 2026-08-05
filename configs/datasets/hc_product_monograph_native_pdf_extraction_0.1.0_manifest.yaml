@@ -1,0 +1,224 @@
+schema_version: '1.0'
+release:
+  dataset_id: hc_product_monograph_native_pdf_extraction
+  version: 0.1.0
+  release_type: benchmark
+  title: Health Canada Product Monograph native-PDF extraction
+  description: A draft bilingual benchmark that sends each complete official Product
+    Monograph PDF to the model through a native file-input API.
+  created_at_utc: '2026-08-04T13:30:00Z'
+  status: draft
+  immutable: false
+  license_or_terms: Official Product Monographs are publicly posted by Health Canada.
+    Copyright in individual monographs may remain with their sponsors. The repository
+    stores source locks and descriptors, not source PDF bytes.
+  intended_use: Measure end-to-end full-document retrieval, visual reading, and structured
+    extraction on English and French Product Monographs after the label review gate
+    is complete.
+  limitations:
+  - This release is draft and must not produce a published leaderboard until human
+    label review is complete.
+  - Reference labels originate in the frozen DPD alignment and have automated page-evidence
+    checks, not independent human sign-off.
+  - Native PDF processing and tokenization can differ between providers, so results
+    are comparable only within a declared input contract.
+  - DIN, regulatory schedule, product status, and sponsor are alignment metadata and
+    are not scored.
+  - The 40-product purposive sample is not representative of every marketed drug or
+    document format.
+  languages:
+  - en
+  - fr
+  task_types:
+  - bilingual_structured_extraction
+  - native_pdf_document_understanding
+  - product_monograph_extraction
+sources:
+- source_id: hc_product_monographs
+  name: Health Canada Product Monograph PDF repository
+  source_url: https://pdf.hres.ca/dpd_pm/
+  retrieved_at_utc: '2026-07-30T22:00:00Z'
+  source_modified_date: null
+  license_or_terms: Publicly posted official Product Monographs; individual sponsor
+    copyright may apply.
+  snapshot_notes: Eighty official PDF URLs, SHA-256 values, byte sizes, and page counts
+    are frozen in source_documents.csv.
+- source_id: evalanche_pm_builder
+  name: Evalanche Product Monograph benchmark builder
+  source_url: https://github.com/hc-sc-ocdo-bdpd/evalanche
+  retrieved_at_utc: '2026-07-30T22:00:00Z'
+  source_modified_date: null
+  license_or_terms: Evalanche repository terms.
+  snapshot_notes: Derives full-PDF case descriptors and a human review queue from
+    the frozen evidence-window release.
+files:
+- file_id: pm_native_pdf_cases
+  source_id: evalanche_pm_builder
+  role: benchmark_cases
+  relative_path: data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/cases.csv.gz
+  media_type: application/gzip
+  language: null
+  byte_size: 15496
+  sha256: f1859ec86e26eef4e7bd58dc5f952abff181315a77ffad7e177429d6931d5e74
+  record_count: 80
+  record_count_method: csv_rows
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: pm_native_pdf_products
+  source_id: evalanche_pm_builder
+  role: sampling_membership
+  relative_path: data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/products.csv
+  media_type: text/csv
+  language: null
+  byte_size: 17766
+  sha256: cfa46e067ec94b37a73c711af5e203a4f8cf240a2cfcf6db86598ff339965ec1
+  record_count: 40
+  record_count_method: csv_rows
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: pm_native_pdf_source_documents
+  source_id: evalanche_pm_builder
+  role: source_lock
+  relative_path: data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/source_documents.csv
+  media_type: text/csv
+  language: null
+  byte_size: 21083
+  sha256: 065a58d17e65907469194619f4e7f5cf99d591fc4d43a292ba205885e61be968
+  record_count: 80
+  record_count_method: csv_rows
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: pm_native_pdf_field_evidence
+  source_id: evalanche_pm_builder
+  role: automated_reference_evidence
+  relative_path: data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/field_evidence.csv.gz
+  media_type: application/gzip
+  language: null
+  byte_size: 4557
+  sha256: afbce07b29eba164f12be38d10db5f33c32579dee9f41aaa914d2a35e247f0f9
+  record_count: 390
+  record_count_method: csv_rows
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: pm_native_pdf_label_review
+  source_id: evalanche_pm_builder
+  role: human_label_review_queue
+  relative_path: data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/label_review.csv
+  media_type: text/csv
+  language: null
+  byte_size: 123374
+  sha256: ab09a26bbc5c204abc6ba228c6d6f4a68d8b12633f70b43cdca472b43d94e9a0
+  record_count: 390
+  record_count_method: csv_rows
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+- file_id: pm_native_pdf_build_report
+  source_id: evalanche_pm_builder
+  role: benchmark_build_report
+  relative_path: data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/build_report.json
+  media_type: application/json
+  language: null
+  byte_size: 1631
+  sha256: 1a0b7e5697c9e41eb063d908b58de1c3ae39c47190806b1c2ccf189eea859e54
+  record_count: 1
+  record_count_method: declared
+  page_count: null
+  parser_schema_version: hc_pm/1.0
+  validation_status: passed
+  validation_error_count: 0
+sampling:
+  method: purposive
+  unit: product_family
+  population_description: The same 40 bilingual marketed product families used by
+    the evidence-window diagnostic, with one complete PDF per language.
+  target_count: 40
+  membership_file_id: pm_native_pdf_products
+  member_id_column: product_id
+  seed: 20260730
+  inclusion_criteria:
+  - An exact hash-locked official English PDF is available.
+  - An exact hash-locked official French PDF is available.
+  - The monograph scope aligns with the selected DPD family.
+  - Every scored reference item has automated source-page evidence.
+  exclusion_criteria:
+  - A language PDF is missing or duplicates the other language.
+  - The monograph covers unresolved sibling products or strengths.
+  - The PDF is malformed, image-only, or lacks scored evidence.
+  strata:
+  - single_ingredient
+  - multi_ingredient
+  - multi_variant
+splits:
+- name: development
+  purpose: Prompt development and provider smoke tests.
+  unit: product_family
+  target_count: 30
+  group_key: ingredient_group_id
+  selection_policy: Inherited unchanged from the evidence-window release.
+  member_ids:
+  - hc_dpd_0e64b57edf3df6c4
+  - hc_dpd_1189b6a74cab5ab2
+  - hc_dpd_1bcde8f71d81c99f
+  - hc_dpd_28787c405835368e
+  - hc_dpd_2c2174190b036b5a
+  - hc_dpd_2dcb457e633b3402
+  - hc_dpd_30aba3a7347bf952
+  - hc_dpd_32f64d7617d42b75
+  - hc_dpd_368497cc07261e3e
+  - hc_dpd_467237d19b6080fa
+  - hc_dpd_57f05e10f203066a
+  - hc_dpd_5966e2911f55e6b1
+  - hc_dpd_59866f3bf88da67c
+  - hc_dpd_7c564b021ccc75e5
+  - hc_dpd_83027a6372dd02be
+  - hc_dpd_832be5088084b7fa
+  - hc_dpd_90c34aee86855e30
+  - hc_dpd_9ad870d869b86719
+  - hc_dpd_af71ca70a95d1a2d
+  - hc_dpd_b2ae33ee64e13a77
+  - hc_dpd_b2e29a0786795152
+  - hc_dpd_b35e1ec6cb452259
+  - hc_dpd_b9d6fcfa334ba454
+  - hc_dpd_c8e96c44873b5890
+  - hc_dpd_ce8c2274074c61e1
+  - hc_dpd_d56491f43e6d2377
+  - hc_dpd_d8f5db885f46fa2d
+  - hc_dpd_d98eb0afeeb72237
+  - hc_dpd_dafdf1c71fef5967
+  - hc_dpd_f8e67f7fbd96cbac
+- name: heldout
+  purpose: Final prompt-locked comparison after promotion.
+  unit: product_family
+  target_count: 10
+  group_key: ingredient_group_id
+  selection_policy: Inherited unchanged with no ingredient-group overlap.
+  member_ids:
+  - hc_dpd_2fc21f129a5c9b0a
+  - hc_dpd_3188d041219430c6
+  - hc_dpd_3c7a02c6dfa581f0
+  - hc_dpd_486e43c7e5c72b57
+  - hc_dpd_524f46556d9e7ecb
+  - hc_dpd_57efb40bc22ca21c
+  - hc_dpd_7549c78320e483e3
+  - hc_dpd_771eaf63bd1bf1d7
+  - hc_dpd_853162ea2c353ecb
+  - hc_dpd_e2756ab087d7a22b
+lineage:
+  parent_dataset_version: 0.1.0
+  code_version: 0.3.0
+  transformations:
+  - Reuse the frozen bilingual Product Monograph cohort and source lock.
+  - Replace label-selected text windows with hash-verified complete-PDF input descriptors.
+  - Preserve the existing four-field reference JSON and source evidence as provisional
+    labels.
+  - Create a field-level human review queue required for benchmark promotion.

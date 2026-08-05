@@ -50,3 +50,13 @@ jobs:
           python -m evalanche.cli verify-dataset \
             --manifest configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml \
             --root .
+
+      - name: Verify benchmark registry and Product Monograph releases
+        run: |
+          python -m evalanche.cli registry-validate --root .
+          python -m evalanche.cli verify-dataset \
+            --manifest configs/datasets/hc_product_monograph_structured_extraction_0.1.0_manifest.yaml \
+            --root .
+          python -m evalanche.cli verify-dataset \
+            --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml \
+            --root .

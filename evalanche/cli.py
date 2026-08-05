@@ -7,12 +7,15 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.auto import tqdm
 
-from evalanche.benchmark_runner import run_registered_benchmark
 from evalanche.config import (
     load_config,
     load_evaluation_config,
     load_generation_config,
     load_metrics_config,
+)
+from evalanche.benchmark_runner import (
+    rescore_registered_benchmark,
+    run_registered_benchmark,
 )
 from evalanche.dataset_manifest import (
     save_dataset_verification,
@@ -58,21 +61,31 @@ from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs, preflight_generation
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
-from evalanche.leaderboard import (
-    build_benchmark_index,
-    build_leaderboard,
-)
 from evalanche.metadata import save_run_metadata
 from evalanche.metrics import run_deterministic_metrics
 from evalanche.recommendation import save_recommendation_report
-from evalanche.registry import load_registry, validate_registry
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
     print_summary,
     save_model_summary,
 )
+from evalanche.leaderboard import (
+    build_benchmark_index,
+    build_leaderboard,
+)
+from evalanche.registry import load_registry, validate_registry
 from evalanche.result_bundle import register_result_bundle
+from evalanche.product_monograph import (
+    PM_COHORT_PATH,
+    PM_OVERRIDES_PATH,
+    PM_RAW_DIR,
+    PM_SOURCES_PATH,
+    acquire_product_monographs,
+    build_product_monograph_native_pdf_benchmark,
+    build_product_monograph_benchmark,
+    verify_product_monograph_sources,
+)
 from evalanche.routing import JUDGE
 
 
@@ -705,7 +718,9 @@ def run_build_leaderboard(
                 registry.resolve_benchmark(benchmark_reference)
             ]
         else:
-            raise ValueError("Provide --benchmark or use --all.")
+            raise ValueError(
+                "Provide --benchmark or use --all."
+            )
         results = [
             build_leaderboard(
                 registry=registry,
@@ -769,6 +784,183 @@ def run_benchmark_from_registry(
             f"{result['leaderboard']['html_path']}"
         )
         print("Status: COMPLETE AND REGISTERED")
+    return result
+
+
+def run_rescore_benchmark_from_registry(
+    *,
+    root_path: str,
+    benchmark_reference: str,
+    model_id: str,
+) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        benchmark = registry.resolve_benchmark(benchmark_reference)
+        model = registry.resolve_model(model_id)
+        result = rescore_registered_benchmark(
+            registry=registry,
+            benchmark=benchmark,
+            model=model,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Benchmark rescore failed: {error}")
+        raise SystemExit(1) from None
+
+    plan = result["plan"]
+    print("\nEvalanche benchmark rescore")
+    print(f"Benchmark: {plan['benchmark']}")
+    print(f"Model: {plan['model_id']}")
+    print(f"Cases: {plan['case_count']}")
+    print("Model generation calls: 0")
+    print(f"Run: {result['bundle']['run_id']}")
+    print(
+        "Leaderboard: "
+        f"{result['leaderboard']['html_path']}"
+    )
+    print("Status: RESCORED AND REGISTERED")
+    return result
+
+
+def run_verify_product_monograph_sources(
+    *,
+    root_path: str,
+    sources_path: str,
+    raw_dir: str,
+) -> dict[str, Any]:
+    try:
+        result = verify_product_monograph_sources(
+            root_path=root_path,
+            sources_path=sources_path,
+            raw_dir=raw_dir,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph source verification failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nProduct Monograph source lock")
+    print(f"Documents: {result['documents']}")
+    print(
+        "Languages: "
+        + ", ".join(
+            f"{language}={count}"
+            for language, count in sorted(result["languages"].items())
+        )
+    )
+    print(f"Unique hashes: {result['unique_hashes']}")
+    if not result["valid"]:
+        print("Status: INVALID")
+        for issue in result["issues"]:
+            print(f"- {issue}")
+        raise SystemExit(1)
+    print("Status: VALID")
+    return result
+
+
+def run_acquire_product_monographs(
+    *,
+    root_path: str,
+    sources_path: str,
+    raw_dir: str,
+    timeout: float,
+) -> dict[str, Any]:
+    try:
+        result = acquire_product_monographs(
+            root_path=root_path,
+            sources_path=sources_path,
+            raw_dir=raw_dir,
+            timeout=timeout,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph acquisition failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nProduct Monograph acquisition")
+    print(f"Documents: {result['documents']}")
+    print(f"Downloaded: {result['downloaded']}")
+    print(f"Reused: {result['reused']}")
+    print(f"Output: {result['raw_dir']}")
+    print("Status: VALID")
+    return result
+
+
+def run_build_product_monograph(
+    *,
+    root_path: str,
+    cohort_path: str,
+    overrides_path: str,
+    sources_path: str,
+    raw_dir: str,
+) -> dict[str, Any]:
+    try:
+        result = build_product_monograph_benchmark(
+            root_path=root_path,
+            cohort_path=cohort_path,
+            overrides_path=overrides_path,
+            sources_path=sources_path,
+            raw_dir=raw_dir,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph benchmark build failed: {error}")
+        raise SystemExit(1) from None
+
+    verification = result["verification"]
+    print("\nHealth Canada Product Monograph benchmark")
+    print(
+        f"Dataset: {result['dataset_id']} "
+        f"{result['dataset_version']}"
+    )
+    print(f"Products: {result['product_count']}")
+    print(f"Cases: {result['case_count']}")
+    print(f"Evidence items: {result['evidence_item_count']}")
+    print(f"Output: {result['output_dir']}")
+    print(f"Manifest: {result['manifest_path']}")
+    print(
+        f"Verified files: {verification['files_passed']}/"
+        f"{verification['files_checked']}"
+    )
+    print("Status: VALID")
+    print("Independent human sign-off: NOT CLAIMED")
+    return result
+
+
+def run_build_product_monograph_native_pdf(
+    *,
+    root_path: str,
+    source_cases_path: str,
+    sources_path: str,
+    raw_dir: str,
+) -> dict[str, Any]:
+    try:
+        result = build_product_monograph_native_pdf_benchmark(
+            root_path=root_path,
+            source_cases_path=source_cases_path,
+            sources_path=sources_path,
+            raw_dir=raw_dir,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Native-PDF benchmark build failed: {error}")
+        raise SystemExit(1) from None
+
+    verification = result["verification"]
+    print("\nHealth Canada Product Monograph native-PDF benchmark")
+    print(
+        f"Dataset: {result['dataset_id']} "
+        f"{result['dataset_version']}"
+    )
+    print(f"Products: {result['product_count']}")
+    print(f"Cases: {result['case_count']}")
+    print(
+        "Approved label items: "
+        f"{result['approved_review_item_count']}/"
+        f"{result['review_item_count']}"
+    )
+    print(f"Output: {result['output_dir']}")
+    print(f"Manifest: {result['manifest_path']}")
+    print(
+        f"Verified files: {verification['files_passed']}/"
+        f"{verification['files_checked']}"
+    )
+    print("Status: DRAFT, NOT RANKABLE")
     return result
 
 
@@ -1101,6 +1293,89 @@ def build_parser() -> argparse.ArgumentParser:
         help="Resolve and validate the run without making model calls.",
     )
 
+    rescore_benchmark_parser = subparsers.add_parser(
+        "rescore-benchmark"
+    )
+    rescore_benchmark_parser.add_argument(
+        "--root",
+        default=".",
+        help="Repository root containing the registry.",
+    )
+    rescore_benchmark_parser.add_argument(
+        "--benchmark",
+        required=True,
+        help="Benchmark reference in benchmark_id@version form.",
+    )
+    rescore_benchmark_parser.add_argument("--model", required=True)
+
+    verify_pm_parser = subparsers.add_parser(
+        "verify-product-monograph-sources"
+    )
+    verify_pm_parser.add_argument("--root", default=".")
+    verify_pm_parser.add_argument(
+        "--sources",
+        default=PM_SOURCES_PATH.as_posix(),
+    )
+    verify_pm_parser.add_argument(
+        "--raw-dir",
+        default=PM_RAW_DIR.as_posix(),
+    )
+
+    acquire_pm_parser = subparsers.add_parser(
+        "acquire-product-monographs"
+    )
+    acquire_pm_parser.add_argument("--root", default=".")
+    acquire_pm_parser.add_argument(
+        "--sources",
+        default=PM_SOURCES_PATH.as_posix(),
+    )
+    acquire_pm_parser.add_argument(
+        "--raw-dir",
+        default=PM_RAW_DIR.as_posix(),
+    )
+    acquire_pm_parser.add_argument("--timeout", type=float, default=120.0)
+
+    build_pm_parser = subparsers.add_parser(
+        "build-product-monograph-benchmark"
+    )
+    build_pm_parser.add_argument("--root", default=".")
+    build_pm_parser.add_argument(
+        "--cohort",
+        default=PM_COHORT_PATH.as_posix(),
+    )
+    build_pm_parser.add_argument(
+        "--overrides",
+        default=PM_OVERRIDES_PATH.as_posix(),
+    )
+    build_pm_parser.add_argument(
+        "--sources",
+        default=PM_SOURCES_PATH.as_posix(),
+    )
+    build_pm_parser.add_argument(
+        "--raw-dir",
+        default=PM_RAW_DIR.as_posix(),
+    )
+
+    build_pm_pdf_parser = subparsers.add_parser(
+        "build-product-monograph-native-pdf-benchmark"
+    )
+    build_pm_pdf_parser.add_argument("--root", default=".")
+    build_pm_pdf_parser.add_argument(
+        "--source-cases",
+        default=(
+            "data/hc/benchmarks/product_monograph_structured_extraction/"
+            "0.1.0/cases.csv.gz"
+        ),
+    )
+    build_pm_pdf_parser.add_argument(
+        "--sources",
+        default=PM_SOURCES_PATH.as_posix(),
+    )
+    build_pm_pdf_parser.add_argument(
+        "--raw-dir",
+        default=PM_RAW_DIR.as_posix(),
+    )
+
     return parser
 
 
@@ -1202,6 +1477,40 @@ def main() -> None:
             benchmark_reference=args.benchmark,
             model_id=args.model,
             plan_only=args.plan_only,
+        )
+    elif args.command == "rescore-benchmark":
+        run_rescore_benchmark_from_registry(
+            root_path=args.root,
+            benchmark_reference=args.benchmark,
+            model_id=args.model,
+        )
+    elif args.command == "verify-product-monograph-sources":
+        run_verify_product_monograph_sources(
+            root_path=args.root,
+            sources_path=args.sources,
+            raw_dir=args.raw_dir,
+        )
+    elif args.command == "acquire-product-monographs":
+        run_acquire_product_monographs(
+            root_path=args.root,
+            sources_path=args.sources,
+            raw_dir=args.raw_dir,
+            timeout=args.timeout,
+        )
+    elif args.command == "build-product-monograph-benchmark":
+        run_build_product_monograph(
+            root_path=args.root,
+            cohort_path=args.cohort,
+            overrides_path=args.overrides,
+            sources_path=args.sources,
+            raw_dir=args.raw_dir,
+        )
+    elif args.command == "build-product-monograph-native-pdf-benchmark":
+        run_build_product_monograph_native_pdf(
+            root_path=args.root,
+            source_cases_path=args.source_cases,
+            sources_path=args.sources,
+            raw_dir=args.raw_dir,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")
