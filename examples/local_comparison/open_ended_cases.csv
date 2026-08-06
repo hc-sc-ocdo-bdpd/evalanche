@@ -1,0 +1,3 @@
+case_id,group_id,language,split,risk,input,expected_output,evaluation_type
+replace_judge_001,replace_group_001,en,development,normal,Replace with an open-ended task instruction.,Replace with a human-reviewed reference or evaluation anchor.,judge
+replace_judge_002,replace_group_002,en,heldout,high,Replace with a realistic high-consequence example.,Replace with a human-reviewed reference or evaluation anchor.,judge

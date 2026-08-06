@@ -1,18 +1,20 @@
 # Benchmark registry and generated leaderboards
 
-The registry is the normal Evalanche workflow for adding models, datasets,
-benchmarks, and completed runs. It replaces benchmark-specific assembly code
-and notebooks as the product surface.
+The registry is the normal Evalanche software workflow for adding models,
+datasets, benchmarks, and completed runs. It replaces benchmark-specific
+assembly code and one-off notebooks when a local comparison is needed. The
+handbook and evidence directory remain the repository's primary entry point.
 
 ## Contracts
 
-The registry composes four independent artifacts:
+The registry composes independent artifacts:
 
 | Artifact | Responsibility |
 | --- | --- |
 | Model manifest | Provider route, request settings, version metadata, capabilities, and pricing reference |
+| Access set | Dated confirmation of deployment routes available to the user |
 | Dataset manifest | Source provenance, immutable files, membership, sampling, and splits |
-| Benchmark manifest | Dataset binding, prompt, scoring rules, slices, grouping, and runtime settings |
+| Benchmark manifest | Dataset binding, prompt, scoring rules, slices, grouping, runtime settings, and optional run tiers |
 | Result bundle | Compatibility fingerprint, compact case scores, operational evidence, and source-result hash |
 
 A model can be added without editing a benchmark. A benchmark can be added
@@ -27,6 +29,8 @@ configs/
     <model_id>.yaml
   benchmarks/
     <benchmark_id>_<version>.yaml
+  access_sets/
+    <access_set_id>.yaml
   datasets/
     <dataset release manifest>.yaml
 ```
@@ -62,12 +66,13 @@ observed compatibility hashes.
 
 ## Plan models without calls
 
-Resolve every registered model that declares the required capabilities:
+Resolve every access-confirmed model that declares the required capabilities:
 
 ```bash
 python -m evalanche.cli run-benchmark \
   --benchmark <benchmark_id>@<version> \
   --all-compatible \
+  --access-set configs/access_sets/<access_set_id>.yaml \
   --plan-only
 ```
 
@@ -85,6 +90,10 @@ The plan materializes candidate, generation, and evaluation configurations
 under ignored local run directories. It reports the exact case and model-call
 count. Planning also refuses a model that does not declare every capability
 required by the benchmark.
+
+`--all-compatible` without `--access-set` is rejected. A registered and
+compatible route is not proof that the user can access it. Repeated `--model`
+arguments explicitly confirm access for that command.
 
 ## Run a publishable benchmark
 
@@ -116,15 +125,92 @@ python -m evalanche.cli run-benchmark \
 The command performs generation and evaluation, then writes a generic local
 comparison. It never registers a result, rebuilds a leaderboard, or changes
 the benchmark's status. This is the only execution mode allowed for a draft
-benchmark. `--all-compatible --experiment` and repeated `--model` arguments
-are supported, but review each generated plan and price card first because an
-aggregate multi-model budget preflight is not implemented yet.
+benchmark. `--all-compatible --access-set <path> --experiment` and repeated
+`--model` arguments are supported.
 
-Summarize all completed compatible local runs at any time:
+## Run a cost-aware tier campaign
+
+An optional `tiers` mapping in the benchmark manifest defines cumulative
+cohorts without putting dataset or model names in the engine. A tier declares:
+
+- deterministic `all` or `balanced` sampling;
+- whether the sampling unit is a case or the benchmark grouping key;
+- a cumulative unit count, seed, and arbitrary stratification columns;
+- an inherited parent tier;
+- an observed cost-sample tier or explicit first-run token assumptions;
+- safety and per-request reserve multipliers;
+- optional quality and generation-failure promotion gates.
+
+Inherited tiers are incremental. If smoke has 2 cases, screen has 20
+cumulative cases, and standard has 80, the execution files contain 2, 18, and
+60 cases. Summaries contain 2, 20, and 80. A case and model pair is called at
+most once across the chain.
+
+Preflight every compatible model inside the access set before provider calls:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --tier smoke \
+  --all-compatible \
+  --access-set configs/access_sets/<access_set_id>.yaml \
+  --preflight-only
+```
+
+The preflight materializes the deterministic cohort, checks prerequisites and
+checkpoint state, prices pending calls for every selected model, applies each
+tier's safety multiplier, and prints one aggregate projection. Execute only
+after choosing a campaign limit:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --tier smoke \
+  --all-compatible \
+  --access-set configs/access_sets/<access_set_id>.yaml \
+  --experiment \
+  --max-cost-usd <budget>
+```
+
+The full campaign is blocked before its first call when the aggregate
+projection exceeds the cap. During execution, Evalanche runs models
+sequentially, reserves conservative retry cost before starting work, uses the
+existing case and model checkpoint ledger, and refuses to start more work when
+the remaining local budget is insufficient. One provider call can still cost
+more than its local estimate, so this is a hard local start gate, not a cloud
+billing limit.
+
+After the screen completes, select models through manifest data rather than a
+fixed analysis list:
+
+```bash
+python -m evalanche.cli run-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --tier standard \
+  --promote-from screen \
+  --access-set configs/access_sets/<access_set_id>.yaml \
+  --preflight-only
+```
+
+Repeat with `--experiment --max-cost-usd <budget>` to execute. A cumulative
+tier summary is rebuilt after every model completes. Tier campaigns are local
+and unregistered, including a tier named `standard`.
+
+Summarize completed local runs for access-confirmed candidates:
 
 ```bash
 python -m evalanche.cli summarize-benchmark \
-  --benchmark <benchmark_id>@<version>
+  --benchmark <benchmark_id>@<version> \
+  --access-set configs/access_sets/<access_set_id>.yaml
+```
+
+For a cumulative tier, add:
+
+```bash
+python -m evalanche.cli summarize-benchmark \
+  --benchmark <benchmark_id>@<version> \
+  --tier <tier_name> \
+  --access-set configs/access_sets/<access_set_id>.yaml
 ```
 
 This makes no model calls and writes under:
@@ -136,15 +222,18 @@ results/benchmark_experiments/<benchmark_id>/<version>/
   slice_summary.csv
   field_summary.csv
   case_outcomes.csv
-  experiment.md
-  experiment.json
+  model_comparison.md
+  model_comparison.json
 ```
 
-The command discovers evaluations through compatibility-checked run plans. It
-includes every completed compatible model by default, so adding another model
-does not require changing an analysis file or naming existing models again.
-Use repeated `--model` arguments only when a deliberately narrower view is
-needed.
+Tier summaries use the same files one directory lower, under
+`<version>/<tier_name>/`.
+
+The command discovers evaluations through compatibility-checked run plans and
+then applies the requested access scope. Use `--all-results` to build a
+historical evidence summary of every compatible completion. That report states
+that current access was not confirmed. Use repeated `--model` arguments for an
+explicit one-command candidate scope.
 
 To apply an updated deterministic scorer to the saved model outputs, without
 making generation calls, run:
@@ -238,8 +327,9 @@ recommendation.
 ## Add another model
 
 1. Add one YAML file under `configs/models/`.
-2. Validate the registry.
-3. Plan or run any compatible benchmark by model ID.
+2. Confirm and add the route to the relevant access set.
+3. Validate the registry.
+4. Plan or run any compatible benchmark by model ID.
 
 No benchmark manifest, Python module, notebook, combined-output file, existing
 result, or list of model names needs to change. Re-run `summarize-benchmark`

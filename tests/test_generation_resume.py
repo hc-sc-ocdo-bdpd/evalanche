@@ -15,6 +15,7 @@ from evalanche.config import (
 )
 from evalanche.generation import (
     _candidate_fingerprint_payload,
+    _request_cost_ceiling,
     generate_outputs,
     preflight_generation,
 )
@@ -165,6 +166,32 @@ def test_legacy_candidate_fingerprint_omits_new_null_reasoning_field() -> None:
 
     assert "reasoning_effort" not in payload
     assert payload["temperature"] == 0
+
+
+def test_explicit_request_ceiling_supports_native_file_budget_reserve() -> None:
+    config = GenerationConfig(
+        run=RunConfig(
+            name="native-file",
+            input_path=Path("input.csv"),
+            output_path=Path("output.csv"),
+        ),
+        candidate_models_path=Path("models.yaml"),
+        generation=GenerationSettingsConfig(
+            request_api="responses",
+            request_cost_ceiling_usd=0.25,
+        ),
+    )
+    candidate = generation_module.CandidateModelConfig(
+        name="model_a",
+        model="azure/model-a",
+    )
+
+    assert _request_cost_ceiling(
+        config=config,
+        candidate=candidate,
+        row={"input_files": '[{"path":"document.pdf"}]'},
+        endpoint_price=None,
+    ) == pytest.approx(0.25)
 
 
 def test_interrupted_run_resumes_without_repeating_checkpointed_calls(

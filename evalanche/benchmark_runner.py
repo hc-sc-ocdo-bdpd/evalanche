@@ -6,6 +6,7 @@ from typing import Any
 
 import pandas as pd
 
+from evalanche.benchmark_tiers import materialize_tier_cohort
 from evalanche.config import (
     load_evaluation_config,
     load_generation_config,
@@ -35,11 +36,14 @@ def _paths(
     registry: LoadedRegistry,
     benchmark: BenchmarkManifest,
     model: ModelManifest,
+    tier_name: str | None = None,
 ) -> dict[str, Path]:
     stem = (
         f"{benchmark.benchmark_id}_{benchmark.version}_{model.model_id}"
         .replace(".", "_")
     )
+    if tier_name is not None:
+        stem = f"{stem}_{tier_name}"
     plan_dir = registry.root / "data/generated/registry_plans" / stem
     output_dir = registry.root / "data/generated/registry_runs" / stem
     results_dir = registry.root / "results/registry_runs" / stem
@@ -59,6 +63,11 @@ def build_run_plan(
     registry: LoadedRegistry,
     benchmark: BenchmarkManifest,
     model: ModelManifest,
+    tier_name: str | None = None,
+    cost_preflight_sample_path: str | Path | None = None,
+    maximum_estimated_cost_usd: float | None = None,
+    cost_safety_multiplier: float = 1.0,
+    request_cost_ceiling_usd: float | None = None,
 ) -> dict[str, Any]:
     missing_capabilities = sorted(
         set(benchmark.required_capabilities) - set(model.capabilities)
@@ -69,12 +78,21 @@ def build_run_plan(
             f"capabilities: {missing_capabilities}"
         )
 
+    tier_materialization = None
     cases_path = registry.root / benchmark.dataset.cases_path
+    if tier_name is not None:
+        tier_materialization = materialize_tier_cohort(
+            registry=registry,
+            benchmark=benchmark,
+            tier_name=tier_name,
+        )
+        cases_path = tier_materialization["execution_path"]
     cases = pd.read_csv(cases_path)
     paths = _paths(
         registry=registry,
         benchmark=benchmark,
         model=model,
+        tier_name=tier_name,
     )
     candidate = {
         "models": [
@@ -103,7 +121,7 @@ def build_run_plan(
     generation = {
         "run": {
             "name": f"{benchmark.benchmark_id}_{model.model_id}",
-            "input_path": benchmark.dataset.cases_path.as_posix(),
+            "input_path": cases_path.relative_to(registry.root).as_posix(),
             "output_path": paths["generation_output"]
             .relative_to(registry.root)
             .as_posix(),
@@ -127,6 +145,22 @@ def build_run_plan(
             "resume": benchmark.runtime.resume,
         },
     }
+    if cost_preflight_sample_path is not None:
+        generation["generation"]["cost_preflight_sample_path"] = Path(
+            cost_preflight_sample_path
+        ).as_posix()
+    if maximum_estimated_cost_usd is not None:
+        generation["generation"]["maximum_estimated_cost_usd"] = (
+            maximum_estimated_cost_usd
+        )
+    if cost_safety_multiplier != 1.0:
+        generation["generation"]["cost_safety_multiplier"] = (
+            cost_safety_multiplier
+        )
+    if request_cost_ceiling_usd is not None:
+        generation["generation"]["request_cost_ceiling_usd"] = (
+            request_cost_ceiling_usd
+        )
     generation["prompt"].pop("version")
     if model.pricing_catalog_path is not None:
         generation["endpoint_pricing_path"] = (
@@ -211,6 +245,31 @@ def build_run_plan(
             "evaluation_complete": paths["evaluation_output"].is_file(),
         },
     }
+    if tier_materialization is not None:
+        tier_plan = tier_materialization["plan"]
+        plan["tier"] = {
+            "name": tier_name,
+            "inherits": tier_plan["inherits"],
+            "chain": tier_plan["chain"],
+            "definition_sha256": tier_plan["definition_sha256"],
+            "cumulative_case_count": tier_plan["cumulative"]["cases"],
+            "execution_case_count": tier_plan["execution"]["cases"],
+            "cumulative_case_ids_sha256": tier_plan["cumulative"][
+                "case_ids_sha256"
+            ],
+            "execution_case_ids_sha256": tier_plan["execution"][
+                "case_ids_sha256"
+            ],
+        }
+        plan["paths"]["tier_cohort"] = tier_materialization[
+            "cohort_path"
+        ].relative_to(registry.root).as_posix()
+        plan["paths"]["tier_execution_cases"] = tier_materialization[
+            "execution_path"
+        ].relative_to(registry.root).as_posix()
+        plan["paths"]["tier_plan"] = tier_materialization[
+            "plan_path"
+        ].relative_to(registry.root).as_posix()
     paths["run_plan"].parent.mkdir(parents=True, exist_ok=True)
     paths["run_plan"].write_text(
         json.dumps(plan, indent=2, ensure_ascii=False) + "\n",
@@ -304,6 +363,11 @@ def run_experimental_benchmark(
     registry: LoadedRegistry,
     benchmark: BenchmarkManifest,
     model: ModelManifest,
+    tier_name: str | None = None,
+    cost_preflight_sample_path: str | Path | None = None,
+    maximum_estimated_cost_usd: float | None = None,
+    cost_safety_multiplier: float = 1.0,
+    request_cost_ceiling_usd: float | None = None,
 ) -> dict[str, Any]:
     """Run a local benchmark experiment without registration or publication."""
 
@@ -311,6 +375,11 @@ def run_experimental_benchmark(
         registry=registry,
         benchmark=benchmark,
         model=model,
+        tier_name=tier_name,
+        cost_preflight_sample_path=cost_preflight_sample_path,
+        maximum_estimated_cost_usd=maximum_estimated_cost_usd,
+        cost_safety_multiplier=cost_safety_multiplier,
+        request_cost_ceiling_usd=request_cost_ceiling_usd,
     )
     if benchmark.status == "retired":
         raise ValueError(

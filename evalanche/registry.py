@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import Any, Literal
 
 import yaml
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from evalanche import __version__
 from evalanche.config import (
@@ -189,6 +195,105 @@ class BenchmarkRuntime(RegistryModel):
     resume: bool = True
 
 
+class BenchmarkTierSampling(RegistryModel):
+    """A deterministic cumulative cohort definition."""
+
+    method: Literal["all", "balanced"]
+    unit: Literal["case", "group"] = "group"
+    count: int | None = Field(default=None, ge=1)
+    seed: int = 0
+    stratify_by: list[str] = Field(default_factory=list)
+
+    @field_validator("stratify_by")
+    @classmethod
+    def validate_stratify_by(cls, values: list[str]) -> list[str]:
+        normalized = [_nonblank(value, "stratify_by") for value in values]
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("stratify_by columns must be unique")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_method(self) -> "BenchmarkTierSampling":
+        if self.method == "all" and self.count is not None:
+            raise ValueError("all-tier sampling cannot declare count")
+        if self.method == "balanced" and self.count is None:
+            raise ValueError("balanced-tier sampling requires count")
+        return self
+
+
+class BenchmarkTierCost(RegistryModel):
+    """Auditable assumptions used before a tier makes provider calls."""
+
+    sample_from: str | None = None
+    initial_prompt_tokens: int | None = Field(default=None, ge=0)
+    initial_completion_tokens: int | None = Field(default=None, ge=0)
+    safety_multiplier: float = Field(
+        default=1.25,
+        ge=1.0,
+        allow_inf_nan=False,
+    )
+    request_ceiling_multiplier: float = Field(
+        default=1.5,
+        ge=1.0,
+        allow_inf_nan=False,
+    )
+
+    @field_validator("sample_from")
+    @classmethod
+    def validate_sample_from(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _identifier(value, "sample_from")
+
+    @model_validator(mode="after")
+    def validate_estimate_source(self) -> "BenchmarkTierCost":
+        has_initial = (
+            self.initial_prompt_tokens is not None
+            and self.initial_completion_tokens is not None
+        )
+        if self.sample_from is None and not has_initial:
+            raise ValueError(
+                "tier cost needs sample_from or both initial token estimates"
+            )
+        if (self.initial_prompt_tokens is None) != (
+            self.initial_completion_tokens is None
+        ):
+            raise ValueError(
+                "initial_prompt_tokens and initial_completion_tokens must "
+                "be configured together"
+            )
+        return self
+
+
+class BenchmarkTierPromotion(RegistryModel):
+    minimum_pass_rate: float = Field(default=0.0, ge=0, le=1)
+    maximum_generation_failure_rate: float = Field(
+        default=1.0,
+        ge=0,
+        le=1,
+    )
+
+
+class BenchmarkTier(RegistryModel):
+    description: str
+    inherits: str | None = None
+    sampling: BenchmarkTierSampling
+    cost: BenchmarkTierCost
+    promotion: BenchmarkTierPromotion | None = None
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: str) -> str:
+        return _nonblank(value, "tier description")
+
+    @field_validator("inherits")
+    @classmethod
+    def validate_inherits(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _identifier(value, "inherits")
+
+
 class BenchmarkManifest(RegistryModel):
     schema_version: Literal["1.0"] = REGISTRY_SCHEMA_VERSION
     benchmark_id: str
@@ -204,6 +309,7 @@ class BenchmarkManifest(RegistryModel):
     language_column: str | None = "language"
     required_capabilities: list[str] = Field(default_factory=list)
     runtime: BenchmarkRuntime = Field(default_factory=BenchmarkRuntime)
+    tiers: dict[str, BenchmarkTier] = Field(default_factory=dict)
     limitations: list[str] = Field(default_factory=list)
 
     @field_validator("benchmark_id")
@@ -245,6 +351,59 @@ class BenchmarkManifest(RegistryModel):
         if len(normalized) != len(set(normalized)):
             raise ValueError("required_capabilities must be unique")
         return normalized
+
+    @field_validator("tiers")
+    @classmethod
+    def validate_tier_names(
+        cls,
+        tiers: dict[str, BenchmarkTier],
+    ) -> dict[str, BenchmarkTier]:
+        return {
+            _identifier(name, "tier name"): tier
+            for name, tier in tiers.items()
+        }
+
+    @model_validator(mode="after")
+    def validate_tier_graph(self) -> "BenchmarkManifest":
+        for name, tier in self.tiers.items():
+            if tier.inherits == name:
+                raise ValueError(f"tier {name!r} cannot inherit itself")
+            if tier.inherits is not None and tier.inherits not in self.tiers:
+                raise ValueError(
+                    f"tier {name!r} inherits unknown tier "
+                    f"{tier.inherits!r}"
+                )
+            if (
+                tier.inherits is not None
+                and tier.inherits in self.tiers
+                and tier.sampling.unit
+                != self.tiers[tier.inherits].sampling.unit
+            ):
+                raise ValueError(
+                    f"tier {name!r} must use the same sampling unit as "
+                    f"its parent {tier.inherits!r}"
+                )
+            if (
+                tier.cost.sample_from is not None
+                and tier.cost.sample_from not in self.tiers
+            ):
+                raise ValueError(
+                    f"tier {name!r} uses unknown cost sample tier "
+                    f"{tier.cost.sample_from!r}"
+                )
+
+        for start in self.tiers:
+            seen: set[str] = set()
+            current: str | None = start
+            while current is not None:
+                if current in seen:
+                    raise ValueError(
+                        f"benchmark tiers contain an inheritance cycle at "
+                        f"{current!r}"
+                    )
+                seen.add(current)
+                current = self.tiers[current].inherits
+        return self
 
 
 class LoadedRegistry:
@@ -468,6 +627,40 @@ def validate_registry(
                         f"is missing fields {sorted(missing_fields)}"
                     )
                     break
+
+        if benchmark.tiers:
+            from evalanche.benchmark_tiers import (
+                build_tier_cohort,
+                tier_is_ancestor,
+            )
+
+            for tier_name, tier in benchmark.tiers.items():
+                try:
+                    cohort = build_tier_cohort(
+                        cases=cases,
+                        benchmark=benchmark,
+                        tier_name=tier_name,
+                    )
+                    if cohort.cumulative_cases.empty:
+                        raise ValueError("cumulative cohort is empty")
+                    if cohort.execution_cases.empty:
+                        raise ValueError("execution delta is empty")
+                    if (
+                        tier.cost.sample_from is not None
+                        and not tier_is_ancestor(
+                            benchmark,
+                            ancestor=tier.cost.sample_from,
+                            descendant=tier_name,
+                        )
+                    ):
+                        raise ValueError(
+                            f"cost sample tier {tier.cost.sample_from!r} "
+                            "is not an ancestor"
+                        )
+                except ValueError as error:
+                    issues.append(
+                        f"Benchmark {key}, tier {tier_name}: {error}"
+                    )
 
     return {
         "schema_version": REGISTRY_SCHEMA_VERSION,

@@ -27,12 +27,12 @@ When more than two models are evaluated, Evalanche applies Holm correction to
 the full set of pairwise p-values. This controls the chance of declaring at
 least one false difference across the set of comparisons.
 
-An observed quality rank is not automatically a recommendation. In quality-only
-mode, Evalanche reports a clear leader only when it has a higher pass rate and
-the corrected paired test distinguishes it from every other evaluated model.
-Otherwise, the report says that there is no clear winner yet.
+An observed quality rank is not an automatic selection. Evalanche may call a
+result evidence-supported only when it has a higher pass rate and the corrected
+paired test distinguishes it from every other evaluated model. Even then, the
+comparison report does not choose a model automatically.
 
-An enabled constraint-aware policy can make a separate task-specific decision
+An explicitly enabled policy can make a separate task-specific decision
 using explicit requirements and operational weights. That policy decision is
 not a statistical significance claim. See
 [`model_selection.md`](model_selection.md) for its safeguards and limitations.

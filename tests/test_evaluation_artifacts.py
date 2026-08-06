@@ -7,6 +7,7 @@ from evalanche.config import (
     CriterionConfig,
     EvaluationConfig,
     JudgeConfig,
+    ModelProfileConfig,
     RunConfig,
     ScoringConfig,
     SelectionConfig,
@@ -107,7 +108,7 @@ def test_single_model_report_does_not_claim_comparative_winner(
     )
 
     assert (
-        "Comparative recommendation:** Not available"
+        "Comparison outcome:** Not available"
         in report
     )
     assert "Only `model_a` was evaluated" in report
@@ -139,7 +140,7 @@ def test_small_multiple_model_report_does_not_overclaim_winner(
     )
 
     assert (
-        "Comparative recommendation:** "
+        "Comparison outcome:** "
         "No clear winner yet"
         in report
     )
@@ -199,7 +200,7 @@ def test_report_can_name_evidence_supported_leader(
     )
 
     assert (
-        "Evidence-supported leader:** `model_a`"
+        "Evidence-supported result:** `model_a`"
         in report
     )
     assert (
@@ -253,7 +254,7 @@ def test_report_does_not_treat_judge_error_as_model_failure(
         metadata_path="metadata.json",
     )
 
-    assert "Comparative recommendation:** Not available" in report
+    assert "Comparison outcome:** Not available" in report
     assert "judge failed" in report.lower()
     assert "not counted as candidate-model failures" in report
 
@@ -350,8 +351,13 @@ def test_report_can_apply_constraint_aware_selection(
             latency=0.6,
         ),
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             maximum_p95_latency_seconds=10.0,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
     results = pd.DataFrame(
         [
@@ -405,7 +411,7 @@ def test_report_can_apply_constraint_aware_selection(
         metadata_path="metadata.json",
     )
 
-    assert "Constraint-aware recommendation:** `model_b`" in report
+    assert "Policy-selected model:** `model_b`" in report
     assert "## Model Selection Policy" in report
     assert "weighted decision score" in report
     assert "| model_b | eligible | 1 |" in report
@@ -473,7 +479,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
         )
     )
 
-    assert metadata["schema_version"] == "0.9"
+    assert metadata["schema_version"] == "1.0"
     assert metadata["metrics"]["unicode_normalization"] == "NFC"
     assert metadata["metrics"]["json_comparison"] == {
         "unordered_list_paths": [],
@@ -490,16 +496,16 @@ def test_run_evaluation_writes_reproducible_artifacts(
     assert metadata["results"]["judge_rows"] == 0
     assert metadata["results"]["judge_errors"] == 0
     assert (
-        metadata["recommendation"]["comparative"]
+        metadata["decision"]["comparative"]
         is True
     )
-    assert metadata["recommendation"][
+    assert metadata["decision"][
         "top_ranked_models"
     ] == ["model_a"]
-    assert metadata["recommendation"]["status"] == (
+    assert metadata["decision"]["status"] == (
         "insufficient_evidence"
     )
-    assert metadata["recommendation"][
+    assert metadata["decision"][
         "recommended_model"
     ] is None
     assert metadata["statistics"][
@@ -535,7 +541,7 @@ def test_run_evaluation_writes_reproducible_artifacts(
         encoding="utf-8"
     )
     assert (
-        "Comparative recommendation:** "
+        "Comparison outcome:** "
         "No clear winner yet"
         in report
     )
@@ -550,8 +556,13 @@ def test_run_evaluation_records_enabled_selection_policy(
     config.selection = SelectionConfig(
         enabled=True,
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             minimum_pass_rate=0.5,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
     pd.DataFrame(
         [
@@ -596,11 +607,11 @@ def test_run_evaluation_records_enabled_selection_policy(
 
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
     assert metadata["selection_policy"]["enabled"] is True
-    assert metadata["recommendation"]["status"] == "sole_eligible_model"
-    assert metadata["recommendation"]["recommended_model"] == "model_a"
+    assert metadata["decision"]["status"] == "sole_eligible_model"
+    assert metadata["decision"]["recommended_model"] == "model_a"
 
     report = report_path.read_text(encoding="utf-8")
-    assert "Constraint-aware recommendation:** `model_a`" in report
+    assert "Policy-selected model:** `model_a`" in report
 
 
 def test_evaluation_metadata_preserves_observed_generation_price_snapshot(

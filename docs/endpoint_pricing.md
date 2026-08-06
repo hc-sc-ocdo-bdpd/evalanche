@@ -143,6 +143,7 @@ generation:
   cost_preflight_sample_path: data/generated/pilot_outputs.csv
   maximum_estimated_cost_usd: 30.00
   cost_safety_multiplier: 1.50
+  request_cost_ceiling_usd: 0.25
 ```
 
 The preflight prices the pilot's observed input and output tokens with the
@@ -155,12 +156,25 @@ The runner includes completed configured cost, a worst-case reserve for
 in-flight requests, and a reserve for failed attempts whose token usage was not
 returned. Completed work is checkpointed before a budget stop.
 
+`request_cost_ceiling_usd` is an explicit local reserve used before each
+request. It is especially important for native PDFs because their provider
+tokenization includes extracted text and rendered page images, so file bytes
+cannot provide a defensible ceiling. Tier campaigns calculate this reserve
+from observed earlier-tier token use, or from the benchmark's explicit
+first-run token assumptions, and then apply the declared reserve multiplier.
+
+Multi-model tier preflight sums every selected model after its safety
+multiplier and blocks the campaign before the first call when the aggregate
+exceeds `--max-cost-usd`. During execution, completed work consumes the shared
+campaign budget before another model can start.
+
 Run a preflight without model calls:
 
 ```bash
 python -m evalanche.cli generate --config configs/generate.yaml --preflight-only
 ```
 
-This remains a local estimate, not a provider billing hard stop. Provider calls
-without usage evidence, negotiated rates, taxes, foreign exchange, and
-non-token charges can differ from the configured calculation.
+This remains a local estimate and start gate, not a provider billing hard
+stop. A request may cost more than its reserve, and provider calls without
+usage evidence, negotiated rates, taxes, foreign exchange, and non-token
+charges can differ from the configured calculation.

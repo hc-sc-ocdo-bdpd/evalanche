@@ -110,6 +110,11 @@ The candidate model or models are declared in
 `configs/candidate_models.yaml`. With the current default, set the Azure
 deployment through `CANDIDATE_MODEL` if needed.
 
+This flat demo configuration predates access-set files. It calls every route
+listed in `configs/candidate_models.yaml`, so remove every route you have not
+explicitly confirmed before running it. For a new comparison, prefer the
+[access-confirmed registry workflow](../local_comparison.md).
+
 Generate outputs:
 
 ```bash
@@ -140,7 +145,7 @@ results/evaluate_hc_dpd_census_demo_results_model_summary.csv
 results/evaluate_hc_dpd_census_demo_results_pairwise_comparisons.csv
 results/evaluate_hc_dpd_census_demo_results_model_selection.csv
 results/evaluate_hc_dpd_census_demo_results_run_metadata.json
-results/evaluate_hc_dpd_census_demo_results_recommendation.md
+results/evaluate_hc_dpd_census_demo_results_comparison.md
 ```
 
 The demo comparison profile follows the benchmark specification:
@@ -161,10 +166,10 @@ comparison, and `json_canonical_match`, the authoritative benchmark
 comparison. It also records `json_missing_fields`, `json_extra_fields`, and
 `json_mismatched_fields`.
 
-With one candidate, the artifacts report that no comparative recommendation
-is available. With two or more candidates in `configs/candidate_models.yaml`,
-every model receives the same 24 case IDs and the paired comparison and
-selection logic becomes applicable.
+With one candidate, the artifacts report that no comparison is available.
+With two or more candidates in `configs/candidate_models.yaml`, every model
+receives the same 24 case IDs and the paired comparison becomes applicable.
+Any policy selection remains opt-in and requires explicit access evidence.
 
 ## Interpret the demo result
 
@@ -234,9 +239,8 @@ Product Monograph PDFs or extracted monograph text. The release therefore
 does not measure long-document Product Monograph extraction, and it is not a
 general recommendation about which model Health Canada should use.
 
-The immediate analytical milestone is manual validation and error analysis of
-the completed four-model census result. The next data milestone remains
-acquisition, freezing, text extraction, and manual DPD alignment of matched
-English and French Product Monographs. That work creates the realistic
-document benchmark. The DPD census remains useful as a complete extraction
-coverage and operational stress suite.
+The DPD census remains useful as a complete extraction coverage and
+operational stress suite. Completed analysis and the later Product Monograph
+benchmarks are summarized on the [Health Canada case-study landing
+page](../case_studies/health_canada.md). They support the repository's main
+model-selection guide rather than defining its primary user journey.

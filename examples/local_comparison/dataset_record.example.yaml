@@ -1,0 +1,12 @@
+schema_version: "1.0"
+dataset_id: replace_local_task_cases
+version: 0.1.0
+title: Replace with a short dataset title
+description: >-
+  Replace with the case source, sampling method, intended use, and important
+  limitations. For a published release, use the full manifest contract in
+  configs/datasets/generic_example_manifest.yaml.
+created_on: 2026-08-06
+status: development
+limitations:
+  - The bundled rows are placeholders and must not be used as evidence.

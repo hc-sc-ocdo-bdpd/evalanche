@@ -8,6 +8,8 @@ import pandas as pd
 from rich.console import Console
 from rich.table import Table
 
+from evalanche.access_sets import historical_results_scope
+from evalanche.benchmark_tiers import materialize_tier_cohort, tier_chain
 from evalanche.evaluation import build_evaluation_summary
 from evalanche.registry import (
     BenchmarkManifest,
@@ -18,7 +20,7 @@ from evalanche.registry import (
 from evalanche.statistics import build_pairwise_comparisons
 
 
-EXPERIMENT_SCHEMA_VERSION = "1.0"
+EXPERIMENT_SCHEMA_VERSION = "1.1"
 DEFAULT_PLANS_ROOT = Path("data/generated/registry_plans")
 DEFAULT_OUTPUT_ROOT = Path("results/benchmark_experiments")
 
@@ -56,6 +58,7 @@ def _load_result(
     path: Path,
     model_id: str,
     expected_case_ids: set[str],
+    allow_case_superset: bool = False,
 ) -> pd.DataFrame:
     results = pd.read_csv(path)
     required = {
@@ -78,7 +81,12 @@ def _load_result(
             f"found {sorted(observed_models)}"
         )
     observed_case_ids = set(results["case_id"].astype(str))
-    if observed_case_ids != expected_case_ids:
+    membership_valid = (
+        expected_case_ids.issubset(observed_case_ids)
+        if allow_case_superset
+        else observed_case_ids == expected_case_ids
+    )
+    if not membership_valid:
         missing_cases = len(expected_case_ids - observed_case_ids)
         extra_cases = len(observed_case_ids - expected_case_ids)
         raise ValueError(
@@ -90,6 +98,8 @@ def _load_result(
 
     results = results.copy()
     results["case_id"] = results["case_id"].astype(str)
+    if allow_case_superset:
+        results = results[results["case_id"].isin(expected_case_ids)].copy()
     results["model_name"] = results["model_name"].astype(str)
     results["final_passed"] = results["final_passed"].map(
         _parse_optional_bool
@@ -107,6 +117,7 @@ def discover_benchmark_evaluations(
     benchmark: BenchmarkManifest,
     model_ids: list[str] | None = None,
     plans_root: str | Path = DEFAULT_PLANS_ROOT,
+    tier_name: str | None = None,
 ) -> tuple[pd.DataFrame, list[dict[str, Any]]]:
     """Load every completed compatible local evaluation discovered by plan."""
 
@@ -130,7 +141,17 @@ def discover_benchmark_evaluations(
                 f"{incompatible}"
             )
 
-    cases = pd.read_csv(registry.root / benchmark.dataset.cases_path)
+    if tier_name is None:
+        cases = pd.read_csv(registry.root / benchmark.dataset.cases_path)
+        allowed_tiers: set[str] = set()
+    else:
+        materialized = materialize_tier_cohort(
+            registry=registry,
+            benchmark=benchmark,
+            tier_name=tier_name,
+        )
+        cases = materialized["cohort"].cumulative_cases
+        allowed_tiers = set(tier_chain(benchmark, tier_name))
     expected_case_ids = set(cases["case_id"].astype(str))
     expected_reference = _benchmark_reference(benchmark)
     expected_fingerprint = benchmark_fingerprint(
@@ -139,9 +160,7 @@ def discover_benchmark_evaluations(
     )["compatibility_sha256"]
     plan_dir = _inside_root(registry.root, plans_root)
 
-    frames: list[pd.DataFrame] = []
-    sources: list[dict[str, Any]] = []
-    seen_models: set[str] = set()
+    candidates: dict[str, list[dict[str, Any]]] = {}
     if plan_dir.is_dir():
         plan_paths = sorted(plan_dir.rglob("run_plan.json"))
     else:
@@ -160,10 +179,16 @@ def discover_benchmark_evaluations(
             continue
         if selected is not None and model_id not in selected:
             continue
-        if model_id in seen_models:
-            raise ValueError(
-                f"Multiple compatible run plans were found for {model_id!r}"
-            )
+        plan_tier_payload = plan.get("tier")
+        plan_tier = (
+            str(plan_tier_payload.get("name"))
+            if isinstance(plan_tier_payload, dict)
+            else None
+        )
+        if tier_name is None and plan_tier is not None:
+            continue
+        if tier_name is not None and plan_tier not in allowed_tiers | {None}:
+            continue
 
         evaluation_value = plan.get("paths", {}).get("evaluation_output")
         if not evaluation_value:
@@ -174,27 +199,101 @@ def discover_benchmark_evaluations(
         if not evaluation_path.is_file():
             continue
 
-        frame = _load_result(
-            path=evaluation_path,
-            model_id=model_id,
-            expected_case_ids=expected_case_ids,
-        )
-        frames.append(frame)
-        sources.append(
+        candidates.setdefault(model_id, []).append(
             {
-                "model_id": model_id,
-                "run_plan_path": plan_path.relative_to(
-                    registry.root
-                ).as_posix(),
-                "run_plan_sha256": sha256_file(plan_path),
-                "evaluation_path": evaluation_path.relative_to(
-                    registry.root
-                ).as_posix(),
-                "evaluation_sha256": sha256_file(evaluation_path),
-                "rows": int(len(frame)),
+                "plan": plan,
+                "plan_tier": plan_tier,
+                "plan_path": plan_path,
+                "evaluation_path": evaluation_path,
             }
         )
+
+    frames: list[pd.DataFrame] = []
+    sources: list[dict[str, Any]] = []
+    seen_models: set[str] = set()
+    for model_id, model_candidates in sorted(candidates.items()):
+        legacy = [
+            candidate
+            for candidate in model_candidates
+            if candidate["plan_tier"] is None
+        ]
+        if len(legacy) > 1:
+            raise ValueError(
+                f"Multiple compatible legacy run plans found for {model_id!r}"
+            )
+
+        used: list[tuple[pd.DataFrame, dict[str, Any]]] = []
+        if legacy:
+            candidate = legacy[0]
+            frame = _load_result(
+                path=candidate["evaluation_path"],
+                model_id=model_id,
+                expected_case_ids=expected_case_ids,
+                allow_case_superset=tier_name is not None,
+            )
+            used = [(frame, candidate)]
+        else:
+            for candidate in model_candidates:
+                plan_tier = candidate["plan_tier"]
+                if plan_tier is None:
+                    continue
+                materialized = materialize_tier_cohort(
+                    registry=registry,
+                    benchmark=benchmark,
+                    tier_name=plan_tier,
+                )
+                fragment_ids = set(
+                    materialized["cohort"].execution_cases[
+                        "case_id"
+                    ].astype(str)
+                )
+                frame = _load_result(
+                    path=candidate["evaluation_path"],
+                    model_id=model_id,
+                    expected_case_ids=fragment_ids,
+                )
+                used.append((frame, candidate))
+
+        if not used:
+            continue
+        combined_model = pd.concat(
+            [frame for frame, _ in used],
+            ignore_index=True,
+        )
+        if combined_model["case_id"].duplicated().any():
+            raise ValueError(
+                f"Tier evaluation fragments overlap for model {model_id!r}"
+            )
+        observed_ids = set(combined_model["case_id"].astype(str))
+        if observed_ids != expected_case_ids:
+            if selected is not None:
+                missing_count = len(expected_case_ids - observed_ids)
+                raise ValueError(
+                    f"Completed tier evaluation for {model_id!r} is "
+                    f"missing {missing_count} case(s)"
+                )
+            continue
+
+        frames.append(combined_model)
         seen_models.add(model_id)
+        for frame, candidate in used:
+            plan_path = candidate["plan_path"]
+            evaluation_path = candidate["evaluation_path"]
+            sources.append(
+                {
+                    "model_id": model_id,
+                    "tier": candidate["plan_tier"] or "legacy_full",
+                    "run_plan_path": plan_path.relative_to(
+                        registry.root
+                    ).as_posix(),
+                    "run_plan_sha256": sha256_file(plan_path),
+                    "evaluation_path": evaluation_path.relative_to(
+                        registry.root
+                    ).as_posix(),
+                    "evaluation_sha256": sha256_file(evaluation_path),
+                    "rows": int(len(frame)),
+                }
+            )
 
     if selected is not None:
         missing_results = sorted(selected - seen_models)
@@ -209,7 +308,10 @@ def discover_benchmark_evaluations(
         )
 
     combined = pd.concat(frames, ignore_index=True)
-    return combined, sorted(sources, key=lambda item: item["model_id"])
+    return combined, sorted(
+        sources,
+        key=lambda item: (item["model_id"], item["tier"]),
+    )
 
 
 def build_slice_summary(
@@ -492,6 +594,26 @@ def _records(frame: pd.DataFrame) -> list[dict[str, Any]]:
     return json.loads(frame.to_json(orient="records"))
 
 
+def _access_scope_markdown(scope: dict[str, Any]) -> str:
+    if scope.get("access_confirmed") is True:
+        if scope.get("mode") == "access_set":
+            return (
+                "Candidate access was confirmed through access set "
+                f"`{scope.get('access_set_id')}`, dated "
+                f"`{scope.get('confirmed_on')}`. Only compatible models "
+                "from that set were included."
+            )
+        return (
+            "Candidate access was confirmed for this comparison because "
+            "each model was explicitly selected for the command."
+        )
+    return (
+        "Current candidate access was not confirmed. This is a historical "
+        "evidence summary of completed compatible results, not a decision "
+        "shortlist."
+    )
+
+
 def build_benchmark_experiment_summary(
     *,
     registry: LoadedRegistry,
@@ -499,16 +621,26 @@ def build_benchmark_experiment_summary(
     model_ids: list[str] | None = None,
     plans_root: str | Path = DEFAULT_PLANS_ROOT,
     output_dir: str | Path | None = None,
+    tier_name: str | None = None,
+    access_scope: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build an unregistered local comparison from all discovered runs."""
+    """Build an unregistered comparison from compatible completed runs."""
 
     results, sources = discover_benchmark_evaluations(
         registry=registry,
         benchmark=benchmark,
         model_ids=model_ids,
         plans_root=plans_root,
+        tier_name=tier_name,
     )
-    cases = pd.read_csv(registry.root / benchmark.dataset.cases_path)
+    if tier_name is None:
+        cases = pd.read_csv(registry.root / benchmark.dataset.cases_path)
+    else:
+        cases = materialize_tier_cohort(
+            registry=registry,
+            benchmark=benchmark,
+            tier_name=tier_name,
+        )["cohort"].cumulative_cases
     summary = build_evaluation_summary(results)
     comparisons = build_pairwise_comparisons(results)
     slices = build_slice_summary(
@@ -522,15 +654,20 @@ def build_benchmark_experiment_summary(
         cases=cases,
         benchmark=benchmark,
     )
+    scope = dict(access_scope or historical_results_scope())
+    scope["evaluated_model_ids"] = summary["model_name"].astype(str).tolist()
 
-    destination = (
-        registry.root
-        / DEFAULT_OUTPUT_ROOT
-        / benchmark.benchmark_id
-        / benchmark.version
-        if output_dir is None
-        else _inside_root(registry.root, output_dir)
-    )
+    if output_dir is None:
+        destination = (
+            registry.root
+            / DEFAULT_OUTPUT_ROOT
+            / benchmark.benchmark_id
+            / benchmark.version
+        )
+        if tier_name is not None:
+            destination = destination / tier_name
+    else:
+        destination = _inside_root(registry.root, output_dir)
     destination.mkdir(parents=True, exist_ok=True)
     paths = {
         "model_summary": destination / "model_summary.csv",
@@ -538,8 +675,8 @@ def build_benchmark_experiment_summary(
         "slices": destination / "slice_summary.csv",
         "fields": destination / "field_summary.csv",
         "case_outcomes": destination / "case_outcomes.csv",
-        "report": destination / "experiment.md",
-        "metadata": destination / "experiment.json",
+        "report": destination / "model_comparison.md",
+        "metadata": destination / "model_comparison.json",
     }
     for frame, key in [
         (summary, "model_summary"),
@@ -553,16 +690,22 @@ def build_benchmark_experiment_summary(
     publishable = benchmark.status in {"ready", "frozen"}
     report = "\n".join(
         [
-            f"# {benchmark.title}, local experiment summary",
+            f"# {benchmark.title}, model comparison",
             "",
             f"Benchmark: `{_benchmark_reference(benchmark)}`",
             "",
             f"Benchmark status: `{benchmark.status}`",
             "",
+            f"Tier: `{tier_name or 'full'}`",
+            "",
             (
                 "This is a local, unregistered comparison. It does not "
                 "alter a published leaderboard."
             ),
+            "",
+            "## Candidate access boundary",
+            "",
+            _access_scope_markdown(scope),
             "",
             _markdown_table(summary),
             "",
@@ -574,9 +717,9 @@ def build_benchmark_experiment_summary(
             "",
             (
                 "Observed order is descriptive, not a universal model rank. "
-                "All rows were discovered from compatible run plans. Adding "
-                "another completed compatible model evaluation and rerunning "
-                "this command automatically rebuilds every table."
+                "Rows come from compatibility-checked run plans within the "
+                "recorded scope. Rerunning the summary rebuilds every table "
+                "without changing previous provider outputs."
             ),
             "",
             (
@@ -606,9 +749,11 @@ def build_benchmark_experiment_summary(
             "status": benchmark.status,
             "compatibility": benchmark_fingerprint(registry, benchmark),
         },
+        "tier": tier_name,
         "comparison_status": (
             "local_unregistered" if publishable else "draft_experimental"
         ),
+        "access_scope": scope,
         "models": summary["model_name"].astype(str).tolist(),
         "model_count": int(len(summary)),
         "case_count_per_model": int(summary["cases"].min()),
@@ -630,12 +775,18 @@ def build_benchmark_experiment_summary(
         "sources": sources,
         "paths": paths,
         "comparison_status": metadata["comparison_status"],
+        "tier": tier_name,
+        "access_scope": scope,
     }
 
 
 def print_benchmark_experiment_summary(result: dict[str, Any]) -> None:
     summary = result["summary"]
-    table = Table(title="Local Benchmark Experiment")
+    tier_name = result.get("tier")
+    title = "Local Benchmark Experiment"
+    if tier_name is not None:
+        title = f"Local Benchmark Experiment, {tier_name} tier"
+    table = Table(title=title)
     table.add_column("Observed")
     table.add_column("Model")
     table.add_column("Passed")
@@ -663,3 +814,10 @@ def print_benchmark_experiment_summary(result: dict[str, Any]) -> None:
             _format_float(row["generation_p95_seconds"], 2),
         )
     console.print(table)
+    scope = result.get("access_scope", {})
+    if scope.get("access_confirmed") is True:
+        console.print("Candidate access: confirmed for this comparison")
+    else:
+        console.print(
+            "Candidate access: not confirmed, historical evidence only"
+        )

@@ -44,7 +44,7 @@ def _markdown_table(df: pd.DataFrame) -> str:
     return "\n".join([header, separator] + rows)
 
 
-def build_recommendation_report(
+def build_comparison_report(
     *,
     config: EvalConfig,
     results: pd.DataFrame,
@@ -69,31 +69,34 @@ def build_recommendation_report(
 
     if len(winners) == 1:
         winner = winners.iloc[0]
-        recommendation = str(winner["model_name"])
+        observed_leader = str(winner["model_name"])
 
-        recommendation_text = (
-            f"**Recommended model:** `{recommendation}`\n\n"
-            f"`{recommendation}` is the top-ranked model for this evaluation run. "
-            f"It had the highest average weighted score "
+        outcome_text = (
+            f"**Highest observed score:** `{observed_leader}`\n\n"
+            f"`{observed_leader}` had the highest average weighted score "
             f"({_format_decimal(winner['average_weighted_score'])}) "
-            f"and a pass rate of {_format_percent(winner['pass_rate'])}."
+            "in this evaluation run "
+            f"and a pass rate of {_format_percent(winner['pass_rate'])}. "
+            "This comparison does not select a model automatically."
         )
     else:
         winner_names = [str(name) for name in winners["model_name"].tolist()]
-        recommendation = ", ".join(f"`{name}`" for name in winner_names)
-
-        recommendation_text = (
-            f"**Recommended models:** {recommendation}\n\n"
-            f"These models are tied for the top rank in this evaluation run. "
-            f"Use secondary considerations such as cost, latency, deployment constraints, "
-            f"or manual review of failure cases to choose between them."
+        observed_leaders = ", ".join(
+            f"`{name}`" for name in winner_names
         )
 
-    report = f"""# Evalanche Model Recommendation
+        outcome_text = (
+            f"**Highest observed scores:** {observed_leaders}\n\n"
+            "These models are tied for the top rank in this evaluation run. "
+            "Use access, hard requirements, cost, latency, reliability, and "
+            "manual review of failure cases to interpret the tradeoff."
+        )
 
-## Recommendation
+    report = f"""# Evalanche Model Comparison
 
-{recommendation_text}
+## Observed outcome
+
+{outcome_text}
 
 ## Evaluation Scope
 
@@ -111,13 +114,17 @@ def build_recommendation_report(
 
 ## Interpretation
 
-This recommendation is task-grounded. It should be read as:
+This comparison is task-grounded. It should be read as:
 
-> Based on this dataset, rubric, judge model, and configuration, the recommended model is the strongest option among the models evaluated.
+> These are the observed results for this dataset, rubric, judge model, and configuration.
 
 It should not be read as:
 
-> This is the best model in general.
+> The highest observed score is the best model in general or the right model for every user.
+
+Only models the user has confirmed they can access should enter a decision
+shortlist. A single selection requires an explicit decision policy that also
+accounts for hard constraints and operational evidence.
 
 ## Evidence Files
 
@@ -127,10 +134,10 @@ It should not be read as:
 
 ## Caveats
 
-- This recommendation is limited to the evaluated task, dataset, rubric, and judge model.
+- This comparison is limited to the evaluated task, dataset, rubric, and judge model.
 - LLM-as-judge scores are evaluation signals, not objective truth.
 - For high-stakes use cases, automated judge results should be calibrated against human or expert review.
-- If the test set is small or unrepresentative, the recommendation should be treated as preliminary.
+- If the test set is small or unrepresentative, the comparison should be treated as preliminary.
 - Cost, latency, privacy, deployment availability, bilingual performance, and operational constraints should be considered before production use.
 """
 
@@ -138,16 +145,16 @@ It should not be read as:
 
 
 def _build_empty_report(*, config: EvalConfig) -> str:
-    return f"""# Evalanche Model Recommendation
+    return f"""# Evalanche Model Comparison
 
-No recommendation could be generated because no model summary was available.
+No comparison could be generated because no model summary was available.
 
 Run name: `{config.run.name}`
 Task: `{config.task.name}`
 """
 
 
-def save_recommendation_report(
+def save_comparison_report(
     *,
     config: EvalConfig,
     results: pd.DataFrame,
@@ -156,18 +163,24 @@ def save_recommendation_report(
     metadata_path: str | Path,
 ) -> Path:
     case_results_path = Path(case_results_path)
-    recommendation_path = case_results_path.with_name(
-        case_results_path.stem + "_recommendation.md"
+    comparison_path = case_results_path.with_name(
+        case_results_path.stem + "_comparison.md"
     )
 
-    report = build_recommendation_report(
+    report = build_comparison_report(
         config=config,
         results=results,
         model_summary_path=model_summary_path,
         metadata_path=metadata_path,
     )
 
-    recommendation_path.parent.mkdir(parents=True, exist_ok=True)
-    recommendation_path.write_text(report, encoding="utf-8")
+    comparison_path.parent.mkdir(parents=True, exist_ok=True)
+    comparison_path.write_text(report, encoding="utf-8")
 
-    return recommendation_path
+    return comparison_path
+
+
+# Backward-compatible Python aliases. New artifacts and CLI messages use
+# comparison language and never select a model automatically.
+build_recommendation_report = build_comparison_report
+save_recommendation_report = save_comparison_report

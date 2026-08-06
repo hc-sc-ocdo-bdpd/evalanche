@@ -7,6 +7,11 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.auto import tqdm
 
+from evalanche.access_sets import (
+    explicit_model_scope,
+    historical_results_scope,
+    resolve_access_set,
+)
 from evalanche.config import (
     load_config,
     load_evaluation_config,
@@ -18,6 +23,12 @@ from evalanche.benchmark_runner import (
     run_experimental_benchmark,
     run_registered_benchmark,
 )
+from evalanche.benchmark_campaign import (
+    build_tier_campaign_preflight,
+    execute_tier_campaign,
+    select_models_for_promotion,
+)
+from evalanche.benchmark_tiers import materialize_tier_cohort, tier_is_ancestor
 from evalanche.benchmark_experiment import (
     build_benchmark_experiment_summary,
     print_benchmark_experiment_summary,
@@ -68,7 +79,7 @@ from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
 from evalanche.metadata import save_run_metadata
 from evalanche.metrics import run_deterministic_metrics
-from evalanche.recommendation import save_recommendation_report
+from evalanche.recommendation import save_comparison_report
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
@@ -138,7 +149,11 @@ def run_generate(
         )
         print(
             "Configured limit: "
-            f"${preflight['maximum_estimated_cost_usd']:.2f} USD"
+            + (
+                f"${preflight['maximum_estimated_cost_usd']:.2f} USD"
+                if preflight["maximum_estimated_cost_usd"] is not None
+                else "not set"
+            )
         )
         print("Status: READY")
         print("No model calls were made.")
@@ -243,7 +258,7 @@ def run_judge(config_path: str) -> None:
         model_summary_path=summary_path,
     )
 
-    recommendation_path = save_recommendation_report(
+    comparison_report_path = save_comparison_report(
         config=config,
         results=results,
         case_results_path=config.run.output_path,
@@ -264,7 +279,7 @@ def run_judge(config_path: str) -> None:
     print(f"\nSaved case results to: {config.run.output_path}")
     print(f"Saved model summary to: {summary_path}")
     print(f"Saved run metadata to: {metadata_path}")
-    print(f"Saved recommendation report to: {recommendation_path}")
+    print(f"Saved comparison report to: {comparison_report_path}")
 
 
 def run_combined_evaluation(config_path: str) -> None:
@@ -296,7 +311,7 @@ def run_combined_evaluation(config_path: str) -> None:
         f"{selection_path}"
     )
     print(f"Saved combined run metadata to: {metadata_path}")
-    print(f"Saved combined recommendation to: {report_path}")
+    print(f"Saved combined comparison to: {report_path}")
 
 
 def run_verify_dataset(
@@ -661,6 +676,18 @@ def run_registry_validate(*, root_path: str) -> dict[str, Any]:
     try:
         registry = load_registry(root_path)
         result = validate_registry(registry)
+        access_paths = sorted(
+            (registry.root / "configs/access_sets").glob("*.yaml")
+        )
+        access_issues: list[str] = []
+        for path in access_paths:
+            try:
+                resolve_access_set(registry=registry, path=path)
+            except (OSError, ValueError) as error:
+                access_issues.append(f"Access set {path.name}: {error}")
+        result["access_sets"] = len(access_paths)
+        result["issues"].extend(access_issues)
+        result["valid"] = not result["issues"]
     except (OSError, ValueError) as error:
         print(f"Registry validation failed: {error}")
         raise SystemExit(1) from None
@@ -668,6 +695,7 @@ def run_registry_validate(*, root_path: str) -> dict[str, Any]:
     print("\nEvalanche registry")
     print(f"Models: {result['models']}")
     print(f"Benchmarks: {result['benchmarks']}")
+    print(f"Access sets: {result['access_sets']}")
     if not result["valid"]:
         print("Status: INVALID")
         for issue in result["issues"]:
@@ -754,6 +782,225 @@ def run_build_leaderboard(
     return results
 
 
+def _resolve_access_confirmed_models(
+    *,
+    registry: Any,
+    benchmark: Any,
+    model_ids: list[str] | None,
+    all_compatible: bool,
+    access_set_path: str | None,
+) -> tuple[list[str], dict[str, Any]]:
+    explicit_ids = list(dict.fromkeys(model_ids or []))
+    if all_compatible:
+        if access_set_path is None:
+            raise ValueError(
+                "--all-compatible requires --access-set. Compatibility "
+                "does not prove that a model is available to the user."
+            )
+        resolution = resolve_access_set(
+            registry=registry,
+            path=access_set_path,
+            benchmark=benchmark,
+        )
+        selected = resolution["compatible_model_ids"]
+        scope = dict(resolution["scope"])
+        scope["excluded_incompatible"] = resolution[
+            "incompatible_models"
+        ]
+        return selected, scope
+
+    if not explicit_ids:
+        raise ValueError("No models were explicitly selected")
+    if access_set_path is None:
+        return explicit_ids, explicit_model_scope(explicit_ids)
+
+    resolution = resolve_access_set(
+        registry=registry,
+        path=access_set_path,
+        benchmark=benchmark,
+    )
+    outside = sorted(
+        set(explicit_ids) - set(resolution["access_set"].model_ids)
+    )
+    if outside:
+        raise ValueError(
+            "Explicitly selected models are not in the access set: "
+            + ", ".join(outside)
+        )
+    scope = dict(resolution["scope"])
+    scope["selected_model_ids"] = explicit_ids
+    return explicit_ids, scope
+
+
+def run_tier_campaign_from_registry(
+    *,
+    root_path: str,
+    benchmark_reference: str,
+    tier_name: str,
+    model_ids: list[str] | None,
+    all_compatible: bool,
+    promote_from: str | None,
+    plan_only: bool,
+    preflight_only: bool,
+    experiment: bool,
+    maximum_cost_usd: float | None,
+    access_set_path: str | None,
+) -> dict[str, Any]:
+    try:
+        registry = load_registry(root_path)
+        benchmark = registry.resolve_benchmark(benchmark_reference)
+        promotion = None
+        access_scope: dict[str, Any]
+        if promote_from is not None:
+            if not tier_is_ancestor(
+                benchmark,
+                ancestor=promote_from,
+                descendant=tier_name,
+            ):
+                raise ValueError(
+                    f"Promotion tier {promote_from!r} is not an ancestor "
+                    f"of {tier_name!r}"
+                )
+            if access_set_path is None:
+                raise ValueError(
+                    "--promote-from requires --access-set so only "
+                    "access-confirmed models can be promoted."
+                )
+            resolution = resolve_access_set(
+                registry=registry,
+                path=access_set_path,
+                benchmark=benchmark,
+            )
+            candidate_ids = resolution["compatible_model_ids"]
+            access_scope = dict(resolution["scope"])
+            access_scope["excluded_incompatible"] = resolution[
+                "incompatible_models"
+            ]
+            promotion = select_models_for_promotion(
+                registry=registry,
+                benchmark=benchmark,
+                source_tier=promote_from,
+                model_ids=candidate_ids,
+                access_scope=access_scope,
+            )
+            selected_ids = promotion["selected_model_ids"]
+        else:
+            selected_ids, access_scope = _resolve_access_confirmed_models(
+                registry=registry,
+                benchmark=benchmark,
+                model_ids=model_ids,
+                all_compatible=all_compatible,
+                access_set_path=access_set_path,
+            )
+        if not selected_ids:
+            raise ValueError("No models qualify for this tier campaign")
+        preflight = build_tier_campaign_preflight(
+            registry=registry,
+            benchmark=benchmark,
+            tier_name=tier_name,
+            model_ids=selected_ids,
+            maximum_cost_usd=maximum_cost_usd,
+            access_scope=access_scope,
+        )
+        materialized = materialize_tier_cohort(
+            registry=registry,
+            benchmark=benchmark,
+            tier_name=tier_name,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Benchmark tier preflight failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nEvalanche tier campaign")
+    print(f"Campaign: {preflight['campaign_id']}")
+    print(f"Benchmark: {benchmark_reference}")
+    print(f"Tier: {tier_name}")
+    print(
+        "Cumulative cases: "
+        f"{materialized['plan']['cumulative']['cases']}"
+    )
+    print(
+        "New tier cases: "
+        f"{materialized['plan']['execution']['cases']}"
+    )
+    if promotion is not None:
+        print(f"Promotion source: {promote_from}")
+    print("\nModel cost preflight")
+    for row in preflight["rows"]:
+        print(
+            f"- {row['model_id']}: {row['pending_requests']} pending call(s), "
+            f"${float(row['projected_budgeted_total_usd']):.4f} USD "
+            f"budgeted, {row['cost_sample_source']}"
+        )
+    print(
+        "Aggregate budgeted projection: "
+        f"${preflight['projected_budgeted_total_usd']:.4f} USD"
+    )
+    print(
+        "Campaign limit: "
+        + (
+            f"${maximum_cost_usd:.4f} USD"
+            if maximum_cost_usd is not None
+            else "not set"
+        )
+    )
+    print(f"Campaign plan: {preflight['paths']['campaign']}")
+
+    if preflight["within_budget"] is False:
+        print("Status: BLOCKED BY AGGREGATE BUDGET")
+        print("No model calls were made.")
+        raise SystemExit(2)
+    if plan_only or preflight_only:
+        print("Status: PREFLIGHT READY")
+        print("No model calls were made.")
+        return {"preflight": preflight, "execution": None}
+    if preflight["pending_models"] == 0:
+        summary = build_benchmark_experiment_summary(
+            registry=registry,
+            benchmark=benchmark,
+            model_ids=selected_ids,
+            tier_name=tier_name,
+            access_scope=access_scope,
+        )
+        print_benchmark_experiment_summary(summary)
+        print("Status: TIER ALREADY COMPLETE")
+        print("No model calls were made.")
+        return {"preflight": preflight, "execution": None}
+    if not experiment:
+        print(
+            "Tier campaigns are local comparisons. Add --experiment to "
+            "execute without publishing a leaderboard."
+        )
+        raise SystemExit(1)
+    if maximum_cost_usd is None:
+        print(
+            "Tier execution requires --max-cost-usd. Run --preflight-only "
+            "first to choose the cap."
+        )
+        raise SystemExit(1)
+
+    try:
+        execution = execute_tier_campaign(
+            registry=registry,
+            preflight=preflight,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Benchmark tier campaign stopped safely: {error}")
+        raise SystemExit(2) from None
+    print("\nTier campaign complete")
+    print(
+        "Models completed now: "
+        + (", ".join(execution["completed_models"]) or "none")
+    )
+    print(
+        "Observed budgeted cost: "
+        f"${execution['observed_budgeted_cost_usd']:.4f} USD"
+    )
+    print(f"Campaign record: {execution['paths']['campaign']}")
+    print("Status: LOCAL EXPERIMENT COMPLETE, NOT REGISTERED")
+    return {"preflight": preflight, "execution": execution}
+
+
 def run_benchmark_from_registry(
     *,
     root_path: str,
@@ -762,20 +1009,42 @@ def run_benchmark_from_registry(
     all_compatible: bool,
     plan_only: bool,
     experiment: bool,
+    tier_name: str | None = None,
+    promote_from: str | None = None,
+    preflight_only: bool = False,
+    maximum_cost_usd: float | None = None,
+    access_set_path: str | None = None,
 ) -> dict[str, Any]:
+    if tier_name is not None:
+        return run_tier_campaign_from_registry(
+            root_path=root_path,
+            benchmark_reference=benchmark_reference,
+            tier_name=tier_name,
+            model_ids=model_ids,
+            all_compatible=all_compatible,
+            promote_from=promote_from,
+            plan_only=plan_only,
+            preflight_only=preflight_only,
+            experiment=experiment,
+            maximum_cost_usd=maximum_cost_usd,
+            access_set_path=access_set_path,
+        )
+    if promote_from is not None or preflight_only or maximum_cost_usd is not None:
+        print(
+            "--promote-from, --preflight-only, and --max-cost-usd require "
+            "--tier."
+        )
+        raise SystemExit(1)
     try:
         registry = load_registry(root_path)
         benchmark = registry.resolve_benchmark(benchmark_reference)
         required_capabilities = set(benchmark.required_capabilities)
-        compatible_ids = sorted(
-            model_id
-            for model_id, model in registry.models.items()
-            if required_capabilities.issubset(model.capabilities)
-        )
-        selected_ids = (
-            compatible_ids
-            if all_compatible
-            else list(dict.fromkeys(model_ids or []))
+        selected_ids, access_scope = _resolve_access_confirmed_models(
+            registry=registry,
+            benchmark=benchmark,
+            model_ids=model_ids,
+            all_compatible=all_compatible,
+            access_set_path=access_set_path,
         )
         if not selected_ids:
             raise ValueError("No compatible models were selected.")
@@ -841,6 +1110,8 @@ def run_benchmark_from_registry(
             experiment_summary = build_benchmark_experiment_summary(
                 registry=registry,
                 benchmark=benchmark,
+                model_ids=selected_ids,
+                access_scope=access_scope,
             )
         except (OSError, ValueError) as error:
             print(f"Experiment summary failed: {error}")
@@ -863,15 +1134,46 @@ def run_summarize_benchmark(
     benchmark_reference: str,
     model_ids: list[str] | None,
     output_dir: str | None,
+    tier_name: str | None = None,
+    access_set_path: str | None = None,
+    all_results: bool = False,
 ) -> dict[str, Any]:
     try:
         registry = load_registry(root_path)
         benchmark = registry.resolve_benchmark(benchmark_reference)
+        if all_results:
+            selected_ids = None
+            access_scope = historical_results_scope()
+        elif access_set_path is not None:
+            resolution = resolve_access_set(
+                registry=registry,
+                path=access_set_path,
+                benchmark=benchmark,
+            )
+            selected_ids = resolution["compatible_model_ids"]
+            access_scope = dict(resolution["scope"])
+            access_scope["excluded_incompatible"] = resolution[
+                "incompatible_models"
+            ]
+            if not selected_ids:
+                raise ValueError(
+                    "No access-confirmed models in the access set satisfy "
+                    "the benchmark capabilities."
+                )
+        elif model_ids:
+            selected_ids = list(dict.fromkeys(model_ids))
+            access_scope = explicit_model_scope(selected_ids)
+        else:
+            raise ValueError(
+                "Choose --model, --access-set, or --all-results."
+            )
         result = build_benchmark_experiment_summary(
             registry=registry,
             benchmark=benchmark,
-            model_ids=model_ids,
+            model_ids=selected_ids,
             output_dir=output_dir,
+            tier_name=tier_name,
+            access_scope=access_scope,
         )
     except (OSError, ValueError) as error:
         print(f"Benchmark summary failed: {error}")
@@ -883,6 +1185,8 @@ def run_summarize_benchmark(
         + ", ".join(result["summary"]["model_name"].astype(str))
     )
     print(f"Status: {result['comparison_status'].upper()}")
+    if tier_name is not None:
+        print(f"Tier: {tier_name}")
     print(f"Report: {result['paths']['report']}")
     print("No model calls were made.")
     return result
@@ -1444,15 +1748,39 @@ def build_parser() -> argparse.ArgumentParser:
         dest="models",
         help=(
             "Registered model ID. Repeat to run multiple models in one "
-            "command."
+            "command. Each ID is an explicit access confirmation for this "
+            "run."
         ),
     )
     run_model_group.add_argument(
         "--all-compatible",
         action="store_true",
         help=(
-            "Use every registered model that declares the benchmark's "
-            "required capabilities."
+            "Use every compatible model in --access-set. The access set is "
+            "required because compatibility does not prove availability."
+        ),
+    )
+    run_model_group.add_argument(
+        "--promote-from",
+        metavar="TIER",
+        help=(
+            "Select every completed model that passes the named tier's "
+            "manifest-defined promotion gates. Requires --tier and "
+            "--access-set."
+        ),
+    )
+    run_benchmark_parser.add_argument(
+        "--access-set",
+        help=(
+            "YAML file confirming which registered deployment routes are "
+            "available. Required with --all-compatible or --promote-from."
+        ),
+    )
+    run_benchmark_parser.add_argument(
+        "--tier",
+        help=(
+            "Run a manifest-defined cumulative tier. Tier execution is "
+            "incremental and remains a local experiment."
         ),
     )
     execution_group = run_benchmark_parser.add_mutually_exclusive_group()
@@ -1469,6 +1797,22 @@ def build_parser() -> argparse.ArgumentParser:
             "This is the only execution mode allowed for a draft benchmark."
         ),
     )
+    execution_group.add_argument(
+        "--preflight-only",
+        action="store_true",
+        help=(
+            "Materialize the tier, inspect resume state, and estimate the "
+            "aggregate cost without making model calls."
+        ),
+    )
+    run_benchmark_parser.add_argument(
+        "--max-cost-usd",
+        type=float,
+        help=(
+            "Maximum budgeted USD for all selected models in this tier. "
+            "Required for tier execution."
+        ),
+    )
 
     summarize_parser = subparsers.add_parser("summarize-benchmark")
     summarize_parser.add_argument(
@@ -1481,13 +1825,30 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Benchmark reference in benchmark_id@version form.",
     )
-    summarize_parser.add_argument(
+    summarize_scope_group = summarize_parser.add_mutually_exclusive_group(
+        required=True
+    )
+    summarize_scope_group.add_argument(
         "--model",
         action="append",
         dest="models",
         help=(
-            "Limit the summary to this model. Repeat for more models. "
-            "The default discovers every completed compatible evaluation."
+            "Include this access-confirmed model. Repeat for more models."
+        ),
+    )
+    summarize_scope_group.add_argument(
+        "--access-set",
+        help=(
+            "Include compatible completed results for the deployments in "
+            "this access set."
+        ),
+    )
+    summarize_scope_group.add_argument(
+        "--all-results",
+        action="store_true",
+        help=(
+            "Discover every compatible completed result as historical "
+            "evidence without asserting current model access."
         ),
     )
     summarize_parser.add_argument(
@@ -1495,6 +1856,12 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Optional repository-relative output directory. The default is "
             "under ignored results/benchmark_experiments/."
+        ),
+    )
+    summarize_parser.add_argument(
+        "--tier",
+        help=(
+            "Summarize the cumulative cohort for this manifest-defined tier."
         ),
     )
 
@@ -1703,6 +2070,11 @@ def main() -> None:
             all_compatible=args.all_compatible,
             plan_only=args.plan_only,
             experiment=args.experiment,
+            tier_name=args.tier,
+            promote_from=args.promote_from,
+            preflight_only=args.preflight_only,
+            maximum_cost_usd=args.max_cost_usd,
+            access_set_path=args.access_set,
         )
     elif args.command == "summarize-benchmark":
         run_summarize_benchmark(
@@ -1710,6 +2082,9 @@ def main() -> None:
             benchmark_reference=args.benchmark,
             model_ids=args.models,
             output_dir=args.output_dir,
+            tier_name=args.tier,
+            access_set_path=args.access_set,
+            all_results=args.all_results,
         )
     elif args.command == "rescore-benchmark":
         run_rescore_benchmark_from_registry(

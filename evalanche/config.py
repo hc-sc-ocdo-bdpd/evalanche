@@ -162,6 +162,11 @@ class GenerationSettingsConfig(BaseModel):
         gt=0,
         allow_inf_nan=False,
     )
+    request_cost_ceiling_usd: float | None = Field(
+        default=None,
+        gt=0,
+        allow_inf_nan=False,
+    )
     cost_safety_multiplier: float = Field(
         default=1.0,
         ge=1.0,
@@ -181,9 +186,10 @@ class GenerationSettingsConfig(BaseModel):
         if (
             self.maximum_estimated_cost_usd is None
             and self.cost_safety_multiplier != 1.0
+            and self.cost_preflight_sample_path is None
         ):
             raise ValueError(
-                "maximum_estimated_cost_usd is required when "
+                "cost_preflight_sample_path is required when "
                 "cost_safety_multiplier is greater than 1"
             )
         return self
@@ -477,7 +483,7 @@ class ModelProfileConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     name: str
-    available: bool = True
+    available: bool | None = None
     capabilities: list[str] = Field(default_factory=list)
 
     @field_validator("name")

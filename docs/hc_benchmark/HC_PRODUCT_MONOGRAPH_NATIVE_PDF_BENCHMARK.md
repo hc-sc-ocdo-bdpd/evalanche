@@ -154,26 +154,65 @@ docker compose run --rm evalanche python -m evalanche.cli build-product-monograp
 docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml --root .
 ```
 
-Validate model compatibility and inspect every compatible 80-call plan without
-provider calls:
+The benchmark defines three cumulative, deterministic tiers:
+
+| Tier | Cumulative PDFs | New calls after its parent | Purpose |
+| --- | ---: | ---: | --- |
+| smoke | 2, one bilingual pair | 2 | Verify PDF transport, parsing, token use, price evidence, and resume |
+| screen | 20, ten bilingual pairs | 18 | Eliminate models that should not consume the full pilot budget |
+| standard | 80, forty bilingual pairs | 60 | Complete the current pilot for promoted models |
+
+The selector keeps English and French product pairs together and balances the
+declared split, extraction stratum, and document-complexity columns. Membership
+is deterministic from the benchmark manifest. A model that advances through
+all tiers uses exactly 80 calls.
+
+Before any model has observations, smoke uses an explicit conservative
+assumption of 150,000 input tokens and 900 completion tokens per PDF, then a
+2.0 safety multiplier. Screen and standard reprice their pending calls from
+the selected model's observed earlier-tier token use, with the manifest token
+assumption retained only as a fallback. The output is a budget estimate and a
+local request-start gate, not a reconciled Azure invoice limit.
+
+Inspect every compatible smoke run in your confirmed access set and its
+aggregate cost without provider calls:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --all-compatible --plan-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --tier smoke --all-compatible --access-set configs/access_sets/my_available_models.yaml --preflight-only
 ```
 
-Run any selected registered model as a local experiment:
+Set a cap above the printed projection, then execute. This remains a local,
+unregistered experiment:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --model <model_id> --experiment
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --tier smoke --all-compatible --access-set configs/access_sets/my_available_models.yaml --experiment --max-cost-usd <budget>
 ```
 
-This is allowed while the benchmark is draft, but it does not register the
-result or create a leaderboard. To combine every completed compatible local
-evaluation, including results generated before the experiment command was
-added, run:
+Then preflight and execute the cumulative screen tier. It reuses smoke as its
+cost sample and calls only the 18 new PDFs per model:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --tier screen --all-compatible --access-set configs/access_sets/my_available_models.yaml --preflight-only
+```
+
+After screen, preflight every model that passes the manifest's generic
+promotion gates, currently at least 50 percent strict pass and no more than 5
+percent generation failures:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --tier standard --promote-from screen --access-set configs/access_sets/my_available_models.yaml --preflight-only
+```
+
+Repeat the screen or standard command with
+`--experiment --max-cost-usd <budget>` to execute it. Rerunning the same tier
+resumes its checkpoint ledger and does not repeat completed case and model
+pairs.
+
+To combine every completed compatible standard evaluation, including the four
+complete 80-PDF runs generated before tiers existed, run:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 --tier standard --all-results
 ```
 
 The summary discovers model IDs from compatible run plans. It includes a new
@@ -181,6 +220,10 @@ model automatically after that model completes the benchmark. Its terminal and
 file outputs include quality, cost, cost per request, cost coverage, tokens,
 latency, language and split slices, field accuracy, case outcomes, and every
 model pair. It makes no model calls.
+
+Earlier complete 80-case plans are treated as legacy standard completions.
+They are subset safely for smoke or screen summaries and are never rerun only
+to fit the newer tier layout.
 
 Normal execution without `--experiment` remains rejected while the benchmark
 is draft. This prevents provisional labels from creating a
@@ -206,7 +249,7 @@ After promotion, run any selected model or all compatible models and let the
 registered workflow score, bundle, and rebuild the leaderboard:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark <promoted_benchmark_id>@<version> --all-compatible
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark <promoted_benchmark_id>@<version> --all-compatible --access-set configs/access_sets/my_available_models.yaml
 ```
 
 ## Comparison policy

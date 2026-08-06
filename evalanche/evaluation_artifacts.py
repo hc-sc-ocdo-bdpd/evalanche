@@ -338,8 +338,8 @@ def _selection_policy_markdown(config: EvaluationConfig) -> str:
     selection = config.selection
     if not selection.enabled:
         return (
-            "_Constraint-aware selection is disabled. The result uses the "
-            "quality-only statistical recommendation._"
+            "_The optional decision policy is disabled. The report presents "
+            "comparison evidence without selecting a model._"
         )
 
     constraints = selection.constraints
@@ -364,7 +364,8 @@ def _selection_policy_markdown(config: EvaluationConfig) -> str:
 
     return "\n".join(
         [
-            "Hard requirements are applied before weighted scoring. A model "
+            "This optional policy was explicitly enabled. Hard requirements "
+            "are applied before weighted scoring. A model "
             "with missing required evidence remains unknown rather than "
             "passing or failing the requirement.",
             "",
@@ -408,7 +409,7 @@ def _selection_markdown(selection: pd.DataFrame) -> str:
         "Generation failure rate",
         "Available",
         "Capabilities",
-        "Recommended",
+        "Selected by policy",
         "Reasons",
     ]
     rows = [
@@ -501,13 +502,13 @@ def _quality_recommendation_text(
 ) -> str:
     if summary.empty:
         return (
-            "**Comparative recommendation:** Not available. "
+            "**Comparison outcome:** Not available. "
             "No model results were produced."
         )
 
     if details["status"] == "incomplete_evaluation":
         return (
-            "**Comparative recommendation:** Not available.\n\n"
+            "**Comparison outcome:** Not available.\n\n"
             f"{details['unscored_cases']} model result(s) could not be "
             "scored because the judge failed. Those rows were kept as "
             "operational failures and were not counted as candidate-model "
@@ -518,7 +519,7 @@ def _quality_recommendation_text(
     if len(summary) == 1:
         model = summary.iloc[0]
         return (
-            "**Comparative recommendation:** Not available.\n\n"
+            "**Comparison outcome:** Not available.\n\n"
             f"Only `{model['model_name']}` was evaluated. It "
             f"passed {model['passed_cases']} of "
             f"{model['cases']} cases "
@@ -536,7 +537,7 @@ def _quality_recommendation_text(
             for name in details["top_ranked_models"]
         )
         return (
-            "**Comparative recommendation:** "
+            "**Comparison outcome:** "
             "No clear winner yet.\n\n"
             f"The top observed pass rate was tied by {names}. "
             "These models are tied on the primary ranking "
@@ -556,7 +557,7 @@ def _quality_recommendation_text(
             for name in details["not_distinguished_from"]
         )
         return (
-            "**Comparative recommendation:** "
+            "**Comparison outcome:** "
             "No clear winner yet.\n\n"
             f"`{observed_leader}` had the highest observed "
             f"result, passing {leader['passed_cases']} of "
@@ -570,16 +571,15 @@ def _quality_recommendation_text(
         )
 
     return (
-        f"**Evidence-supported leader:** "
+        f"**Evidence-supported result:** "
         f"`{observed_leader}`\n\n"
         f"It passed {leader['passed_cases']} of "
         f"{leader['cases']} cases "
         f"({_format_percent(leader['pass_rate'])}) and "
         "clearly outperformed each other evaluated model in "
-        "the paired pass/fail comparisons. This supports "
-        "choosing it for this tested task, subject to the "
-        "operational constraints below; it is not the best "
-        "model in general."
+        "the paired pass/fail comparisons. This is strong task-specific "
+        "evidence, but it does not select a model automatically. Access, "
+        "hard requirements, and operational tradeoffs still apply."
     )
 
 
@@ -627,7 +627,7 @@ def _constraint_recommendation_text(
             else "not assessed"
         )
         return (
-            "**Constraint-aware recommendation:** Not available.\n\n"
+            "**Policy decision:** Not available.\n\n"
             f"Only `{model_name}` was evaluated. Its policy status was "
             f"`{policy_status}`, but at least two candidate models are "
             "required for a comparative selection."
@@ -636,7 +636,7 @@ def _constraint_recommendation_text(
     if status == "insufficient_operational_data":
         unknown = decision["unknown_models"]
         return (
-            "**Constraint-aware recommendation:** Not available.\n\n"
+            "**Policy decision:** Not available.\n\n"
             "Required evidence is missing for one or more candidates: "
             f"{_selection_reasons(selection, unknown)}. Missing evidence "
             "is not treated as a passed requirement."
@@ -645,7 +645,7 @@ def _constraint_recommendation_text(
     if status == "no_eligible_models":
         ineligible = decision["ineligible_models"]
         return (
-            "**Constraint-aware recommendation:** No eligible model.\n\n"
+            "**Policy decision:** No eligible model.\n\n"
             "Every evaluated candidate failed at least one configured "
             f"requirement: {_selection_reasons(selection, ineligible)}."
         )
@@ -655,14 +655,14 @@ def _constraint_recommendation_text(
             f"`{name}`" for name in decision["top_ranked_models"]
         )
         return (
-            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            "**Policy decision:** No clear selection.\n\n"
             f"{names} tied on the configured weighted decision score."
         )
 
     if status == "insufficient_policy_margin":
         leader = decision["top_ranked_models"][0]
         return (
-            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            "**Policy decision:** No clear selection.\n\n"
             f"`{leader}` had the highest decision score, but its margin "
             f"of {decision['score_margin']:.3f} was below the configured "
             f"minimum of {config.selection.minimum_score_margin:.3f}."
@@ -671,7 +671,7 @@ def _constraint_recommendation_text(
     if status == "insufficient_quality_evidence":
         leader = decision["top_ranked_models"][0]
         return (
-            "**Constraint-aware recommendation:** No clear winner yet.\n\n"
+            "**Policy decision:** No clear selection.\n\n"
             f"`{leader}` had the highest quality-only decision score, but "
             "the corrected paired evidence did not clearly distinguish it "
             "from every other eligible model."
@@ -698,10 +698,10 @@ def _constraint_recommendation_text(
         )
 
     return (
-        f"**Constraint-aware recommendation:** `{recommended}`\n\n"
+        f"**Policy-selected model:** `{recommended}`\n\n"
         f"Its configured decision score was {score:.3f}. {explanation} "
-        "This is a task-specific policy result, not a claim that it is the "
-        "best model in general."
+        "This is an opt-in, task-specific policy result over explicitly "
+        "profiled candidates, not a claim that it is best in general."
     )
 
 
@@ -756,9 +756,9 @@ def build_evaluation_report(
         source_counts.get("judge_error", 0)
     )
 
-    return f"""# Evalanche Combined Evaluation Report
+    return f"""# Evalanche Model Comparison
 
-## Result
+## Comparison outcome
 
 {_recommendation_text(config, summary, comparisons, selection)}
 
@@ -828,7 +828,7 @@ used as a fallback. Otherwise the cost remains unknown.
 - Exact and JSON cases use deterministic evaluation as the authoritative result.
 - Open-ended judge cases use the configured LLM judge.
 - Generation errors receive a score of zero and are not sent to the judge.
-- Judge errors remain unscored and prevent a comparative recommendation.
+- Judge errors remain unscored and prevent a complete comparative conclusion.
 - JSON partial-field scores are diagnostic; only a full match after the
   configured deterministic canonicalization passes.
 
@@ -879,7 +879,7 @@ def save_evaluation_report(
     case_results_path = Path(case_results_path)
     report_path = case_results_path.with_name(
         case_results_path.stem
-        + "_recommendation.md"
+        + "_comparison.md"
     )
 
     report = build_evaluation_report(
@@ -920,7 +920,7 @@ def build_evaluation_metadata(
     source_counts = results[
         "evaluation_source"
     ].value_counts()
-    recommendation = build_recommendation_decision(
+    decision = build_recommendation_decision(
         summary,
         comparisons,
         selection,
@@ -945,7 +945,7 @@ def build_evaluation_metadata(
     )
 
     return {
-        "schema_version": "0.9",
+        "schema_version": "1.0",
         "created_at_utc": datetime.now(
             timezone.utc
         ).isoformat(),
@@ -970,7 +970,7 @@ def build_evaluation_metadata(
                 comparison_path
             ),
             "model_selection_path": str(selection_path),
-            "recommendation_path": str(report_path),
+            "comparison_report_path": str(report_path),
             "endpoint_pricing_path": (
                 str(config.endpoint_pricing_path)
                 if config.endpoint_pricing_path is not None
@@ -998,7 +998,7 @@ def build_evaluation_metadata(
             "model_selection_sha256": sha256_file(
                 selection_path
             ),
-            "recommendation_sha256": sha256_file(
+            "comparison_report_sha256": sha256_file(
                 report_path
             ),
             "endpoint_pricing_sha256": pricing_snapshot[
@@ -1109,7 +1109,7 @@ def build_evaluation_metadata(
             ),
             "scope": "case_sampling_only",
         },
-        "recommendation": {
+        "decision": {
             "comparative": (
                 int(
                     summary[
@@ -1118,7 +1118,7 @@ def build_evaluation_metadata(
                 )
                 >= 2
             ),
-            **recommendation,
+            **decision,
         },
         "model_summary": json.loads(
             summary.to_json(orient="records")

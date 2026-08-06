@@ -1,0 +1,9 @@
+schema_version: "1.0"
+access_set_id: my_available_models
+description: Model deployment routes confirmed for this comparison.
+confirmed_on: 2026-08-06
+models:
+  - model_id: replace_with_registered_model_id
+    access_confirmed: true
+    confirmation_basis: I can call this deployment in the intended environment.
+    notes: Replace this row and date before use.

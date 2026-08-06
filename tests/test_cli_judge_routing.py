@@ -86,8 +86,8 @@ def disable_report_outputs(
     )
     monkeypatch.setattr(
         cli,
-        "save_recommendation_report",
-        lambda **kwargs: tmp_path / "recommendation.md",
+        "save_comparison_report",
+        lambda **kwargs: tmp_path / "comparison.md",
     )
     monkeypatch.setattr(cli, "print_summary", lambda results: None)
     monkeypatch.setattr(cli, "print_model_leaderboard", lambda results: None)

@@ -1,0 +1,3 @@
+case_id,group_id,language,split,risk,input,expected_output,evaluation_type
+replace_json_001,replace_group_001,en,development,normal,Replace with source text or a source reference.,"{""name"":""Example"",""status"":""active""}",json
+replace_json_002,replace_group_002,fr,heldout,high,Remplacez par une entrée représentative.,"{""name"":""Exemple"",""status"":""active""}",json

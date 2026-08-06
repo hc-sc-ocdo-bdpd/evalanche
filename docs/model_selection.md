@@ -1,29 +1,41 @@
-# Constraint-aware model selection
+# Optional decision policy
 
-If you are still deciding which evidence and candidates matter, start with
-[Choosing a model with Evalanche](choosing_a_model.md). This page documents the
-policy engine used after relevant evidence has been collected.
+Evalanche reports comparison evidence by default. It selects one model only
+when a user deliberately enables a policy after confirming candidate access,
+hard requirements, and decision preferences.
 
-Evalanche can apply explicit client requirements and weighted preferences after
-it calculates model quality and operational metrics. The selection policy is
-configured under `selection` in a combined evaluation YAML file.
+Start with the [model selection handbook](choosing_a_model.md). This page
+documents the optional policy engine, not the primary user journey.
+
+## When a policy is appropriate
+
+Use it when:
+
+- every candidate route is confirmed available;
+- hard requirements have named owners and evidence;
+- the task and cases are representative;
+- the quality and operational measures are complete enough;
+- the decision owner has approved thresholds and weights;
+- selecting one model is actually useful.
+
+Do not enable it merely to turn a comparison into a winner. A shortlist or
+tradeoff table is often the honest output.
 
 ## Decision order
 
-The decision process has three stages:
+1. Confirm that at least two candidates were evaluated completely.
+2. Require an explicit profile and availability declaration for every
+   candidate.
+3. Apply hard requirements.
+4. Mark missing required evidence as `unknown`.
+5. Exclude only candidates whose evidence shows a hard failure.
+6. Score eligible candidates under the approved weighted policy.
+7. Select one only when the configured margin and quality safeguards pass.
 
-1. Check that the evaluation is complete and includes at least two models.
-2. Apply hard requirements to each model.
-3. Rank eligible models using the configured weighted decision score.
+An unknown candidate blocks a policy selection because the missing evidence
+could change the result.
 
-A model is `ineligible` when available evidence proves that it failed a hard
-requirement. A model is `unknown` when evidence needed by the policy is missing.
-Unknown is not treated as either passing or failing. Any unknown candidate
-blocks a recommendation because the missing evidence could change the result.
-Unknown selection-policy fields are rejected during configuration loading so a
-misspelled requirement cannot be silently ignored.
-
-## Example configuration
+## Configuration
 
 ```yaml
 selection:
@@ -60,91 +72,89 @@ selection:
         - bilingual
 ```
 
-Model profile names must match the `model_name` values in the evaluation data.
-Capability names are normalized to lowercase. A required capability should
-represent a client-verified fact, such as deployment approval, hosting location,
-language support, or an internal availability requirement.
+Profile names must match `model_name` values in the evaluation data.
+Availability must be written explicitly. An omitted availability value remains
+unknown and cannot silently become eligible.
 
-When `require_model_profile` is false, a missing profile does not by itself
-block quantitative selection. In that case, availability is shown as not
-declared. Set the field to true whenever explicit deployment declarations are a
-client requirement.
+The profile is a decision record, not independent proof. The owner should
+verify availability, hosting, region, approval, and capabilities through the
+actual account and official provider documentation.
 
 ## Hard requirements
 
-The supported hard requirements are:
+| Field | Meaning |
+| --- | --- |
+| `require_model_profile` | A missing profile produces an unknown status |
+| `minimum_pass_rate` | Minimum observed strict pass rate |
+| `minimum_pass_rate_ci_low` | Minimum lower endpoint of the 95 percent Wilson interval |
+| `maximum_average_cost_usd` | Maximum observed generation cost per request, with complete coverage required |
+| `maximum_p95_latency_seconds` | Maximum observed p95 generation latency, with complete coverage required |
+| `maximum_generation_failure_rate` | Maximum provider-generation failure rate |
+| `required_capabilities` | Verified capabilities required in the profile |
+| `model_profiles[].available` | Explicit availability for the intended deployment |
 
-- `minimum_pass_rate`: minimum observed pass rate.
-- `require_model_profile`: require an explicit profile for every evaluated
-  model. A missing profile produces an `unknown` status.
-- `minimum_pass_rate_ci_low`: minimum lower endpoint of the reported 95%
-  Wilson pass-rate interval.
-- `maximum_average_cost_usd`: maximum average candidate-generation cost per
-  request. Cost coverage must be complete.
-- `maximum_p95_latency_seconds`: maximum p95 candidate-generation latency.
-  Latency coverage must be complete.
-- `maximum_generation_failure_rate`: maximum candidate-generation failure rate.
-- `required_capabilities`: capabilities that must appear in the model profile.
-- `model_profiles[].available`: whether the model is available for the intended
-  deployment.
+A failed requirement produces `ineligible`. Missing evidence produces
+`unknown`. Missing cost is never treated as zero.
 
-All limits are optional. A missing metric required by an enabled limit produces
-an `unknown` status rather than a false pass.
+## Weighted score
 
-## Weighted decision score
+Weights are nonnegative and normalized by their total.
 
-Weights must be nonnegative and must sum to a positive number. Evalanche
-normalizes them by their total, so they do not need to add up to exactly one.
-
-The four components are bounded between zero and one:
-
-- Quality is the observed overall pass rate.
-- Cost is `1 - average_cost / maximum_average_cost`, bounded to zero through
-  one.
-- Latency is `1 - p95_latency / maximum_p95_latency`, bounded to zero through
-  one.
+- Quality is observed overall pass rate.
+- Cost is `1 - average_cost / maximum_average_cost`, bounded from zero to one.
+- Latency is `1 - p95_latency / maximum_p95_latency`, bounded from zero to one.
 - Reliability is `1 - generation_failure_rate`.
 
-A positive cost weight requires `maximum_average_cost_usd`, which supplies both
-the hard limit and the scale for the cost component. A positive latency weight
-similarly requires `maximum_p95_latency_seconds`.
+A positive cost weight requires `maximum_average_cost_usd`, which supplies a
+hard limit and scale. A positive latency weight similarly requires
+`maximum_p95_latency_seconds`.
 
-Candidate cost uses the selected per-request cost recorded during generation.
-An explicit endpoint-pricing estimate is preferred when complete, with complete
-LiteLLM response-cost metadata used as fallback. The selection CSV and report
-retain the cost source. See [`endpoint_pricing.md`](endpoint_pricing.md) for the
-catalog and precedence rules.
+The score is a policy calculation. It is not a statistically learned utility
+function and it does not prove the preferences are correct.
 
-The model with the highest score is selected only when its lead is at least
-`minimum_score_margin`. This is a practical policy margin, not a statistical
-confidence test.
+## Selection safeguards
 
-When quality is the only positive weight and multiple models remain eligible,
-Evalanche retains its paired statistical safeguard. The quality leader must
-clearly outperform every other eligible model in the corrected paired tests.
+The highest policy score is selected only when its lead reaches
+`minimum_score_margin`. This is a practical policy margin, not a confidence
+test.
+
+When quality is the only positive weight, the observed leader must also clearly
+outperform every other eligible candidate in corrected paired tests. A rank
+alone is not enough.
+
+Run a sensitivity check when modest changes to weights or thresholds could
+reverse the selected model. An unstable policy result should be reported as a
+tradeoff, not hidden behind extra decimal places.
 
 ## Artifacts
 
-An enabled combined evaluation writes a model-selection CSV containing:
+An enabled evaluation writes:
 
-- eligibility status and reasons;
-- missing evidence;
-- quality, cost, latency, and reliability components;
-- weighted decision score and selection rank;
-- the recommended-model flag.
+- `*_model_selection.csv` with eligibility, evidence, components, score, and
+  policy-selection flag;
+- `*_comparison.md` with the comparison and optional policy outcome;
+- metadata schema `1.0` with `decision`, `selection_policy`, access declarations,
+  artifact paths, and hashes.
 
-The same policy, decision, and model table are included in the Markdown report
-and run metadata. Evaluation metadata schema version `0.9` includes a hash of
-the model-selection CSV and the complete deterministic JSON-comparison
-profile.
+When the policy is disabled, the comparison report presents observed evidence
+without a selected model.
 
-## Limits
+The CSV field name `recommended` remains an internal compatibility field for
+the policy flag. User-facing artifacts call it `Selected by policy` so a
+configured preference rule is not confused with a universal recommendation.
 
-The weighted score implements the configured policy. It does not prove that the
-weights or thresholds are correct. Client owners should approve them before a
-decision is used.
+## Limitations
 
-Latency, cost, and reliability values are point estimates from the current run.
-They do not include operational uncertainty intervals and are not production
-service-level guarantees. Capability and availability values are declarations
-from configuration and must be independently verified.
+- The policy can only compare candidates represented in the evaluated data.
+- Access declarations can become stale.
+- Capability declarations must be verified.
+- Quality applies only to the task, cases, prompt, and scorer.
+- Operational measurements are point estimates from the run environment, not
+  production service-level guarantees.
+- Cost estimates use declared prices and recorded usage, not reconciled bills.
+- A weighted score can hide a severe subgroup failure unless that failure is a
+  hard requirement.
+- A policy does not replace stakeholder accountability.
+
+Use the [decision record template](decision_record.md) to preserve who approved
+the policy and what should trigger review.

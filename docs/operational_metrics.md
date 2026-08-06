@@ -1,7 +1,8 @@
 # Operational metrics
 
-Evalanche records operational evidence alongside output quality so an enabled
-selection policy can account for speed, cost, and reliability.
+Evalanche records operational evidence alongside output quality so a user can
+compare speed, cost, and reliability. An optional policy can use those measures
+only when it is explicitly enabled.
 
 ## Request latency
 
@@ -51,8 +52,8 @@ Generation and judge requests have separate status and failure-rate fields.
   score of zero because the model did not produce an answer for the case.
 - A judge error is an evaluation-system failure. It remains unscored and is not
   counted as a candidate-model failure.
-- Any unscored judge row blocks a comparative recommendation until the judge
-  call is recovered or rerun.
+- Any unscored judge row blocks a complete comparative conclusion until the
+  judge call is recovered or rerun.
 
 Set `judge.continue_on_error: true` to preserve judge failures in combined run
 artifacts. With the default value of `false`, a judge error stops the run.
@@ -71,5 +72,4 @@ starts, concurrency, rate limits, and retry policy. Benchmark reports should
 retain the run metadata and should not generalize one run into a production
 availability or latency commitment.
 
-See [`model_selection.md`](model_selection.md) for the rules that determine
-when these metrics can affect a recommendation.
+See [`model_selection.md`](model_selection.md) for the optional policy rules.

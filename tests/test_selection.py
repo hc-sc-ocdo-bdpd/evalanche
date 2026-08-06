@@ -65,9 +65,14 @@ def test_selection_applies_constraints_before_weighted_scoring() -> None:
             cost=0.5,
         ),
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             minimum_pass_rate=0.75,
             maximum_average_cost_usd=0.01,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
 
     selection = build_model_selection(summary, config).set_index(
@@ -108,8 +113,12 @@ def test_missing_required_cost_is_unknown_not_zero() -> None:
             cost=0.5,
         ),
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             maximum_average_cost_usd=0.01,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+        ],
     )
 
     row = build_model_selection(summary, config).iloc[0]
@@ -129,11 +138,13 @@ def test_required_capabilities_use_explicit_model_profiles() -> None:
     config = SelectionConfig(
         enabled=True,
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             required_capabilities=["bilingual", "approved-hosting"],
         ),
         model_profiles=[
             ModelProfileConfig(
                 name="model_a",
+                available=True,
                 capabilities=["bilingual"],
             )
         ],
@@ -155,7 +166,7 @@ def test_required_capabilities_use_explicit_model_profiles() -> None:
     ]
 
 
-def test_required_model_profile_does_not_assume_availability() -> None:
+def test_enabled_selection_does_not_assume_access_profiles() -> None:
     summary = make_summary([{"model_name": "model_a"}])
     config = SelectionConfig(
         enabled=True,
@@ -167,7 +178,8 @@ def test_required_model_profile_does_not_assume_availability() -> None:
     row = build_model_selection(summary, config).iloc[0]
 
     assert row["selection_status"] == "unknown"
-    assert row["missing_evidence"] == "model profile"
+    assert "model profile" in row["missing_evidence"]
+    assert "deployment availability" in row["missing_evidence"]
 
 
 def test_decision_recommends_only_model_that_meets_requirements() -> None:
@@ -180,8 +192,13 @@ def test_decision_recommends_only_model_that_meets_requirements() -> None:
     config = SelectionConfig(
         enabled=True,
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             minimum_pass_rate=0.75,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
     selection = build_model_selection(summary, config)
 
@@ -201,6 +218,35 @@ def test_decision_recommends_only_model_that_meets_requirements() -> None:
             "recommended",
         ]
     ) is True
+
+
+def test_quality_only_clear_leader_is_evidence_not_selection() -> None:
+    summary = make_summary(
+        [
+            {"model_name": "model_a", "pass_rate": 0.9, "rank": 1},
+            {"model_name": "model_b", "pass_rate": 0.2, "rank": 2},
+        ]
+    )
+    comparisons = pd.DataFrame(
+        [
+            {
+                "model_a": "model_a",
+                "model_b": "model_b",
+                "clear_winner": "model_a",
+            }
+        ]
+    )
+
+    decision = build_recommendation_decision(
+        summary,
+        comparisons,
+        pd.DataFrame(),
+        SelectionConfig(enabled=False),
+    )
+
+    assert decision["status"] == "clear_leader"
+    assert decision["evidence_supported_model"] == "model_a"
+    assert decision["recommended_model"] is None
 
 
 def test_weighted_policy_can_choose_best_operational_fit() -> None:
@@ -228,8 +274,13 @@ def test_weighted_policy_can_choose_best_operational_fit() -> None:
             latency=0.6,
         ),
         constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
             maximum_p95_latency_seconds=10.0,
         ),
+        model_profiles=[
+            ModelProfileConfig(name="quality_model", available=True),
+            ModelProfileConfig(name="fast_model", available=True),
+        ],
     )
     selection = build_model_selection(summary, config)
 
@@ -266,6 +317,13 @@ def test_policy_margin_prevents_near_tie_recommendation() -> None:
             quality=0.5,
             reliability=0.5,
         ),
+        constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
+        ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
     selection = build_model_selection(summary, config)
 
@@ -290,6 +348,13 @@ def test_quality_only_policy_keeps_paired_evidence_requirement() -> None:
     config = SelectionConfig(
         enabled=True,
         minimum_score_margin=0.01,
+        constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
+        ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a", available=True),
+            ModelProfileConfig(name="model_b", available=True),
+        ],
     )
     selection = build_model_selection(summary, config)
 
@@ -333,10 +398,13 @@ def test_quality_evidence_compares_only_eligible_models() -> None:
     )
     config = SelectionConfig(
         enabled=True,
+        constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
+        ),
         model_profiles=[
             ModelProfileConfig(name="model_a", available=False),
-            ModelProfileConfig(name="model_b"),
-            ModelProfileConfig(name="model_c"),
+            ModelProfileConfig(name="model_b", available=True),
+            ModelProfileConfig(name="model_c", available=True),
         ],
     )
     selection = build_model_selection(summary, config)

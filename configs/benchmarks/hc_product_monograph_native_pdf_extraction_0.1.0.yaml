@@ -207,6 +207,71 @@ runtime:
   max_requests_per_minute: 10
   checkpoint_every: 5
   resume: true
+tiers:
+  smoke:
+    description: >-
+      One deterministic bilingual product pair used to verify PDF transport,
+      output parsing, token reporting, pricing, and resumability.
+    sampling:
+      method: balanced
+      unit: group
+      count: 1
+      seed: 20260805
+      stratify_by:
+        - language
+        - split
+        - stratum
+        - document_complexity
+    cost:
+      initial_prompt_tokens: 150000
+      initial_completion_tokens: 900
+      safety_multiplier: 2.0
+      request_ceiling_multiplier: 2.0
+  screen:
+    description: >-
+      Ten cumulative bilingual product pairs used to screen out models that
+      should not consume the full benchmark budget. Execution adds only the
+      nine pairs not already completed by smoke.
+    inherits: smoke
+    sampling:
+      method: balanced
+      unit: group
+      count: 10
+      seed: 20260805
+      stratify_by:
+        - language
+        - split
+        - stratum
+        - document_complexity
+    cost:
+      sample_from: smoke
+      initial_prompt_tokens: 150000
+      initial_completion_tokens: 900
+      safety_multiplier: 1.75
+      request_ceiling_multiplier: 2.0
+    promotion:
+      minimum_pass_rate: 0.50
+      maximum_generation_failure_rate: 0.05
+  standard:
+    description: >-
+      The complete 80-case pilot. Execution adds only cases not already run in
+      smoke and screen, so a promoted model uses exactly 80 calls in total.
+    inherits: screen
+    sampling:
+      method: all
+      unit: group
+      seed: 20260805
+      stratify_by:
+        - language
+        - split
+        - stratum
+        - document_complexity
+    cost:
+      sample_from: screen
+      initial_prompt_tokens: 150000
+      initial_completion_tokens: 900
+      safety_multiplier: 1.50
+      request_ceiling_multiplier: 1.75
 limitations:
   - This benchmark is draft and cannot execute as a registered run until its promotion gates pass.
   - Provisional labels come from DPD alignment plus automated source-page evidence, not completed independent human review.

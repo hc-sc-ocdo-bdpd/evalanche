@@ -296,6 +296,7 @@ def test_local_markdown_links_resolve() -> None:
         ROOT / "CONTRIBUTING.md",
         *sorted((ROOT / "configs").glob("*.md")),
         *sorted((ROOT / "docs").rglob("*.md")),
+        *sorted((ROOT / "examples").rglob("*.md")),
         *sorted((ROOT / "reports").rglob("*.md")),
     ]
     missing: list[str] = []

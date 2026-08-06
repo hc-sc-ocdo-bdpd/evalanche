@@ -109,7 +109,7 @@ def build_model_selection(
     for _, row in summary.iterrows():
         model_name = str(row["model_name"])
         profile = profiles.get(model_name)
-        available = profile.available if profile is not None else True
+        available = profile.available if profile is not None else None
         capabilities = (
             set(profile.capabilities)
             if profile is not None
@@ -121,8 +121,10 @@ def build_model_selection(
         if config.constraints.require_model_profile and profile is None:
             missing.append("model profile")
 
-        if not available:
+        if available is False:
             failures.append("model is not available for deployment")
+        elif available is None:
+            missing.append("deployment availability")
 
         if required_capabilities:
             if profile is None:
@@ -436,7 +438,8 @@ def build_quality_decision(
         "status": "clear_leader",
         "top_ranked_models": top_models,
         "observed_leader": observed_leader,
-        "recommended_model": observed_leader,
+        "evidence_supported_model": observed_leader,
+        "recommended_model": None,
         "not_distinguished_from": [],
     }
 
@@ -581,7 +584,7 @@ def build_recommendation_decision(
             "not_distinguished_from",
             [],
         )
-        if eligible_quality.get("recommended_model") != winner_name:
+        if eligible_quality.get("evidence_supported_model") != winner_name:
             return {
                 **common,
                 "status": "insufficient_quality_evidence",

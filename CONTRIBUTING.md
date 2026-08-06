@@ -3,6 +3,10 @@
 Evalanche changes should preserve three properties: task-specific evidence,
 reproducible artifacts, and clear operational boundaries.
 
+The primary product is the access-first handbook and research directory. The
+optional software compares only user-confirmed model routes, and the Health
+Canada benchmarks remain supporting case studies.
+
 ## Development setup
 
 Python 3.11 is the runtime used by the Docker image. Python 3.12 is also tested
@@ -47,6 +51,21 @@ partial failures, and reproducibility guards.
 - Treat the active model set as registry data. Generic run, summary, and
   reporting code must not contain a fixed list of model IDs or require edits
   when another compatible model manifest is added.
+- Never treat registry membership or declared compatibility as user access.
+  Multi-model commands must require explicit model IDs or a dated access set.
+- Keep public evidence separate from local candidate scope. Public sources can
+  mention inaccessible models without adding them to a local comparison.
+- Preserve comparison-first report semantics. A single selected model is
+  allowed only through an explicit policy with availability profiles and
+  approved thresholds or weights.
+- Keep tier sampling, cost assumptions, inheritance, and promotion gates in
+  benchmark manifests. Generic campaign code must not name a task, dataset, or
+  current model.
+- Preserve cumulative tier membership and incremental execution. A child tier
+  must never repeat a case and model call already completed by its parent.
+- Treat aggregate cost limits as local request-start gates. Retain the sample,
+  price card, safety multiplier, request reserve, and checkpoint ledger needed
+  to explain every estimate and stop.
 - Preserve exact prompts, model routes, pricing evidence, input hashes, and
   output hashes in run metadata.
 - Treat frozen dataset versions and published result releases as immutable.
@@ -57,6 +76,19 @@ partial failures, and reproducibility guards.
 - Do not mix unrelated task or source families into one headline score.
 - Do not commit credentials, local endpoint URLs, personal paths, generated
   checkpoints, or case-level provider outputs.
+
+## Research documentation
+
+- Prefer original papers, official benchmark sites, maintained repositories,
+  and official provider documentation.
+- Record a review date and publication status.
+- Explain what the source measures, how it is scored, which setup matters, and
+  where it should not transfer.
+- Do not copy fast-changing leaderboard scores into evergreen guidance.
+- Mark preprints as preprints and avoid presenting a recent result as settled
+  consensus.
+- Use model and system terminology precisely. Agent-harness results are not
+  base-model results.
 
 ## Configuration changes
 

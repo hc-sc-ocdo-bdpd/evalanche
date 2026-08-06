@@ -10,7 +10,8 @@ examples.
 | Pattern | Purpose |
 | --- | --- |
 | `models/*.yaml` | Independently reusable registered model manifests |
-| `benchmarks/*.yaml` | Dataset, prompt, scoring, required capability, input API, slice, and runtime benchmark contracts |
+| `access_sets/*.yaml` | Dated user confirmation of available deployment routes |
+| `benchmarks/*.yaml` | Dataset, prompt, scoring, capabilities, input API, slices, runtime, and optional tier contracts |
 | `product_monograph/<version>/*.yaml` | Source-locked Product Monograph cohort and label-construction overrides |
 | `candidate_models.yaml` | Small generic multi-model example |
 | `candidate_gpt_*.yaml` | One pinned candidate profile per deployed model |
@@ -38,14 +39,61 @@ encode the currently available IDs.
 2. Give it a new stable `model_id`, provider deployment, declared capabilities,
    request settings, version metadata, and pricing reference.
 3. Run `python -m evalanche.cli registry-validate`.
-4. Plan a compatible benchmark by ID, or use `--all-compatible --plan-only`.
-5. After evaluation, run `summarize-benchmark` to rebuild the discovered local
-   comparison.
+4. Add the confirmed route to a dated access set.
+5. Plan by model ID, or use `--all-compatible --access-set <path> --plan-only`.
+6. After evaluation, run `summarize-benchmark --access-set <path>` to rebuild
+   the access-confirmed local comparison.
 
 Do not add a new model to `candidate_models.yaml` or create a new combined
 analysis configuration merely to make the registry workflow see it. Those
 flat files are retained for historical provenance and the small generic
 example.
+
+## Adding benchmark tiers
+
+Tiers belong in the benchmark manifest because sampling and promotion are
+properties of a task, not properties of the current model inventory. A compact
+example is:
+
+```yaml
+tiers:
+  smoke:
+    description: Verify the route and cost evidence.
+    sampling:
+      method: balanced
+      unit: group
+      count: 1
+      seed: 20260805
+      stratify_by: [language, difficulty]
+    cost:
+      initial_prompt_tokens: 10000
+      initial_completion_tokens: 500
+      safety_multiplier: 2.0
+      request_ceiling_multiplier: 2.0
+  screen:
+    description: Screen a cumulative ten groups.
+    inherits: smoke
+    sampling:
+      method: balanced
+      unit: group
+      count: 10
+      seed: 20260805
+      stratify_by: [language, difficulty]
+    cost:
+      sample_from: smoke
+      initial_prompt_tokens: 10000
+      initial_completion_tokens: 500
+      safety_multiplier: 1.5
+      request_ceiling_multiplier: 2.0
+    promotion:
+      minimum_pass_rate: 0.70
+      maximum_generation_failure_rate: 0.05
+```
+
+`count` is cumulative and counts the selected unit. With `unit: group`, the
+benchmark's `group_key` defines that unit. A child tier must contain its parent
+and executes only its new cases. `registry-validate` checks the tier graph,
+columns, membership, nonempty deltas, and cost-sample ancestry.
 
 ## Naming
 

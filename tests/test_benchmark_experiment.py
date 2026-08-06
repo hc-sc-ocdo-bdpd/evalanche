@@ -192,7 +192,8 @@ def test_summary_discovers_new_completed_models_without_code_changes(
     assert metadata["model_count"] == 3
     assert metadata["comparison_status"] == "draft_experimental"
     report = second["paths"]["report"].read_text(encoding="utf-8")
-    assert "Adding another completed compatible model evaluation" in report
+    assert "Current candidate access was not confirmed" in report
+    assert "Rerunning the summary rebuilds every table" in report
     assert "experimental and unranked" in report
 
 

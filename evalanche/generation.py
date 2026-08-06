@@ -667,6 +667,8 @@ def _request_cost_ceiling(
     row: dict[str, Any],
     endpoint_price: EndpointPriceConfig | None,
 ) -> float | None:
+    if config.generation.request_cost_ceiling_usd is not None:
+        return config.generation.request_cost_ceiling_usd
     if endpoint_price is None:
         return None
 
@@ -872,7 +874,7 @@ def _build_cost_preflight(
 ) -> dict[str, Any] | None:
     maximum = config.generation.maximum_estimated_cost_usd
     sample_path = config.generation.cost_preflight_sample_path
-    if maximum is None or sample_path is None:
+    if sample_path is None:
         return None
 
     if not sample_path.exists():
@@ -984,6 +986,9 @@ def _build_cost_preflight(
     )
     multiplier = config.generation.cost_safety_multiplier
     budgeted_projection = projected_total_cost * multiplier
+    within_limit = (
+        None if maximum is None else budgeted_projection <= maximum
+    )
     preflight = {
         "sample_path": str(sample_path),
         "sample_sha256": sha256_file(sample_path),
@@ -994,10 +999,10 @@ def _build_cost_preflight(
         "cost_safety_multiplier": multiplier,
         "projected_budgeted_total_usd": budgeted_projection,
         "maximum_estimated_cost_usd": maximum,
-        "within_limit": budgeted_projection <= maximum,
+        "within_limit": within_limit,
         "by_model": by_model,
     }
-    if not preflight["within_limit"]:
+    if within_limit is False:
         raise ValueError(
             "generation cost preflight failed: projected budgeted cost "
             f"${budgeted_projection:.2f} USD exceeds the configured "
@@ -1178,13 +1183,19 @@ def generate_outputs(
     )
 
     if preflight is not None:
+        configured_limit = preflight["maximum_estimated_cost_usd"]
+        limit_text = (
+            f"${configured_limit:.2f} USD limit"
+            if configured_limit is not None
+            else "no configured limit"
+        )
         print(
             "\nCost preflight: "
             f"${preflight['projected_total_cost_usd']:.2f} USD "
             "projected, "
             f"${preflight['projected_budgeted_total_usd']:.2f} USD "
             "after safety multiplier, "
-            f"${preflight['maximum_estimated_cost_usd']:.2f} USD limit"
+            f"{limit_text}"
         )
     if resumed_output_count:
         print(

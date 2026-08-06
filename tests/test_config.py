@@ -286,6 +286,19 @@ def test_model_profile_names_must_be_unique() -> None:
         )
 
 
+def test_model_profile_never_assumes_availability() -> None:
+    selection = SelectionConfig(
+        enabled=True,
+        constraints=SelectionConstraintsConfig(
+            require_model_profile=True,
+        ),
+        model_profiles=[
+            ModelProfileConfig(name="model_a"),
+        ],
+    )
+    assert selection.model_profiles[0].available is None
+
+
 def test_selection_rejects_unknown_policy_fields() -> None:
     with pytest.raises(
         ValidationError,
@@ -374,14 +387,24 @@ def test_generation_cost_guard_requires_preflight_sample() -> None:
         )
 
 
-def test_generation_safety_multiplier_requires_cost_limit() -> None:
+def test_generation_safety_multiplier_requires_cost_sample() -> None:
     with pytest.raises(
         ValidationError,
-        match="maximum_estimated_cost_usd",
+        match="cost_preflight_sample_path",
     ):
         GenerationSettingsConfig(
             cost_safety_multiplier=1.5,
         )
+
+
+def test_generation_preflight_can_estimate_before_limit_is_chosen() -> None:
+    settings = GenerationSettingsConfig(
+        cost_preflight_sample_path=Path("sample.csv"),
+        cost_safety_multiplier=1.5,
+    )
+
+    assert settings.maximum_estimated_cost_usd is None
+    assert settings.cost_safety_multiplier == 1.5
 
 
 def test_generation_settings_reject_unknown_fields() -> None:

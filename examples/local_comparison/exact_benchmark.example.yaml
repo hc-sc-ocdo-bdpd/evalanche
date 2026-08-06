@@ -1,0 +1,64 @@
+schema_version: "1.0"
+benchmark_id: replace_exact_task
+version: 0.1.0
+title: Replace exact-scored local task
+description: Replace with the task, inputs, output contract, and intended use.
+status: draft
+dataset:
+  dataset_id: replace_local_task_cases
+  version: 0.1.0
+  manifest_path: examples/local_comparison/dataset_record.example.yaml
+  cases_path: examples/local_comparison/classification_cases.csv
+prompt:
+  version: "1.0"
+  system: Return only one allowed label with no explanation.
+  template: "{input}"
+scoring:
+  evaluation_type: exact
+  version: "1.0"
+  metrics:
+    case_sensitive: false
+    trim_whitespace: true
+    collapse_whitespace: true
+slice_columns:
+  - language
+  - split
+  - risk
+group_key: group_id
+language_column: language
+required_capabilities: []
+runtime:
+  request_api: chat_completions
+  max_completion_tokens: 40
+  max_workers: 4
+  max_requests_per_minute: 60
+  checkpoint_every: 10
+  resume: true
+tiers:
+  smoke:
+    description: Verify one route and artifact path.
+    sampling:
+      method: balanced
+      unit: group
+      count: 1
+      seed: 20260806
+      stratify_by:
+        - language
+        - risk
+    cost:
+      initial_prompt_tokens: 1000
+      initial_completion_tokens: 40
+      safety_multiplier: 2.0
+      request_ceiling_multiplier: 2.0
+  screen:
+    description: Run every current development group after smoke.
+    inherits: smoke
+    sampling:
+      method: all
+      unit: group
+    cost:
+      sample_from: smoke
+      safety_multiplier: 1.5
+      request_ceiling_multiplier: 2.0
+limitations:
+  - Placeholder cases must be replaced before any result is interpreted.

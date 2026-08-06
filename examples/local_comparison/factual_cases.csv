@@ -1,0 +1,3 @@
+case_id,group_id,language,split,risk,input,expected_output,evaluation_type
+replace_fact_001,replace_group_001,en,development,normal,Replace with a question that has one accepted short answer.,accepted answer,exact
+replace_fact_002,replace_group_002,en,heldout,high,Replace with an important fact question and preserve supporting evidence separately.,second accepted answer,exact
