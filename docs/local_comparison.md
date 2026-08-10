@@ -393,6 +393,24 @@ Before using the generic configuration:
 - create and evaluate a human calibration set;
 - label results exploratory until the judge protocol is validated.
 
+Start from the complete provider-free fixture:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli validate-judge --protocol examples/judge_validation/protocol.yaml
+```
+
+Copy `examples/judge_validation/`, replace every synthetic case, human label,
+and judge observation, then set a justified target and gates. The validation
+command makes no provider calls. It compares the saved observations against
+the adjudicated human reference, measures stability and bias controls, writes
+the disagreement queue, and exits with status 2 if the declared target is not
+met.
+
+After validation, attach the exact protocol and generated JSON report to the
+evaluation config. Evalanche verifies the task, prompt, rubric, judge model,
+version, settings, and contract hash before accepting the evidence level. See
+[llm_judges.md](llm_judges.md) for the full input contract and claim limits.
+
 ## Common problems
 
 | Problem | Meaning or action |

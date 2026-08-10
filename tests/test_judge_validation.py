@@ -200,6 +200,8 @@ def test_criteria_judge_scores_a_validated_response() -> None:
     assert result["attempts"] == 2
     assert result["failed_attempts"] == 1
     assert result["cost_usd"] == 0.004
+    assert result["evidence_level"] == "exploratory"
+    assert result["protocol_id"] is None
 
 
 def test_judge_prompt_names_every_required_criterion() -> None:
@@ -217,6 +219,73 @@ def test_judge_prompt_names_every_required_criterion() -> None:
     assert '"correctness"' in system_prompt
     assert '"completeness"' in system_prompt
     assert "Include every configured criterion exactly once" in system_prompt
+
+
+def test_judge_prompt_blinds_candidate_identity_by_default() -> None:
+    judge = CriteriaJudge(make_config())
+    row = {
+        "input": "Question",
+        "expected_output": "Expected",
+        "model_name": "secret-model-name",
+        "model_output": "Candidate",
+    }
+
+    user_prompt = judge._build_messages(row)[1]["content"]
+    assert "secret-model-name" not in user_prompt
+
+    judge.config.judge.candidate_identity_blinded = False
+    named_prompt = judge._build_messages(row)[1]["content"]
+    assert "Candidate model identity" in named_prompt
+    assert "secret-model-name" in named_prompt
+
+
+def test_reference_free_prompt_omits_expected_output() -> None:
+    config = make_config()
+    config.judge.reference_mode = "none"
+    judge = CriteriaJudge(config)
+
+    messages = judge._build_messages(
+        {
+            "input": "Question",
+            "expected_output": "Hidden reference",
+            "model_output": "Candidate",
+        }
+    )
+
+    assert "Hidden reference" not in messages[1]["content"]
+    assert "No reference answer is provided" in messages[0]["content"]
+
+
+def test_required_reference_rejects_blank_expected_output() -> None:
+    judge = CriteriaJudge(make_config())
+
+    with pytest.raises(ValueError, match="non-empty expected output"):
+        judge._build_messages(
+            {
+                "input": "Question",
+                "expected_output": "",
+                "model_output": "Candidate",
+            }
+        )
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("prompt_id", "custom.prompt", "only supports prompt_id"),
+        ("prompt_version", "2.0", "only supports prompt_version"),
+    ],
+)
+def test_builtin_judge_rejects_unimplemented_prompt_contracts(
+    field: str,
+    value: str,
+    message: str,
+) -> None:
+    config = make_config()
+    setattr(config.judge, field, value)
+
+    with pytest.raises(ValueError, match=message):
+        CriteriaJudge(config)
 
 
 def test_criteria_judge_resolves_explicit_endpoint_price(

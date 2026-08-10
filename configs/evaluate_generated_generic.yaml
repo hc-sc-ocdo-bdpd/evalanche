@@ -10,9 +10,16 @@ metrics:
 
 judge:
   model: ${JUDGE_MODEL:-azure/gpt-5.4-mini}
+  variant_id: primary
   temperature: 0
   max_retries: 3
   continue_on_error: true
+  prompt_id: evalanche.criteria_pointwise
+  prompt_version: "1.0"
+  rubric_id: generated_generic_instruction_following
+  rubric_version: "1.0"
+  candidate_identity_blinded: true
+  reference_mode: required
 
 task:
   name: generated_generic_instruction_following
@@ -20,6 +27,13 @@ task:
     Evaluate whether the candidate model output satisfies the user instruction
     and matches the expected output. The input is self-contained. Do not assume
     any external private context.
+  measured_construct: >
+    Correct, complete, and format-conforming responses to the supplied
+    instruction, assessed against the supplied expected output.
+  intended_use: >
+    Exploratory comparison of user-confirmed candidate models. Comparative
+    selection requires a matching validated judge protocol.
+  languages: [en]
 
 scoring:
   score_min: 0

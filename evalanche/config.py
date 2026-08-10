@@ -63,11 +63,59 @@ class RunConfig(BaseModel):
 
 
 class JudgeConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     model: str
+    variant_id: str = "primary"
+    provider_model_version: str | None = None
     temperature: float | None = 0
     max_retries: int = 3
     continue_on_error: bool = False
     pricing_id: str | None = None
+    prompt_id: str = "evalanche.criteria_pointwise"
+    prompt_version: str = "1.0"
+    rubric_id: str | None = None
+    rubric_version: str | None = None
+    candidate_identity_blinded: bool = True
+    reference_mode: Literal["required", "optional", "none"] = "required"
+    protocol_path: Path | None = None
+    validation_report_path: Path | None = None
+    minimum_validation_level_for_selection: Literal[
+        "exploratory",
+        "calibrated",
+        "decision_grade",
+        "publishable",
+    ] = "calibrated"
+
+    @field_validator(
+        "model",
+        "variant_id",
+        "prompt_id",
+        "prompt_version",
+    )
+    @classmethod
+    def validate_required_identity(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("judge identity fields cannot be blank")
+        return normalized
+
+    @field_validator(
+        "provider_model_version",
+        "rubric_id",
+        "rubric_version",
+    )
+    @classmethod
+    def normalize_optional_identity(
+        cls,
+        value: str | None,
+    ) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("optional judge identity fields cannot be blank")
+        return normalized
 
     @field_validator("pricing_id")
     @classmethod
@@ -79,10 +127,59 @@ class JudgeConfig(BaseModel):
             raise ValueError("pricing_id cannot be blank")
         return normalized
 
+    @model_validator(mode="after")
+    def validate_validation_paths(self) -> "JudgeConfig":
+        if (
+            self.validation_report_path is not None
+            and self.protocol_path is None
+        ):
+            raise ValueError(
+                "protocol_path is required when validation_report_path "
+                "is configured"
+            )
+        if (self.rubric_id is None) != (self.rubric_version is None):
+            raise ValueError(
+                "rubric_id and rubric_version must be configured together"
+            )
+        return self
+
 
 class TaskConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
     name: str
     description: str
+    measured_construct: str | None = None
+    intended_use: str | None = None
+    languages: list[str] = Field(default_factory=lambda: ["unspecified"])
+
+    @field_validator("name", "description")
+    @classmethod
+    def validate_required_text(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("task name and description cannot be blank")
+        return normalized
+
+    @field_validator("measured_construct", "intended_use")
+    @classmethod
+    def normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("optional task fields cannot be blank")
+        return normalized
+
+    @field_validator("languages")
+    @classmethod
+    def validate_languages(cls, values: list[str]) -> list[str]:
+        normalized = [value.strip() for value in values]
+        if not normalized or any(not value for value in normalized):
+            raise ValueError("task languages cannot be empty or blank")
+        if len(normalized) != len(set(normalized)):
+            raise ValueError("task languages must be unique")
+        return normalized
 
 
 class ScoringConfig(BaseModel):

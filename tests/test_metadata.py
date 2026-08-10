@@ -20,8 +20,20 @@ def make_config(tmp_path: Path) -> EvalConfig:
             input_path=tmp_path / "input.csv",
             output_path=tmp_path / "results.csv",
         ),
-        judge=JudgeConfig(model="azure/test-judge"),
-        task=TaskConfig(name="test", description="Test task"),
+        judge=JudgeConfig(
+            model="azure/test-judge",
+            variant_id="primary-test",
+            provider_model_version="test-2026-08-06",
+            rubric_id="test-rubric",
+            rubric_version="1.0",
+        ),
+        task=TaskConfig(
+            name="test",
+            description="Test task",
+            measured_construct="Test response quality.",
+            intended_use="Metadata regression testing.",
+            languages=["en"],
+        ),
         scoring=ScoringConfig(),
         criteria=[
             CriterionConfig(
@@ -94,6 +106,21 @@ def test_standalone_judge_metadata_keeps_cost_sources_separate(
     assert summary["configured_cost_usd"] == 0.003
     assert summary["provider_reported_cost_usd"] is None
     assert summary["provider_reported_cost_coverage"] == 0.5
+    assert metadata["judge"]["variant_id"] == "primary-test"
+    assert metadata["judge"]["provider_model_version"] == (
+        "test-2026-08-06"
+    )
+    assert metadata["judge"]["rubric_id"] == "test-rubric"
+    assert metadata["judge"]["prompt_id"] == (
+        "evalanche.criteria_pointwise"
+    )
+    assert metadata["judge"]["validation_evidence"]["level"] == (
+        "exploratory"
+    )
+    assert metadata["task"]["measured_construct"] == (
+        "Test response quality."
+    )
+    assert metadata["task"]["languages"] == ["en"]
 
 
 def test_standalone_judge_metadata_snapshots_resolved_price(

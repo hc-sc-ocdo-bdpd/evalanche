@@ -1,0 +1,49 @@
+case_id,criterion,judge_variant_id,trial_id,prompt_variant_id,identity_condition,presentation_order,label,status,uncertainty,reason
+fixture_001,overall,fixture_primary,trial_1,baseline,blinded,pointwise,pass,success,0.05,Fixture observation.
+fixture_001,overall,fixture_primary,trial_2,baseline,blinded,pointwise,pass,success,0.05,Fixture repeat.
+fixture_001,overall,fixture_primary,trial_3,baseline,blinded,pointwise,pass,success,0.10,Fixture repeat.
+fixture_001,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,pass,success,0.10,Fixture prompt variant.
+fixture_001,overall,fixture_primary,trial_1,baseline,named,pointwise,pass,success,0.10,Fixture identity condition.
+fixture_001,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.15,Fixture judge variant.
+fixture_002,overall,fixture_primary,trial_1,baseline,blinded,pointwise,fail,success,0.10,Fixture observation.
+fixture_002,overall,fixture_primary,trial_2,baseline,blinded,pointwise,fail,success,0.10,Fixture repeat.
+fixture_002,overall,fixture_primary,trial_3,baseline,blinded,pointwise,fail,success,0.15,Fixture repeat.
+fixture_002,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,fail,success,0.15,Fixture prompt variant.
+fixture_002,overall,fixture_primary,trial_1,baseline,named,pointwise,fail,success,0.15,Fixture identity condition.
+fixture_002,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.35,Fixture judge variant error.
+fixture_003,overall,fixture_primary,trial_1,baseline,blinded,pointwise,pass,success,0.05,Fixture observation.
+fixture_003,overall,fixture_primary,trial_2,baseline,blinded,pointwise,pass,success,0.10,Fixture repeat.
+fixture_003,overall,fixture_primary,trial_3,baseline,blinded,pointwise,pass,success,0.10,Fixture repeat.
+fixture_003,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,pass,success,0.10,Fixture prompt variant.
+fixture_003,overall,fixture_primary,trial_1,baseline,named,pointwise,pass,success,0.10,Fixture identity condition.
+fixture_003,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.15,Fixture judge variant.
+fixture_004,overall,fixture_primary,trial_1,baseline,blinded,pointwise,fail,success,0.20,Fixture observation.
+fixture_004,overall,fixture_primary,trial_2,baseline,blinded,pointwise,fail,success,0.20,Fixture repeat.
+fixture_004,overall,fixture_primary,trial_3,baseline,blinded,pointwise,fail,success,0.25,Fixture repeat.
+fixture_004,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,pass,success,0.40,Deliberate prompt flip.
+fixture_004,overall,fixture_primary,trial_1,baseline,named,pointwise,fail,success,0.25,Fixture identity condition.
+fixture_004,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,fail,success,0.20,Fixture judge variant.
+fixture_005,overall,fixture_primary,trial_1,baseline,blinded,pointwise,pass,success,0.05,Fixture observation.
+fixture_005,overall,fixture_primary,trial_2,baseline,blinded,pointwise,pass,success,0.05,Fixture repeat.
+fixture_005,overall,fixture_primary,trial_3,baseline,blinded,pointwise,pass,success,0.10,Fixture repeat.
+fixture_005,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,pass,success,0.10,Fixture prompt variant.
+fixture_005,overall,fixture_primary,trial_1,baseline,named,pointwise,pass,success,0.10,Fixture identity condition.
+fixture_005,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.15,Fixture judge variant.
+fixture_006,overall,fixture_primary,trial_1,baseline,blinded,pointwise,fail,success,0.10,Fixture observation.
+fixture_006,overall,fixture_primary,trial_2,baseline,blinded,pointwise,fail,success,0.10,Fixture repeat.
+fixture_006,overall,fixture_primary,trial_3,baseline,blinded,pointwise,fail,success,0.10,Fixture repeat.
+fixture_006,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,fail,success,0.15,Fixture prompt variant.
+fixture_006,overall,fixture_primary,trial_1,baseline,named,pointwise,fail,success,0.15,Fixture identity condition.
+fixture_006,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,fail,success,0.20,Fixture judge variant.
+fixture_007,overall,fixture_primary,trial_1,baseline,blinded,pointwise,fail,success,0.35,Deliberate false failure.
+fixture_007,overall,fixture_primary,trial_2,baseline,blinded,pointwise,fail,success,0.35,Fixture repeat.
+fixture_007,overall,fixture_primary,trial_3,baseline,blinded,pointwise,fail,success,0.35,Fixture repeat.
+fixture_007,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,fail,success,0.40,Fixture prompt variant.
+fixture_007,overall,fixture_primary,trial_1,baseline,named,pointwise,fail,success,0.40,Fixture identity condition.
+fixture_007,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.20,Fixture judge variant.
+fixture_008,overall,fixture_primary,trial_1,baseline,blinded,pointwise,fail,success,0.10,Fixture observation.
+fixture_008,overall,fixture_primary,trial_2,baseline,blinded,pointwise,fail,success,0.10,Fixture repeat.
+fixture_008,overall,fixture_primary,trial_3,baseline,blinded,pointwise,fail,success,0.15,Fixture repeat.
+fixture_008,overall,fixture_primary,trial_1,paraphrase,blinded,pointwise,fail,success,0.15,Fixture prompt variant.
+fixture_008,overall,fixture_primary,trial_1,baseline,named,pointwise,fail,success,0.15,Fixture identity condition.
+fixture_008,overall,fixture_secondary,trial_1,baseline,blinded,pointwise,pass,success,0.35,Fixture judge variant error.

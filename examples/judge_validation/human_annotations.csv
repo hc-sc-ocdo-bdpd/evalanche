@@ -1,0 +1,25 @@
+case_id,criterion,reviewer_id,annotation_stage,label,notes
+fixture_001,overall,reviewer_1,independent,pass,Fixture label.
+fixture_001,overall,reviewer_2,independent,pass,Fixture label.
+fixture_001,overall,adjudicator,adjudicated,pass,Fixture adjudication.
+fixture_002,overall,reviewer_1,independent,fail,Fixture label.
+fixture_002,overall,reviewer_2,independent,fail,Fixture label.
+fixture_002,overall,adjudicator,adjudicated,fail,Fixture adjudication.
+fixture_003,overall,reviewer_1,independent,pass,Fixture label.
+fixture_003,overall,reviewer_2,independent,pass,Fixture label.
+fixture_003,overall,adjudicator,adjudicated,pass,Fixture adjudication.
+fixture_004,overall,reviewer_1,independent,fail,Fixture label.
+fixture_004,overall,reviewer_2,independent,pass,Deliberate fixture disagreement.
+fixture_004,overall,adjudicator,adjudicated,fail,Fixture adjudication.
+fixture_005,overall,reviewer_1,independent,pass,Fixture label.
+fixture_005,overall,reviewer_2,independent,pass,Fixture label.
+fixture_005,overall,adjudicator,adjudicated,pass,Fixture adjudication.
+fixture_006,overall,reviewer_1,independent,fail,Fixture label.
+fixture_006,overall,reviewer_2,independent,fail,Fixture label.
+fixture_006,overall,adjudicator,adjudicated,fail,Fixture adjudication.
+fixture_007,overall,reviewer_1,independent,pass,Fixture label.
+fixture_007,overall,reviewer_2,independent,fail,Deliberate fixture disagreement.
+fixture_007,overall,adjudicator,adjudicated,pass,Fixture adjudication.
+fixture_008,overall,reviewer_1,independent,fail,Fixture label.
+fixture_008,overall,reviewer_2,independent,fail,Fixture label.
+fixture_008,overall,adjudicator,adjudicated,fail,Fixture adjudication.

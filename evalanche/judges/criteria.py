@@ -7,6 +7,7 @@ import pandas as pd
 
 from evalanche.config import EvalConfig
 from evalanche.judges.validation import validate_judge_response
+from evalanche.judges.protocol import resolve_judge_evidence
 from evalanche.llm import LLMClient
 from evalanche.pricing import (
     load_optional_endpoint_pricing_catalog_with_hash,
@@ -17,6 +18,17 @@ from evalanche.pricing import (
 class CriteriaJudge:
     def __init__(self, config: EvalConfig) -> None:
         self.config = config
+        if config.judge.prompt_id != "evalanche.criteria_pointwise":
+            raise ValueError(
+                "The built-in criteria judge only supports prompt_id "
+                "'evalanche.criteria_pointwise'"
+            )
+        if config.judge.prompt_version != "1.0":
+            raise ValueError(
+                "The built-in criteria judge only supports prompt_version "
+                "'1.0'"
+            )
+        self.evidence = resolve_judge_evidence(config)
         pricing_catalog, pricing_catalog_sha256 = (
             load_optional_endpoint_pricing_catalog_with_hash(
                 config.endpoint_pricing_path
@@ -116,6 +128,14 @@ class CriteriaJudge:
             "pricing_source": operational.get("pricing_source"),
             "pricing_catalog_version": self.pricing_catalog_version,
             "pricing_catalog_sha256": self.pricing_catalog_sha256,
+            "evidence_level": self.evidence.level,
+            "protocol_id": self.evidence.protocol_id,
+            "protocol_version": self.evidence.protocol_version,
+            "protocol_sha256": self.evidence.protocol_sha256,
+            "contract_sha256": self.evidence.contract_sha256,
+            "validation_report_sha256": (
+                self.evidence.validation_report_sha256
+            ),
         }
 
         for criterion in self.config.criteria:
@@ -125,7 +145,10 @@ class CriteriaJudge:
 
         return output
 
-    def _weighted_normalized_score(self, criterion_scores: dict[str, Any]) -> float:
+    def _weighted_normalized_score(
+        self,
+        criterion_scores: dict[str, Any],
+    ) -> float:
         score_min = self.config.scoring.score_min
         score_max = self.config.scoring.score_max
         score_range = score_max - score_min
@@ -156,7 +179,7 @@ class CriteriaJudge:
         return weighted_total / weight_total
     
     def _validate_response(self, response: dict[str, Any]) -> None:
-        validate_judge_response(response, self.config)   
+        validate_judge_response(response, self.config)
 
     def _build_messages(self, row: dict[str, Any]) -> list[dict[str, str]]:
         criteria_text = "\n".join(
@@ -175,6 +198,19 @@ class CriteriaJudge:
             },
             "overall_reason": "brief overall reason",
         }
+        if self.config.judge.reference_mode == "required":
+            reference_instruction = (
+                "- Use the expected output as the reference answer."
+            )
+        elif self.config.judge.reference_mode == "optional":
+            reference_instruction = (
+                "- Use an expected output as a reference when one is provided."
+            )
+        else:
+            reference_instruction = (
+                "- No reference answer is provided. Do not invent one, and "
+                "apply only the stated task and criteria."
+            )
 
         system = f"""
 You are an expert evaluator of language model outputs.
@@ -188,7 +224,7 @@ Scoring:
 - Score each criterion from {self.config.scoring.score_min} to {self.config.scoring.score_max}.
 - {self.config.scoring.score_min} means completely unacceptable.
 - {self.config.scoring.score_max} means excellent.
-- Use the expected output as the reference answer.
+{reference_instruction}
 - Penalize unsupported claims, contradictions, and missing important information.
 - Be strict but fair.
 - Include every configured criterion exactly once.
@@ -202,16 +238,26 @@ Return JSON in this exact structure:
 {json.dumps(response_example, indent=2)}
 """.strip()
 
-        user = f"""
-Input:
-{row["input"]}
-
-Expected output:
-{row["expected_output"]}
-
-Candidate model output:
-{row["model_output"]}
-""".strip()
+        user_parts = [f"Input:\n{row['input']}"]
+        expected_output = str(row.get("expected_output", "")).strip()
+        if self.config.judge.reference_mode == "required":
+            if not expected_output:
+                raise ValueError(
+                    "The criteria judge requires a non-empty expected output"
+                )
+            user_parts.append(f"Expected output:\n{expected_output}")
+        elif (
+            self.config.judge.reference_mode == "optional"
+            and expected_output
+        ):
+            user_parts.append(f"Expected output:\n{expected_output}")
+        if not self.config.judge.candidate_identity_blinded:
+            user_parts.append(
+                "Candidate model identity:\n"
+                f"{row.get('model_name', 'unknown')}"
+            )
+        user_parts.append(f"Candidate model output:\n{row['model_output']}")
+        user = "\n\n".join(user_parts)
 
         return [
             {"role": "system", "content": system},

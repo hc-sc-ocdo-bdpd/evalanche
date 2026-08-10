@@ -40,11 +40,18 @@ def make_config(tmp_path: Path) -> EvaluationConfig:
             output_path=tmp_path / "results.csv",
         ),
         judge=JudgeConfig(
-            model="azure/test-judge"
+            model="azure/test-judge",
+            variant_id="artifact-primary",
+            provider_model_version="test-2026-08-06",
+            rubric_id="classification-correctness",
+            rubric_version="1.0",
         ),
         task=TaskConfig(
             name="classification",
             description="Classify the text.",
+            measured_construct="Closed-label classification accuracy.",
+            intended_use="Artifact regression testing.",
+            languages=["en"],
         ),
         scoring=ScoringConfig(),
         criteria=[
@@ -257,6 +264,48 @@ def test_report_does_not_treat_judge_error_as_model_failure(
     assert "Comparison outcome:** Not available" in report
     assert "judge failed" in report.lower()
     assert "not counted as candidate-model failures" in report
+
+
+def test_exploratory_judge_evidence_cannot_name_supported_leader(
+    tmp_path: Path,
+) -> None:
+    config = make_config(tmp_path)
+    records = []
+    for index in range(6):
+        for model_name, passed in (("model_a", True), ("model_b", False)):
+            records.append(
+                {
+                    "case_id": f"judge_{index}",
+                    "model_name": model_name,
+                    "evaluation_type": "judge",
+                    "evaluation_source": "llm_judge",
+                    "final_passed": passed,
+                    "final_score": float(passed),
+                    "evaluation_reason": "Exploratory judge result.",
+                    "judge_status": "success",
+                    "judge_evidence_level": "exploratory",
+                }
+            )
+    results = pd.DataFrame(records)
+    summary = build_evaluation_summary(results)
+    comparisons = build_pairwise_comparisons(results)
+
+    report = build_evaluation_report(
+        config=config,
+        results=results,
+        summary=summary,
+        comparisons=comparisons,
+        selection=pd.DataFrame(),
+        case_results_path="results.csv",
+        summary_path="summary.csv",
+        comparison_path="comparisons.csv",
+        selection_path="selection.csv",
+        metadata_path="metadata.json",
+    )
+
+    assert "Comparison outcome:** Observed results only" in report
+    assert "Judge evidence level:** `exploratory`" in report
+    assert "Evidence-supported result" not in report
 
 
 def test_report_includes_generation_and_judge_operations(
@@ -536,6 +585,17 @@ def test_run_evaluation_writes_reproducible_artifacts(
         metadata["hashes"]["model_selection_sha256"]
     ) == 64
     assert metadata["selection_policy"]["enabled"] is False
+    assert metadata["judge"]["variant_id"] == "artifact-primary"
+    assert metadata["judge"]["rubric_id"] == (
+        "classification-correctness"
+    )
+    assert metadata["judge"]["validation_evidence"]["level"] == (
+        "exploratory"
+    )
+    assert metadata["task"]["measured_construct"] == (
+        "Closed-label classification accuracy."
+    )
+    assert metadata["task"]["languages"] == ["en"]
 
     report = report_path.read_text(
         encoding="utf-8"

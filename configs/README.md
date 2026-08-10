@@ -23,6 +23,7 @@ examples.
 | `generate_hc_dpd_census_gpt_*.yaml` | Full 14,034-case model runs |
 | `evaluate_*.yaml` | Deterministic, judge, individual-model, or combined evaluations |
 | `judge_*.yaml` | Standalone criteria-judge examples |
+| `judge_protocols/*.yaml` | Versioned task-specific judge validation contracts |
 | `metrics_*.yaml` | Standalone deterministic-metric examples |
 
 The historical run configurations remain flat because completed metadata
@@ -121,6 +122,10 @@ evaluate_hc_dpd_census_all_models.yaml
 - Use a new config when changing a prompt, dataset version, model version, or
   scoring policy for a published result.
 - Keep pilot, comparison, and full-census outputs isolated by filename.
+- Give every judge run stable task, prompt, rubric, model-version, and settings
+  identifiers. A changed identity requires a new validation contract.
+- Keep LLM-judge evidence exploratory unless the exact protocol, JSON report,
+  source data, and generated validation artifacts remain hash-verifiable.
 - Run `--preflight-only` before a large generation whenever the config declares
   a local cost guard.
 - Run `registry-validate` before any registered benchmark plan or run.

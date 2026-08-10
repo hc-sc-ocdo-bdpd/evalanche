@@ -449,8 +449,29 @@ def build_recommendation_decision(
     comparisons: pd.DataFrame,
     selection: pd.DataFrame,
     config: SelectionConfig,
+    *,
+    evidence_block_reason: str | None = None,
 ) -> dict[str, Any]:
     quality = build_quality_decision(summary, comparisons)
+    if evidence_block_reason is not None and quality["status"] not in {
+        "no_results",
+        "incomplete_evaluation",
+        "single_model",
+    }:
+        return {
+            "mode": (
+                "constraint_aware" if config.enabled else "quality_only"
+            ),
+            "ranking_measure": (
+                "weighted_selection_score"
+                if config.enabled
+                else "overall_pass_rate"
+            ),
+            **quality,
+            "status": "insufficient_judge_validation",
+            "recommended_model": None,
+            "evidence_block_reason": evidence_block_reason,
+        }
     if not config.enabled:
         return {
             "mode": "quality_only",

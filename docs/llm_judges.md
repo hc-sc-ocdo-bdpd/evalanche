@@ -71,6 +71,23 @@ Useful implications:
 - correlation on one task does not validate a judge elsewhere;
 - the paper also raises concern about bias toward model-generated text.
 
+### LLM-Rubric
+
+[LLM-Rubric](https://aclanthology.org/2024.acl-long.745/) evaluates text with
+multiple rubric questions and calibrates the resulting judge signals against
+human annotations. In its studied dialogue setting, the calibrated,
+multidimensional approach predicted human ratings more accurately than the
+uncalibrated baseline. The paper also reports imperfect agreement both between
+LLMs and people and among human judges.
+
+Useful implications:
+
+- preserve dimensions separately before deriving any overall judgment;
+- calibration requires real human annotations, not merely a detailed prompt;
+- human disagreement is part of the measurement problem and should be
+  reported;
+- one calibrated task does not establish validity for another rubric or use.
+
 ### LLMBar
 
 [LLMBar](https://arxiv.org/abs/2310.07641) and its
@@ -111,6 +128,21 @@ Useful implications:
 - use double-blind candidate labels;
 - report inconsistency rather than silently choosing one order;
 - do not assume a low-temperature call removes order effects.
+
+### Prompt-paraphrase robustness
+
+[All Prompts Are Created Equal?](https://aclanthology.org/2026.findings-acl.1929/)
+tests semantically equivalent judge-prompt variants across several generation
+tasks. It reports an accuracy-robustness gap, especially for subjective
+attributes, and no judge that is uniformly strongest across the studied
+conditions.
+
+Useful implications:
+
+- human alignment under one prompt does not establish prompt robustness;
+- use non-adversarial paraphrases that preserve the rubric's meaning;
+- record label flips and chance-corrected stability across variants;
+- keep the exact production prompt in the validated contract.
 
 ### Prometheus 2
 
@@ -256,7 +288,8 @@ Report more than raw agreement.
 - confusion matrix;
 - accuracy;
 - precision and recall for the failure class;
-- false-positive rate, especially when the judge may approve bad outputs;
+- false-approval rate, which is the false-negative rate for the failure class,
+  especially when the judge may approve bad outputs;
 - Cohen's kappa for two raters;
 - Krippendorff's alpha when there are multiple raters, missing labels, or
   suitable scale types;
@@ -296,13 +329,29 @@ Appropriate for early development and failure discovery.
 - manual inspection of a sample;
 - clear exploratory label.
 
-This is close to the current Evalanche judge capability.
+This is the default when no matching validation report is attached.
+
+### Calibrated
+
+Appropriate when a judge has been tested as a measurement aid for one exact
+task and rubric.
+
+- everything in exploratory;
+- independent human annotations and adjudicated reference labels;
+- a separate validation split;
+- chance-corrected human-human and judge-human agreement;
+- failure precision, failure recall, and false-approval analysis;
+- declared acceptable thresholds and complete baseline coverage;
+- exact task, prompt, rubric, model version, settings, and data fingerprints.
+
+`calibrated` is task-specific. It does not mean the same judge can be trusted
+for a different language, rubric, model version, or evaluation construct.
 
 ### Decision-grade
 
 Appropriate when the result may influence a material internal choice.
 
-- everything in exploratory;
+- everything in calibrated;
 - human-reviewed calibration set;
 - reference or source evidence where possible;
 - chance-corrected agreement;
@@ -342,6 +391,10 @@ A defensible prompt should include:
 - an explicit tie or insufficient-evidence result when appropriate;
 - no candidate model identity.
 
+Blinding is not achieved merely by omitting a dedicated model-name field.
+Inspect inputs, response text, filenames, and metadata for identity leakage,
+and document unavoidable leakage as a limitation.
+
 Do not ask the judge to combine correctness, style, safety, and completeness
 into one unexplained score.
 
@@ -355,39 +408,161 @@ The current judge path provides:
 - retry and error recording;
 - raw and parsed judge outputs;
 - judge token, cost, latency, and failure accounting;
-- deterministic routes kept separate from judge routes.
+- deterministic routes kept separate from judge routes;
+- task, prompt, rubric, model, and version identifiers in the judge contract;
+- reference-required, reference-optional, and reference-free prompt modes;
+- candidate-identity blinding in the built-in pointwise prompt.
 
-It does not yet provide a complete decision-grade protocol. In particular, it
-does not automatically supply:
+The provider-free `validate-judge` path now provides:
 
-- a human calibration dataset and agreement analysis;
-- repeated trials;
-- prompt-paraphrase stability checks;
-- pairwise A/B and B/A judging;
-- multi-judge cross-validation;
-- systematic bias analysis;
-- automatic reference-aware versus reference-free comparison.
+- a versioned protocol and exact contract fingerprint;
+- independent and adjudicated human-label records;
+- separate calibration and validation splits;
+- raw agreement, Cohen's kappa, and Krippendorff's alpha;
+- a binary confusion matrix with failure precision, failure recall, false
+  approval, and Wilson intervals;
+- bootstrap uncertainty for judge-human kappa;
+- repeated-trial stability and prompt-paraphrase flip rates;
+- named-versus-blinded identity checks and optional self-preference shifts;
+- normalized pairwise A/B and B/A position flip and position-bias analysis;
+- full-case coverage checks for every declared stability and bias condition;
+- comparison of every saved judge variant against the same human labels;
+- criterion, language, difficulty, risk, and other declared subgroup results;
+- an explicit disagreement queue for human review;
+- machine-readable gates and computed evidence levels;
+- hash verification before a validation report can be attached to a run.
+
+Validation analysis never calls a provider. Human annotations and judge
+observations are generated and frozen separately, then analyzed repeatedly
+without paying for the calls again.
+
+The built-in ordinary judge command remains pointwise. Pairwise validation is
+supported through saved, canonically labelled A/B and B/A observations. The
+validator does not yet generate a pairwise tournament or decide which cases
+deserve human annotation.
+
+## Run the provider-free worked example
+
+The bundled example is synthetic and is permanently capped at `exploratory`:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli validate-judge --protocol examples/judge_validation/protocol.yaml
+```
+
+It produces a Markdown report, JSON report, gate CSV, disagreement CSV, and
+subgroup CSV under `results/judge_validation/`. A failed declared target still
+writes the diagnostic artifacts, then exits with status code 2.
+
+Keep the protocol inputs and all generated CSV artifacts at the paths recorded
+in the JSON report. When evidence is attached to an evaluation, Evalanche
+rechecks their hashes, derives the level from the preserved gate table, and
+rejects source drift or a manually raised status field.
+
+The three input files have fixed, inspectable contracts.
+
+### Cases
+
+At minimum:
+
+```text
+case_id,split,<declared slice columns>
+```
+
+Keep the input, reference or source evidence, and candidate output in this
+file as additional columns so every label remains auditable. Pointwise and
+pairwise tasks may use different output columns.
+
+### Human annotations
+
+```text
+case_id,criterion,reviewer_id,annotation_stage,label
+```
+
+`annotation_stage` is `independent` or `adjudicated`. Collect independent
+labels before adjudication. Use reviewer pseudonyms where identity should not
+be published, but retain the documented reviewer population and instructions.
+
+### Judge observations
+
+```text
+case_id,criterion,judge_variant_id,trial_id,prompt_variant_id,identity_condition,presentation_order,label,status,uncertainty
+```
+
+- `identity_condition` is `blinded` or `named`;
+- pointwise `presentation_order` is `pointwise`;
+- pairwise orders are `AB` and `BA`;
+- pairwise labels are canonical response identities, not first or second
+  position, so an order reversal can be compared correctly;
+- `status` is `success`, `error`, or `abstain`;
+- `uncertainty` is optional from 0 to 1 and is reported diagnostically, never
+  assumed to be calibrated probability.
+
+## How evidence levels are enforced
+
+The protocol declares a target level and stakeholder-approved gates. The
+software computes the highest level actually achieved. A user cannot promote
+evidence merely by writing `decision_grade` in a result file.
+
+The calibrated gates cover held-out cases, human reference quality,
+judge-human kappa, failure detection, false approval, baseline failures, and
+identity blinding. Decision-grade additionally requires independent human
+review controls, at least three uncached trials, prompt variants, identity-bias
+testing, and required subgroup coverage. Every declared control condition must
+cover every held-out validation case. Pairwise decision-grade protocols also
+require both response orders. Publishable adds frozen-protocol and governance
+gates.
+
+Thresholds such as minimum kappa and maximum false approval have no universal
+defaults. The protocol owner must choose and justify them based on error cost,
+prevalence, task stakes, and intended use. Evalanche reports both the declared
+threshold and observed value.
+
+Synthetic fixtures can never exceed `exploratory`. `publishable` means the
+evidence package passed its declared software-verifiable and documented
+governance gates. Those gates also require either multiple saved judge variants
+or a documented rationale for the frozen judge-selection protocol. It is not
+peer review or external certification.
+
+## Attach validated evidence to a judge run
+
+The active evaluation config must repeat the exact validated identity and
+attach the protocol and JSON report. The report's preserved input and artifact
+files must also remain available for hash verification:
+
+```yaml
+judge:
+  model: azure/replace-with-judge-deployment
+  variant_id: primary
+  provider_model_version: replace-with-exact-version
+  temperature: 0
+  prompt_id: evalanche.criteria_pointwise
+  prompt_version: "1.0"
+  rubric_id: my_task_quality
+  rubric_version: "1.0"
+  candidate_identity_blinded: true
+  reference_mode: required
+  protocol_path: configs/judge_protocols/my_task_quality_0_1_0.yaml
+  validation_report_path: results/judge_validation/my_task_quality/0.1.0/my_task_quality_0.1.0_validation.json
+  minimum_validation_level_for_selection: calibrated
+```
+
+The task description, measured construct, intended use, languages, scoring
+range, threshold, and criteria must also match. Any prompt, rubric, model,
+version, temperature, task, or criterion drift changes the contract hash and
+is rejected before judge calls begin.
+
+Without a matching report, judge rows remain `exploratory`. They can be
+inspected and compared descriptively, but they cannot produce an
+evidence-supported leader or an opt-in policy selection when the configured
+minimum is `calibrated`.
 
 Therefore:
 
 > An Evalanche LLM-judge score is exploratory unless the project using it has
-> completed and documented the additional validation outside or on top of the
-> current command.
+> completed the task-specific validation protocol and attached the exact
+> matching report.
 
 This limitation does not affect deterministic exact and JSON scoring.
-
-## Recommended implementation sequence
-
-1. Add a versioned judge protocol record.
-2. Add human calibration-case input and agreement reports.
-3. Add repeat trials and stability summaries.
-4. Add pairwise judging with A/B and B/A order control.
-5. Add judge identity blinding and randomized presentation records.
-6. Add cross-judge and subgroup validation.
-7. Make decision-grade and publishable labels contingent on completed checks.
-
-Until those features exist, document external calibration artifacts in the
-decision brief and retain human review for important conclusions.
 
 ## Claim language
 

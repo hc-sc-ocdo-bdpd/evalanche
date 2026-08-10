@@ -19,6 +19,10 @@ from evalanche.identity import (
 )
 from evalanche.io import load_eval_cases
 from evalanche.judges import CriteriaJudge
+from evalanche.judges.protocol import (
+    judge_claim_block_reason,
+    resolve_judge_evidence,
+)
 from evalanche.llm import operational_from_error
 from evalanche.metrics.deterministic import score_row
 from evalanche.operational import summarize_stage
@@ -157,6 +161,7 @@ def evaluate_cases(
     *,
     judge: Any | None = None,
 ) -> pd.DataFrame:
+    judge_evidence = resolve_judge_evidence(config)
     cases = validate_evaluation_keys(
         cases,
         source_name="evaluation input",
@@ -242,6 +247,18 @@ def evaluate_cases(
                 "judge_pricing_source": None,
                 "judge_pricing_catalog_version": None,
                 "judge_pricing_catalog_sha256": None,
+                "judge_evidence_level": (
+                    judge_evidence.level
+                    if row["evaluation_type"] == JUDGE
+                    else None
+                ),
+                "judge_protocol_id": judge_evidence.protocol_id,
+                "judge_protocol_version": judge_evidence.protocol_version,
+                "judge_protocol_sha256": judge_evidence.protocol_sha256,
+                "judge_contract_sha256": judge_evidence.contract_sha256,
+                "judge_validation_report_sha256": (
+                    judge_evidence.validation_report_sha256
+                ),
             }
         )
 
@@ -360,6 +377,30 @@ def evaluate_cases(
                     ),
                     "judge_pricing_catalog_sha256": judge_result.get(
                         "pricing_catalog_sha256"
+                    ),
+                    "judge_evidence_level": judge_result.get(
+                        "evidence_level",
+                        judge_evidence.level,
+                    ),
+                    "judge_protocol_id": judge_result.get(
+                        "protocol_id",
+                        judge_evidence.protocol_id,
+                    ),
+                    "judge_protocol_version": judge_result.get(
+                        "protocol_version",
+                        judge_evidence.protocol_version,
+                    ),
+                    "judge_protocol_sha256": judge_result.get(
+                        "protocol_sha256",
+                        judge_evidence.protocol_sha256,
+                    ),
+                    "judge_contract_sha256": judge_result.get(
+                        "contract_sha256",
+                        judge_evidence.contract_sha256,
+                    ),
+                    "judge_validation_report_sha256": judge_result.get(
+                        "validation_report_sha256",
+                        judge_evidence.validation_report_sha256,
                     ),
                 }
             )
@@ -715,6 +756,7 @@ def run_evaluation(
         comparisons,
         selection,
         config.selection,
+        evidence_block_reason=judge_claim_block_reason(results, config),
     )
     selection = mark_recommended_model(selection, decision)
     selection_path = save_model_selection(

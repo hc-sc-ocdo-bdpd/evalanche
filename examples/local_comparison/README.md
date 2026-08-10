@@ -22,7 +22,8 @@ metadata that can be preserved for grouped sampling and slice analysis.
 The open-ended template is not decision-grade by itself. Build human-reviewed
 calibration examples and follow
 [`docs/llm_judges.md`](../../docs/llm_judges.md) before using an LLM judge for
-an important conclusion.
+an important conclusion. The complete provider-free fixture is in
+[`examples/judge_validation/`](../judge_validation/README.md).
 
 See [`docs/local_comparison.md`](../../docs/local_comparison.md) for the full
 workflow.

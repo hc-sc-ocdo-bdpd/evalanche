@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from evalanche.config import EvalConfig
+from evalanche.judges.protocol import resolve_judge_evidence
 from evalanche.reporting import build_model_summary
 
 
@@ -52,6 +53,7 @@ def build_comparison_report(
     metadata_path: str | Path,
 ) -> str:
     summary = build_model_summary(results)
+    judge_evidence = resolve_judge_evidence(config)
 
     if summary.empty:
         return _build_empty_report(config=config)
@@ -103,6 +105,8 @@ def build_comparison_report(
 - **Run name:** `{config.run.name}`
 - **Task:** `{config.task.name}`
 - **Judge model:** `{config.judge.model}`
+- **Judge evidence level:** `{judge_evidence.level}`
+- **Judge protocol:** `{judge_evidence.protocol_id or 'not attached'}`
 - **Rows evaluated:** {total_rows}
 - **Unique cases:** {total_cases}
 - **Models compared:** {total_models}
@@ -136,6 +140,8 @@ accounts for hard constraints and operational evidence.
 
 - This comparison is limited to the evaluated task, dataset, rubric, and judge model.
 - LLM-as-judge scores are evaluation signals, not objective truth.
+- The judge evidence level applies only to its exact matched validation
+  contract. Exploratory evidence cannot support a model selection.
 - For high-stakes use cases, automated judge results should be calibrated against human or expert review.
 - If the test set is small or unrepresentative, the comparison should be treated as preliminary.
 - Cost, latency, privacy, deployment availability, bilingual performance, and operational constraints should be considered before production use.

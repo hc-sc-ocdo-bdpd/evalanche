@@ -97,6 +97,7 @@ def disable_report_outputs(
 def test_run_judge_only_sends_judge_cases_to_model(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     config = make_eval_config(tmp_path)
     cases = make_cases()
@@ -136,6 +137,10 @@ def test_run_judge_only_sends_judge_cases_to_model(
     assert captured_results["results"]["evaluation_type"].tolist() == [
         "judge"
     ]
+    output = capsys.readouterr().out
+    assert "Skipped 2 case(s) routed to deterministic evaluation" in output
+    assert "Saved case results to:" in output
+    assert "Saved comparison report to:" in output
 
 
 def test_run_judge_exits_cleanly_when_there_are_no_judge_cases(

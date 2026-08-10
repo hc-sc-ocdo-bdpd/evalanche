@@ -11,6 +11,7 @@ import pandas as pd
 
 from evalanche import __version__
 from evalanche.config import EvalConfig
+from evalanche.judges.protocol import resolve_judge_evidence
 from evalanche.pricing import build_pricing_snapshot
 from evalanche.reporting import build_model_summary
 
@@ -78,6 +79,7 @@ def build_run_metadata(
     model_summary_path: str | Path,
 ) -> dict[str, Any]:
     model_summary = build_model_summary(results)
+    judge_evidence = resolve_judge_evidence(config)
 
     model_names = (
         sorted(results["model_name"].dropna().astype(str).unique().tolist())
@@ -126,13 +128,32 @@ def build_run_metadata(
         },
         "judge": {
             "model": config.judge.model,
+            "variant_id": config.judge.variant_id,
+            "provider_model_version": (
+                config.judge.provider_model_version
+            ),
             "temperature": config.judge.temperature,
             "max_retries": config.judge.max_retries,
             "pricing_id": config.judge.pricing_id,
+            "prompt_id": config.judge.prompt_id,
+            "prompt_version": config.judge.prompt_version,
+            "rubric_id": config.judge.rubric_id,
+            "rubric_version": config.judge.rubric_version,
+            "candidate_identity_blinded": (
+                config.judge.candidate_identity_blinded
+            ),
+            "reference_mode": config.judge.reference_mode,
+            "minimum_validation_level_for_selection": (
+                config.judge.minimum_validation_level_for_selection
+            ),
+            "validation_evidence": judge_evidence.as_dict(),
         },
         "task": {
             "name": config.task.name,
             "description": config.task.description,
+            "measured_construct": config.task.measured_construct,
+            "intended_use": config.task.intended_use,
+            "languages": config.task.languages,
         },
         "scoring": {
             "score_min": config.scoring.score_min,

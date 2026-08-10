@@ -120,6 +120,7 @@ These are designed to make no provider calls:
 - `--help`;
 - `registry-validate`;
 - `verify-dataset`;
+- `validate-judge`;
 - `--plan-only`;
 - `--preflight-only`;
 - `summarize-benchmark`;

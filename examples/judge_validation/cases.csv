@@ -1,0 +1,9 @@
+case_id,split,language,difficulty,risk,input,reference_answer,candidate_output
+fixture_001,calibration,en,routine,normal,State the required status.,The status is active.,The status is active.
+fixture_002,calibration,en,challenging,high,State the required status.,The status is inactive.,The status is active.
+fixture_003,calibration,fr,routine,normal,Donnez le statut requis.,Le statut est actif.,Le statut est actif.
+fixture_004,calibration,fr,challenging,high,Donnez le statut requis.,Le statut est inactif.,Le statut est actif.
+fixture_005,validation,en,routine,normal,Return the supported conclusion.,The conclusion is supported.,The conclusion is supported.
+fixture_006,validation,en,challenging,high,Return the supported conclusion.,The conclusion is unsupported.,The conclusion is supported.
+fixture_007,validation,fr,routine,normal,Retournez la conclusion appuyee.,La conclusion est appuyee.,La conclusion est appuyee mais concise.
+fixture_008,validation,fr,challenging,high,Retournez la conclusion appuyee.,La conclusion n'est pas appuyee.,La conclusion est appuyee.

@@ -77,6 +77,7 @@ from evalanche.evaluation import run_evaluation
 from evalanche.generation import generate_outputs, preflight_generation
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
+from evalanche.judges.calibration import validate_judge_protocol
 from evalanche.metadata import save_run_metadata
 from evalanche.metrics import run_deterministic_metrics
 from evalanche.recommendation import save_comparison_report
@@ -280,6 +281,40 @@ def run_judge(config_path: str) -> None:
     print(f"Saved model summary to: {summary_path}")
     print(f"Saved run metadata to: {metadata_path}")
     print(f"Saved comparison report to: {comparison_report_path}")
+
+
+def run_validate_judge(
+    protocol_path: str,
+    *,
+    root_path: str = ".",
+    output_dir: str | None = None,
+) -> None:
+    try:
+        artifacts = validate_judge_protocol(
+            protocol_path,
+            root_path=root_path,
+            output_dir=output_dir,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Judge validation failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nJudge validation evidence")
+    print(f"Target level: {artifacts.target_level}")
+    print(f"Achieved level: {artifacts.achieved_level}")
+    print(f"Target met: {'yes' if artifacts.target_met else 'no'}")
+    print(f"Report: {artifacts.report_markdown_path}")
+    print(f"Machine-readable report: {artifacts.report_json_path}")
+    print(f"Gate results: {artifacts.gates_path}")
+    print(f"Disagreements: {artifacts.disagreements_path}")
+    print(f"Subgroups: {artifacts.subgroups_path}")
+
+    if not artifacts.target_met:
+        print(
+            "The declared target level was not achieved. Review the saved "
+            "gate results before using judge scores for stronger claims."
+        )
+        raise SystemExit(2)
 
 
 def run_combined_evaluation(config_path: str) -> None:
@@ -1457,6 +1492,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to a judge evaluation YAML config.",
     )
 
+    validate_judge_parser = subparsers.add_parser("validate-judge")
+    validate_judge_parser.add_argument(
+        "--protocol",
+        required=True,
+        help="Path to a versioned judge validation protocol YAML file.",
+    )
+    validate_judge_parser.add_argument(
+        "--root",
+        default=".",
+        help="Root used to resolve protocol data paths.",
+    )
+    validate_judge_parser.add_argument(
+        "--output-dir",
+        help=(
+            "Optional output directory. The default is a versioned path "
+            "under results/judge_validation."
+        ),
+    )
+
     dataset_parser = subparsers.add_parser("verify-dataset")
     dataset_parser.add_argument(
         "--manifest",
@@ -1983,6 +2037,12 @@ def main() -> None:
         run_metrics(args.config)
     elif args.command == "judge":
         run_judge(args.config)
+    elif args.command == "validate-judge":
+        run_validate_judge(
+            args.protocol,
+            root_path=args.root,
+            output_dir=args.output_dir,
+        )
     elif args.command == "evaluate":
         run_combined_evaluation(args.config)
     elif args.command == "verify-dataset":

@@ -1,0 +1,109 @@
+schema_version: "1.0"
+protocol_id: generic_open_ended_quality_fixture
+version: 0.1.0
+title: Synthetic open-ended response judge validation
+target_level: exploratory
+synthetic_fixture: true
+
+contract:
+  mode: pointwise
+  judge_variant_id: fixture_primary
+  judge_model: fixture/local-judge
+  provider_model_version: fixture-1
+  temperature: 0
+  prompt_id: evalanche.criteria_pointwise
+  prompt_version: "1.0"
+  rubric_id: generic_open_ended_quality
+  rubric_version: "1.0"
+  candidate_identity_blinded: true
+  reference_mode: required
+  task:
+    name: generic_open_ended_response
+    description: Assess whether a response is correct and complete.
+    measured_construct: Task-specific correctness and completeness.
+    intended_use: Demonstrate the offline judge-validation workflow.
+    languages: [en, fr]
+  scoring:
+    score_min: 0
+    score_max: 5
+    pass_threshold: 0.75
+  criteria:
+    - name: correctness
+      weight: 0.75
+      description: The response is supported by the reference and contains no material error.
+    - name: completeness
+      weight: 0.25
+      description: The response includes every required point without irrelevant padding.
+
+data:
+  cases_path: examples/judge_validation/cases.csv
+  human_annotations_path: examples/judge_validation/human_annotations.csv
+  judge_observations_path: examples/judge_validation/judge_observations.csv
+  labels: [pass, fail]
+  pass_label: pass
+  failure_label: fail
+  criteria: [overall]
+  primary_criterion: overall
+  split_column: split
+  calibration_split: calibration
+  validation_split: validation
+  slice_columns: [language, difficulty, risk]
+
+human_review:
+  reviewer_population: Synthetic reviewer fixtures, not real people.
+  instructions_version: fixture-1
+  minimum_independent_raters: 2
+  independent_before_adjudication: true
+  candidate_identity_blinded: true
+  judge_identity_blinded: true
+  adjudication_rule: A synthetic adjudicated row resolves each fixture disagreement.
+
+controls:
+  primary_judge_variant_id: fixture_primary
+  baseline_trial_id: trial_1
+  baseline_prompt_variant_id: baseline
+  baseline_identity_condition: blinded
+  baseline_presentation_order: pointwise
+  minimum_independent_trials: 3
+  minimum_prompt_variants: 2
+  require_identity_bias_test: true
+  require_position_swap: false
+  response_cache_disabled: true
+  required_slice_values:
+    language: [en, fr]
+    difficulty: [routine, challenging]
+  bootstrap_samples: 500
+  bootstrap_seed: 20260806
+
+thresholds:
+  minimum_validation_cases: 4
+  minimum_cases_per_required_slice: 2
+  minimum_human_alpha: 0.30
+  minimum_judge_human_kappa: 0.30
+  minimum_failure_precision: 0.50
+  minimum_failure_recall: 0.50
+  maximum_false_approval_rate: 0.50
+  maximum_observation_failure_rate: 0.05
+  minimum_stability_alpha: 0.60
+  maximum_prompt_flip_rate: 0.20
+  maximum_identity_flip_rate: 0.20
+
+governance:
+  protocol_status: draft
+  heldout_not_used_for_development: false
+  independent_review: false
+  conflicts_documented: false
+  raw_artifacts_preserved: true
+  judge_selection_rationale: Synthetic fixtures compare two judge variants only to exercise the report.
+  publication_notes: Synthetic workflow fixture only.
+
+research_basis:
+  - https://arxiv.org/abs/2606.19544
+  - https://aclanthology.org/2026.findings-acl.1929/
+  - https://arxiv.org/abs/2406.07791
+  - https://aclanthology.org/2024.acl-long.745/
+
+limitations:
+  - Every row is synthetic and must not be used to support a real judge claim.
+  - The small sample is designed for deterministic tests, not statistical power.
+  - Pointwise fixtures do not exercise the pairwise A/B and B/A schema.

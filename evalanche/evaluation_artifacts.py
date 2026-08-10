@@ -11,6 +11,10 @@ import pandas as pd
 from evalanche import __version__
 from evalanche.config import EvaluationConfig
 from evalanche.metadata import sha256_file
+from evalanche.judges.protocol import (
+    judge_claim_block_reason,
+    resolve_judge_evidence,
+)
 from evalanche.operational import summarize_operations
 from evalanche.pricing import build_pricing_snapshot
 from evalanche.selection import (
@@ -516,6 +520,20 @@ def _quality_recommendation_text(
             "selecting a model."
         )
 
+    if details["status"] == "insufficient_judge_validation":
+        leader = details.get("observed_leader")
+        observed = (
+            f" `{leader}` had the highest observed pass rate."
+            if leader is not None
+            else ""
+        )
+        return (
+            "**Comparison outcome:** Observed results only.\n\n"
+            f"{details['evidence_block_reason']}{observed} The report does "
+            "not treat this as an evidence-supported leader or select a "
+            "model."
+        )
+
     if len(summary) == 1:
         model = summary.iloc[0]
         return (
@@ -616,6 +634,13 @@ def _constraint_recommendation_text(
     if status in {"no_results", "incomplete_evaluation"}:
         return _quality_recommendation_text(summary, decision)
 
+    if status == "insufficient_judge_validation":
+        return (
+            "**Policy decision:** Not available.\n\n"
+            f"{decision['evidence_block_reason']} The configured policy "
+            "cannot select a model from judge evidence below that level."
+        )
+
     if status == "single_model":
         model_name = decision.get("observed_leader")
         matching = selection[
@@ -710,12 +735,15 @@ def _recommendation_text(
     summary: pd.DataFrame,
     comparisons: pd.DataFrame,
     selection: pd.DataFrame,
+    *,
+    evidence_block_reason: str | None = None,
 ) -> str:
     decision = build_recommendation_decision(
         summary,
         comparisons,
         selection,
         config.selection,
+        evidence_block_reason=evidence_block_reason,
     )
     if decision["mode"] == "quality_only":
         return _quality_recommendation_text(summary, decision)
@@ -755,12 +783,19 @@ def build_evaluation_report(
     judge_errors = int(
         source_counts.get("judge_error", 0)
     )
+    judge_evidence = resolve_judge_evidence(config)
+    evidence_block_reason = judge_claim_block_reason(results, config)
+    validation_report = (
+        f"`{judge_evidence.validation_report_path}`"
+        if judge_evidence.validation_report_path is not None
+        else "Not attached"
+    )
 
     return f"""# Evalanche Model Comparison
 
 ## Comparison outcome
 
-{_recommendation_text(config, summary, comparisons, selection)}
+{_recommendation_text(config, summary, comparisons, selection, evidence_block_reason=evidence_block_reason)}
 
 ## Evaluation Scope
 
@@ -775,6 +810,9 @@ def build_evaluation_report(
 - **Judge errors:** {judge_errors}
 - **Judge model:** `{config.judge.model}`
 - **Judge pass threshold:** {_format_percent(config.scoring.pass_threshold)}
+- **Judge evidence level:** `{judge_evidence.level}`
+- **Minimum judge level for selection:** `{config.judge.minimum_validation_level_for_selection}`
+- **Judge validation report:** {validation_report}
 
 ## Model Leaderboard
 
@@ -827,6 +865,8 @@ used as a fallback. Otherwise the cost remains unknown.
 
 - Exact and JSON cases use deterministic evaluation as the authoritative result.
 - Open-ended judge cases use the configured LLM judge.
+- Judge evidence below the configured validation level remains descriptive and
+  cannot produce an evidence-supported leader or policy-selected model.
 - Generation errors receive a score of zero and are not sent to the judge.
 - Judge errors remain unscored and prevent a complete comparative conclusion.
 - JSON partial-field scores are diagnostic; only a full match after the
@@ -845,6 +885,8 @@ used as a fallback. Otherwise the cost remains unknown.
 - Results apply only to this dataset, task, prompts, models, and configuration.
 - LLM-judge outputs are evaluation signals and should be calibrated against
   human review for important uses.
+- A judge validation level applies only to the exact task, rubric, prompt,
+  judge model, version, settings, and validation data in its matched contract.
 - Statistical intervals cover case-sampling uncertainty only; they do not
   cover prompt, generation, or judge variability.
 - The statistical methods assume cases are representative and independent.
@@ -925,7 +967,9 @@ def build_evaluation_metadata(
         comparisons,
         selection,
         config.selection,
+        evidence_block_reason=judge_claim_block_reason(results, config),
     )
+    judge_evidence = resolve_judge_evidence(config)
     operations = summarize_operations(results)
     pricing_snapshot = build_pricing_snapshot(
         path=config.endpoint_pricing_path,
@@ -1008,6 +1052,9 @@ def build_evaluation_metadata(
         "task": {
             "name": config.task.name,
             "description": config.task.description,
+            "measured_construct": config.task.measured_construct,
+            "intended_use": config.task.intended_use,
+            "languages": config.task.languages,
         },
         "routing": {
             "exact_and_json": "deterministic",
@@ -1017,12 +1064,27 @@ def build_evaluation_metadata(
         "metrics": config.metrics.model_dump(mode="json"),
         "judge": {
             "model": config.judge.model,
+            "variant_id": config.judge.variant_id,
+            "provider_model_version": (
+                config.judge.provider_model_version
+            ),
             "temperature": config.judge.temperature,
             "max_retries": config.judge.max_retries,
             "continue_on_error": (
                 config.judge.continue_on_error
             ),
             "pricing_id": config.judge.pricing_id,
+            "prompt_id": config.judge.prompt_id,
+            "prompt_version": config.judge.prompt_version,
+            "rubric_id": config.judge.rubric_id,
+            "rubric_version": config.judge.rubric_version,
+            "candidate_identity_blinded": (
+                config.judge.candidate_identity_blinded
+            ),
+            "reference_mode": config.judge.reference_mode,
+            "minimum_validation_level_for_selection": (
+                config.judge.minimum_validation_level_for_selection
+            ),
             "score_min": config.scoring.score_min,
             "score_max": config.scoring.score_max,
             "pass_threshold": (
@@ -1038,6 +1100,7 @@ def build_evaluation_metadata(
                 }
                 for criterion in config.criteria
             ],
+            "validation_evidence": judge_evidence.as_dict(),
         },
         "input_data": {
             "rows": int(len(cases)),

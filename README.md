@@ -60,6 +60,10 @@ The evaluation engine supports:
 - independent model, dataset, benchmark, price, and result records;
 - exact text and canonical JSON scoring;
 - rubric-based LLM judging for properties that need human-like judgment;
+- offline task-specific judge validation against independent and adjudicated
+  human labels;
+- chance-corrected agreement, stability, prompt, identity, order, and subgroup
+  diagnostics for saved judge observations;
 - case, field, language, slice, cost, token, latency, retry, and failure
   summaries;
 - paired comparisons with confidence intervals and multiplicity correction;
@@ -68,6 +72,10 @@ The evaluation engine supports:
 - immutable result bundles and reproducible artifact hashes;
 - comparison reports that preserve tradeoffs instead of selecting a model by
   default.
+
+Unvalidated judge results remain exploratory. A matching validation contract
+and report are required before judge evidence can support a comparative leader
+or an opt-in policy selection. See [LLM judges](docs/llm_judges.md).
 
 Adding a normal model deployment is data-only. Its manifest records the route,
 request settings, declared capabilities, version, and pricing reference. The
