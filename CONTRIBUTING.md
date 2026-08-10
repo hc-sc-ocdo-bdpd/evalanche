@@ -76,6 +76,9 @@ partial failures, and reproducibility guards.
 - Do not mix unrelated task or source families into one headline score.
 - Do not commit credentials, local endpoint URLs, personal paths, generated
   checkpoints, or case-level provider outputs.
+- Keep generated bring-your-own-task bundles under the ignored `local_tasks/`
+  path unless a deliberate review promotes a sanitized task into the main
+  registry.
 
 ## Research documentation
 

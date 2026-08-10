@@ -98,6 +98,19 @@ See the [local comparison guide](docs/local_comparison.md) for the complete,
 copy-and-paste Docker workflow, input templates, cost preflight, and report
 interpretation.
 
+The shortest bring-your-own-task path starts with one offline command:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli init-task
+```
+
+It asks only for task-owned information, creates an isolated bundle under
+`local_tasks/`, adds model stubs only for routes you explicitly name, and makes
+no provider calls. The generated README contains the exact validation, plan,
+preflight, tier, and report commands for that task. See
+[guided task initialization](docs/local_comparison.md#guided-task-initialization-recommended)
+for the non-interactive form and safety boundaries.
+
 ## Evidence, not a universal ranking
 
 Evalanche organizes public evidence by the question it can answer:

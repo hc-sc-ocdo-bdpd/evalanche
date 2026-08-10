@@ -3,6 +3,15 @@
 These small synthetic files show the minimum case shape for four common task
 families. Replace every example with representative cases from the real task.
 
+For ordinary use, prefer the guided offline initializer:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli init-task
+```
+
+These committed templates remain useful for inspecting the underlying file
+contracts and for repository tests.
+
 | Template | Evaluation route | Intended use |
 | --- | --- | --- |
 | `classification_cases.csv` | `exact` | Closed-label classification |

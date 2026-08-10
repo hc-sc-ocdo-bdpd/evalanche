@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -107,6 +108,14 @@ from evalanche.product_monograph_review import (
     check_product_monograph_label_review,
 )
 from evalanche.routing import JUDGE
+from evalanche.task_initializer import (
+    initialize_task_bundle,
+    normalize_family,
+    parse_criterion,
+    parse_model_route,
+    task_execution_blocker,
+    validate_task_bundle,
+)
 
 
 def run_generate(
@@ -740,6 +749,290 @@ def run_registry_validate(*, root_path: str) -> dict[str, Any]:
     return result
 
 
+def _prompt(
+    label: str,
+    *,
+    default: str | None = None,
+    required: bool = False,
+) -> str:
+    suffix = f" [{default}]" if default is not None else ""
+    while True:
+        value = input(f"{label}{suffix}: ").strip()
+        if value:
+            return value
+        if default is not None:
+            return default
+        if not required:
+            return ""
+        print("A value is required.")
+
+
+def _prompt_bool(label: str, *, default: bool = False) -> bool:
+    default_text = "Y/n" if default else "y/N"
+    while True:
+        value = input(f"{label} [{default_text}]: ").strip().casefold()
+        if not value:
+            return default
+        if value in {"y", "yes"}:
+            return True
+        if value in {"n", "no"}:
+            return False
+        print("Enter yes or no.")
+
+
+def _split_values(value: str, *, separator: str = ",") -> list[str]:
+    return [item.strip() for item in value.split(separator) if item.strip()]
+
+
+def run_init_task(
+    *,
+    root_path: str,
+    output_dir: str,
+    task_id: str | None,
+    description: str | None,
+    family: str | None,
+    languages: list[str] | None,
+    slice_columns: list[str] | None,
+    unacceptable_errors: list[str] | None,
+    model_routes: list[str] | None,
+    required_output_fields: list[str] | None,
+    criteria: list[str] | None,
+    measured_construct: str | None,
+    intended_use: str | None,
+    sample_input: str | None,
+    sample_expected_output: str | None,
+    artifact_policy: str | None,
+    contains_sensitive_data: bool,
+    privacy_notes: str | None,
+    starting_tier: str | None,
+    non_interactive: bool,
+    replace: bool,
+) -> dict[str, Any]:
+    try:
+        if non_interactive:
+            missing = [
+                name
+                for name, value in (
+                    ("--task-id", task_id),
+                    ("--description", description),
+                    ("--family", family),
+                )
+                if not value
+            ]
+            if missing:
+                raise ValueError(
+                    "non-interactive initialization requires "
+                    + ", ".join(missing)
+                )
+        else:
+            print("\nGuided task initialization")
+            print("No provider calls will be made.")
+            task_id = task_id or _prompt(
+                "Stable task ID (lowercase snake_case)",
+                required=True,
+            )
+            description = description or _prompt(
+                "Short task description",
+                required=True,
+            )
+            family = family or _prompt(
+                "Task family (classification, structured-extraction, "
+                "factual-response, open-ended-response)",
+                required=True,
+            )
+            if languages is None:
+                languages = _split_values(
+                    _prompt("Languages, comma separated", default="en")
+                )
+            if slice_columns is None:
+                raw_slices = _prompt(
+                    "Additional slice columns, comma separated",
+                    default="",
+                )
+                slice_columns = _split_values(raw_slices)
+            if unacceptable_errors is None:
+                raw_errors = _prompt(
+                    "Unacceptable errors, separated by semicolons",
+                    default="",
+                )
+                unacceptable_errors = _split_values(
+                    raw_errors,
+                    separator=";",
+                )
+            contains_sensitive_data = _prompt_bool(
+                "Could real task cases contain sensitive information?",
+                default=contains_sensitive_data,
+            )
+            artifact_policy = artifact_policy or _prompt(
+                "Artifact policy (local_only or shareable)",
+                default="local_only",
+            )
+            privacy_notes = privacy_notes or _prompt(
+                "Privacy or local-artifact note",
+                default=(
+                    "Keep cases and generated outputs local until sharing "
+                    "is reviewed."
+                ),
+            )
+            normalized_family = normalize_family(family)
+            if normalized_family == "structured_extraction" and (
+                required_output_fields is None
+            ):
+                required_output_fields = _split_values(
+                    _prompt(
+                        "Required JSON fields, comma separated",
+                        default="",
+                    )
+                )
+            if normalized_family == "open_ended_response":
+                measured_construct = measured_construct or _prompt(
+                    "What should the judge measure?",
+                    default="",
+                )
+                intended_use = intended_use or _prompt(
+                    "How may the judge evidence be used?",
+                    default="",
+                )
+                if criteria is None:
+                    raw_criteria = _prompt(
+                        "Criteria as NAME=WEIGHT=DESCRIPTION, separated by "
+                        "semicolons",
+                        default="",
+                    )
+                    criteria = _split_values(
+                        raw_criteria,
+                        separator=";",
+                    )
+            if not contains_sensitive_data:
+                sample_input = sample_input or _prompt(
+                    "Optional first development input",
+                    default="",
+                )
+                sample_expected_output = sample_expected_output or _prompt(
+                    "Optional expected output for that input",
+                    default="",
+                )
+            if model_routes is None:
+                raw_models = _prompt(
+                    "Confirmed routes as MODEL_ID=PROVIDER_ROUTE, separated "
+                    "by semicolons",
+                    default="",
+                )
+                model_routes = _split_values(raw_models, separator=";")
+            starting_tier = starting_tier or _prompt(
+                "Starting tier (smoke or screen)",
+                default="smoke",
+            )
+
+        parsed_models = [
+            parse_model_route(value) for value in (model_routes or [])
+        ]
+        parsed_criteria = [
+            parse_criterion(value) for value in (criteria or [])
+        ]
+        result = initialize_task_bundle(
+            root_path=root_path,
+            output_dir=output_dir,
+            task_id=str(task_id),
+            description=str(description),
+            family=str(family),
+            languages=languages,
+            slice_columns=slice_columns,
+            unacceptable_errors=unacceptable_errors,
+            models=parsed_models,
+            required_output_fields=required_output_fields,
+            criteria=parsed_criteria,
+            measured_construct=measured_construct or None,
+            intended_use=intended_use or None,
+            sample_input=sample_input or None,
+            sample_expected_output=sample_expected_output or None,
+            artifact_policy=(artifact_policy or "local_only"),
+            contains_sensitive_data=contains_sensitive_data,
+            privacy_notes=privacy_notes,
+            starting_tier=(starting_tier or "smoke"),
+            replace=replace,
+        )
+    except (EOFError, OSError, ValueError) as error:
+        print(f"Task initialization failed: {error}")
+        raise SystemExit(1) from None
+
+    validation = result["validation"]
+    print("\nEvalanche task starter")
+    print(f"Task: {result['task_id']}")
+    print(f"Bundle: {result['task_root']}")
+    if result["backup"] is not None:
+        print(f"Previous bundle preserved at: {result['backup']}")
+    print(
+        "Structure: "
+        + ("VALID" if validation["schema_valid"] else "INVALID")
+    )
+    if validation["ready_for_plan"]:
+        print("Readiness: READY FOR OFFLINE PLAN")
+    else:
+        print("Readiness: NEEDS USER INPUT")
+        for item in validation["unresolved_values"]:
+            print(f"- {item}")
+    print("Next: open the generated README.md.")
+    print("No provider calls were made.")
+    return result
+
+
+def run_validate_task(
+    *,
+    root_path: str,
+    require_cost_ready: bool = False,
+) -> dict[str, Any]:
+    try:
+        result = validate_task_bundle(root_path)
+    except (OSError, ValueError) as error:
+        print(f"Task validation failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nEvalanche task bundle")
+    print(f"Task: {result['task_id'] or 'unknown'}")
+    print(f"Root: {result['task_root']}")
+    print(
+        "Structure: "
+        + ("VALID" if result["schema_valid"] else "INVALID")
+    )
+    if result["structural_issues"]:
+        print("Structural issues:")
+        for item in result["structural_issues"]:
+            print(f"- {item}")
+    if result["unresolved_values"]:
+        print("Required task input:")
+        for item in result["unresolved_values"]:
+            print(f"- {item}")
+    if result["cost_blockers"]:
+        print("Cost preflight blockers:")
+        for item in result["cost_blockers"]:
+            print(f"- {item}")
+    if result["warnings"]:
+        print("Warnings:")
+        for item in result["warnings"]:
+            print(f"- {item}")
+    print("No provider calls were made.")
+
+    if not result["schema_valid"]:
+        print("Status: INVALID")
+        raise SystemExit(1)
+    if not result["ready_for_plan"]:
+        print("Status: NEEDS USER INPUT")
+        raise SystemExit(2)
+    if require_cost_ready and not result["ready_for_cost_preflight"]:
+        print("Status: NOT READY FOR COST PREFLIGHT")
+        raise SystemExit(2)
+    print(
+        "Status: "
+        + (
+            "READY FOR COST PREFLIGHT"
+            if result["ready_for_cost_preflight"]
+            else "READY FOR OFFLINE PLAN"
+        )
+    )
+    return result
+
+
 def run_register_result(
     *,
     root_path: str,
@@ -1050,6 +1343,21 @@ def run_benchmark_from_registry(
     maximum_cost_usd: float | None = None,
     access_set_path: str | None = None,
 ) -> dict[str, Any]:
+    task_profile_path = Path(root_path).resolve() / "task.yaml"
+    if task_profile_path.is_file() and not plan_only:
+        blocker = task_execution_blocker(
+            root_path,
+            require_paid_execution=not preflight_only,
+        )
+        if blocker is not None:
+            print(f"Benchmark run blocked: {blocker}")
+            raise SystemExit(1)
+        if experiment and tier_name is None:
+            print(
+                "Benchmark run blocked: generated task bundles must use a "
+                "manifest-defined tier with aggregate cost preflight."
+            )
+            raise SystemExit(1)
     if tier_name is not None:
         return run_tier_campaign_from_registry(
             root_path=root_path,
@@ -1455,6 +1763,117 @@ def run_check_product_monograph_label_review(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
+
+    init_task_parser = subparsers.add_parser(
+        "init-task",
+        help="Create an offline starter bundle for a user-owned task.",
+    )
+    init_task_parser.add_argument(
+        "--root",
+        default=".",
+        help="Evalanche repository root.",
+    )
+    init_task_parser.add_argument(
+        "--output-dir",
+        default="local_tasks",
+        help="Repository-relative parent directory for local task bundles.",
+    )
+    init_task_parser.add_argument("--task-id")
+    init_task_parser.add_argument("--description")
+    init_task_parser.add_argument(
+        "--family",
+        help=(
+            "classification, structured-extraction, factual-response, or "
+            "open-ended-response"
+        ),
+    )
+    init_task_parser.add_argument(
+        "--language",
+        action="append",
+        dest="languages",
+        help="Required language tag. Repeat for more than one.",
+    )
+    init_task_parser.add_argument(
+        "--slice",
+        action="append",
+        dest="slice_columns",
+        help="Additional lowercase slice column. Repeat as needed.",
+    )
+    init_task_parser.add_argument(
+        "--unacceptable-error",
+        action="append",
+        dest="unacceptable_errors",
+        help="An error that makes an output unusable. Repeat as needed.",
+    )
+    init_task_parser.add_argument(
+        "--model",
+        action="append",
+        dest="model_routes",
+        help=(
+            "Explicitly available MODEL_ID=PROVIDER_ROUTE. Repeat for each "
+            "confirmed route."
+        ),
+    )
+    init_task_parser.add_argument(
+        "--output-field",
+        action="append",
+        dest="required_output_fields",
+        help="Required JSON field for structured extraction.",
+    )
+    init_task_parser.add_argument(
+        "--criterion",
+        action="append",
+        help=(
+            "Open-ended criterion as NAME=WEIGHT=DESCRIPTION. Repeat as "
+            "needed."
+        ),
+    )
+    init_task_parser.add_argument("--measured-construct")
+    init_task_parser.add_argument("--intended-use")
+    init_task_parser.add_argument("--sample-input")
+    init_task_parser.add_argument("--sample-expected-output")
+    init_task_parser.add_argument(
+        "--artifact-policy",
+        choices=("local_only", "shareable"),
+    )
+    init_task_parser.add_argument(
+        "--contains-sensitive-data",
+        action="store_true",
+        help=(
+            "Generate placeholders only and record that real cases require "
+            "additional handling review."
+        ),
+    )
+    init_task_parser.add_argument("--privacy-notes")
+    init_task_parser.add_argument(
+        "--starting-tier",
+        choices=("smoke", "screen"),
+    )
+    init_task_parser.add_argument(
+        "--non-interactive",
+        action="store_true",
+        help="Require core values as arguments instead of prompting.",
+    )
+    init_task_parser.add_argument(
+        "--replace",
+        action="store_true",
+        help="Preserve the existing bundle as a timestamped backup.",
+    )
+
+    validate_task_parser = subparsers.add_parser(
+        "validate-task",
+        help="Validate a generated task bundle without provider calls.",
+    )
+    validate_task_parser.add_argument(
+        "--root",
+        required=True,
+        help="Generated task-bundle root.",
+    )
+    validate_task_parser.add_argument(
+        "--require-cost-ready",
+        action="store_true",
+        help="Also require verified pricing for every selected model.",
+    )
 
     evaluate_parser = subparsers.add_parser("evaluate")
     evaluate_parser.add_argument(
@@ -2028,7 +2447,36 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "generate":
+    if args.command == "init-task":
+        run_init_task(
+            root_path=args.root,
+            output_dir=args.output_dir,
+            task_id=args.task_id,
+            description=args.description,
+            family=args.family,
+            languages=args.languages,
+            slice_columns=args.slice_columns,
+            unacceptable_errors=args.unacceptable_errors,
+            model_routes=args.model_routes,
+            required_output_fields=args.required_output_fields,
+            criteria=args.criterion,
+            measured_construct=args.measured_construct,
+            intended_use=args.intended_use,
+            sample_input=args.sample_input,
+            sample_expected_output=args.sample_expected_output,
+            artifact_policy=args.artifact_policy,
+            contains_sensitive_data=args.contains_sensitive_data,
+            privacy_notes=args.privacy_notes,
+            starting_tier=args.starting_tier,
+            non_interactive=args.non_interactive,
+            replace=args.replace,
+        )
+    elif args.command == "validate-task":
+        run_validate_task(
+            root_path=args.root,
+            require_cost_ready=args.require_cost_ready,
+        )
+    elif args.command == "generate":
         run_generate(
             args.config,
             preflight_only=args.preflight_only,

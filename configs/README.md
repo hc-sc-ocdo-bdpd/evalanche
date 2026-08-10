@@ -30,6 +30,11 @@ The historical run configurations remain flat because completed metadata
 records their paths. New extensible work uses `models/`, `benchmarks/`, and
 versioned dataset-specific configuration directories.
 
+Generated bring-your-own-task configurations live under the ignored
+`local_tasks/<task_id>/` root. Run them with `--root local_tasks/<task_id>` so
+they remain isolated from this main registry. Promote a sanitized task into
+the main configuration tree only through deliberate review.
+
 ## Adding a model
 
 The active model inventory is the set of valid YAML manifests in `models/`.

@@ -17,7 +17,11 @@ from pydantic import (
 
 from evalanche import __version__
 from evalanche.config import (
+    CriterionConfig,
     DeterministicMetricsSettingsConfig,
+    JudgeConfig,
+    ScoringConfig,
+    TaskConfig,
     load_yaml,
 )
 
@@ -166,6 +170,10 @@ class BenchmarkScoring(RegistryModel):
         default_factory=DeterministicMetricsSettingsConfig
     )
     required_output_fields: list[str] = Field(default_factory=list)
+    judge: JudgeConfig | None = None
+    task: TaskConfig | None = None
+    score: ScoringConfig | None = None
+    criteria: list[CriterionConfig] = Field(default_factory=list)
     version: str
 
     @field_validator("required_output_fields")
@@ -182,6 +190,33 @@ class BenchmarkScoring(RegistryModel):
     @classmethod
     def validate_scoring_version(cls, value: str) -> str:
         return _nonblank(value, "scoring version")
+
+    @model_validator(mode="after")
+    def validate_evaluation_route(self) -> "BenchmarkScoring":
+        judge_fields = {
+            "judge": self.judge,
+            "task": self.task,
+            "score": self.score,
+            "criteria": self.criteria or None,
+        }
+        configured = [name for name, value in judge_fields.items() if value]
+        if self.evaluation_type == "judge":
+            missing = [name for name, value in judge_fields.items() if not value]
+            if missing:
+                raise ValueError(
+                    "judge scoring requires task-specific fields: "
+                    + ", ".join(missing)
+                )
+            if self.judge is not None and self.judge.protocol_path is None:
+                raise ValueError(
+                    "judge scoring requires a versioned protocol_path"
+                )
+        elif configured:
+            raise ValueError(
+                "judge, task, score, and criteria are only valid for "
+                "judge scoring"
+            )
+        return self
 
 
 class BenchmarkRuntime(RegistryModel):

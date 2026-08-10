@@ -31,6 +31,16 @@ from evalanche.routing import JUDGE
 RUN_PLAN_SCHEMA_VERSION = "1.0"
 
 
+def _execution_path(path: Path) -> str:
+    """Return a path that resolves from the process working directory."""
+
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(Path.cwd().resolve()).as_posix()
+    except ValueError:
+        return resolved.as_posix()
+
+
 def _paths(
     *,
     registry: LoadedRegistry,
@@ -121,14 +131,10 @@ def build_run_plan(
     generation = {
         "run": {
             "name": f"{benchmark.benchmark_id}_{model.model_id}",
-            "input_path": cases_path.relative_to(registry.root).as_posix(),
-            "output_path": paths["generation_output"]
-            .relative_to(registry.root)
-            .as_posix(),
+            "input_path": _execution_path(cases_path),
+            "output_path": _execution_path(paths["generation_output"]),
         },
-        "candidate_models_path": paths["candidate_config"]
-        .relative_to(registry.root)
-        .as_posix(),
+        "candidate_models_path": _execution_path(paths["candidate_config"]),
         "prompt": benchmark.prompt.model_dump(mode="json"),
         "generation": {
             "continue_on_error": True,
@@ -146,9 +152,12 @@ def build_run_plan(
         },
     }
     if cost_preflight_sample_path is not None:
-        generation["generation"]["cost_preflight_sample_path"] = Path(
-            cost_preflight_sample_path
-        ).as_posix()
+        sample_path = Path(cost_preflight_sample_path)
+        if not sample_path.is_absolute():
+            sample_path = registry.root / sample_path
+        generation["generation"]["cost_preflight_sample_path"] = (
+            _execution_path(sample_path)
+        )
     if maximum_estimated_cost_usd is not None:
         generation["generation"]["maximum_estimated_cost_usd"] = (
             maximum_estimated_cost_usd
@@ -163,23 +172,20 @@ def build_run_plan(
         )
     generation["prompt"].pop("version")
     if model.pricing_catalog_path is not None:
-        generation["endpoint_pricing_path"] = (
-            model.pricing_catalog_path.as_posix()
+        generation["endpoint_pricing_path"] = _execution_path(
+            registry.root / model.pricing_catalog_path
         )
 
+    scoring = benchmark.scoring
     evaluation = {
         "run": {
             "name": (
                 f"evaluate_{benchmark.benchmark_id}_{model.model_id}"
             ),
-            "input_path": paths["generation_output"]
-            .relative_to(registry.root)
-            .as_posix(),
-            "output_path": paths["evaluation_output"]
-            .relative_to(registry.root)
-            .as_posix(),
+            "input_path": _execution_path(paths["generation_output"]),
+            "output_path": _execution_path(paths["evaluation_output"]),
         },
-        "metrics": benchmark.scoring.metrics.model_dump(mode="json"),
+        "metrics": scoring.metrics.model_dump(mode="json"),
         "judge": {
             "model": "${JUDGE_MODEL}",
             "temperature": 0,
@@ -220,6 +226,34 @@ def build_run_plan(
             }
         ],
     }
+    if scoring.evaluation_type == JUDGE:
+        if (
+            scoring.judge is None
+            or scoring.task is None
+            or scoring.score is None
+            or not scoring.criteria
+        ):
+            raise ValueError(
+                "Judge benchmark is missing its task-specific scoring contract"
+            )
+        judge_config = scoring.judge.model_dump(mode="json")
+        for path_key in ("protocol_path", "validation_report_path"):
+            configured_path = judge_config.get(path_key)
+            if configured_path is not None:
+                judge_config[path_key] = _execution_path(
+                    registry.root / configured_path
+                )
+        evaluation["judge"] = judge_config
+        evaluation["task"] = scoring.task.model_dump(mode="json")
+        evaluation["scoring"] = scoring.score.model_dump(mode="json")
+        evaluation["criteria"] = [
+            criterion.model_dump(mode="json")
+            for criterion in scoring.criteria
+        ]
+        if model.pricing_catalog_path is not None:
+            evaluation["endpoint_pricing_path"] = _execution_path(
+                registry.root / model.pricing_catalog_path
+            )
     dump_yaml(paths["candidate_config"], candidate)
     dump_yaml(paths["generation_config"], generation)
     dump_yaml(paths["evaluation_config"], evaluation)

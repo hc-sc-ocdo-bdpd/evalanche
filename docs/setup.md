@@ -105,6 +105,7 @@ Open the local URL printed by JupyterLab. Stop the container when finished.
 
 | Path | Content | Git behavior |
 | --- | --- | --- |
+| `local_tasks/` | Guided task bundles, local cases, and task-specific configuration | Ignored |
 | `data/generated/` | Generated cases, plans, checkpoints, and provider outputs | Ignored |
 | `results/` | Local evaluations and comparison artifacts | Ignored except committed release structure |
 | `reports/` | Compact source-controlled releases and leaderboards | Tracked |
@@ -112,12 +113,16 @@ Open the local URL printed by JupyterLab. Stop the container when finished.
 
 Raw provider output should normally remain local. Compact public releases
 retain hashes and provenance without requiring provider calls to be repeated.
+`local_tasks/` is also excluded from the Docker image build context. Docker
+Compose can still access it at runtime through the repository volume mount.
 
 ## Safe command categories
 
 These are designed to make no provider calls:
 
 - `--help`;
+- `init-task`;
+- `validate-task`;
 - `registry-validate`;
 - `verify-dataset`;
 - `validate-judge`;

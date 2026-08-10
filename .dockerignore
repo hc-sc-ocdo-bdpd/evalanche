@@ -23,6 +23,7 @@ htmlcov
 
 data/generated
 results
+local_tasks
 
 .ipynb_checkpoints
 *.log

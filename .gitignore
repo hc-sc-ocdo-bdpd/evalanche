@@ -33,6 +33,7 @@ Thumbs.db
 .ipynb_checkpoints/
 
 # Local inputs and generated run artifacts
+local_tasks/
 data/raw/
 data/processed/
 data/generated/
