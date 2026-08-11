@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v7
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -60,3 +60,55 @@ jobs:
           python -m evalanche.cli verify-dataset \
             --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml \
             --root .
+
+  docker:
+    name: Clean-checkout Docker workflow
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Create local environment file
+        run: cp .env.example .env
+
+      - name: Validate Compose configuration
+        run: docker compose config --quiet
+
+      - name: Build runtime image
+        run: |
+          docker compose build
+          docker compose create evalanche
+
+      - name: Verify offline commands without network access
+        run: |
+          image_id="$(docker compose images -q evalanche)"
+          test -n "$image_id"
+          docker run --rm --network none \
+            --volume "$PWD:/app" --workdir /app "$image_id" \
+            python -m evalanche.cli --help
+          docker run --rm --network none \
+            --volume "$PWD:/app" --workdir /app "$image_id" \
+            python -m evalanche.cli registry-validate --root .
+          docker run --rm --network none \
+            --volume "$PWD:/app" --workdir /app "$image_id" \
+            python -m evalanche.cli evidence-status --root . --check
+          docker run --rm --network none \
+            --volume "$PWD:/app" --workdir /app "$image_id" \
+            python -m evalanche.cli init-task \
+              --root . \
+              --task-id ci_classification \
+              --description "Offline Docker initialization check." \
+              --family classification \
+              --language en \
+              --unacceptable-error "Returning the wrong label." \
+              --model ci_model=test/ci-model \
+              --sample-input "Example input" \
+              --sample-expected-output routine \
+              --non-interactive
+
+      - name: Run documented Docker quality gate
+        run: |
+          docker compose run --rm evalanche sh -lc \
+            "python -m pip install --no-cache-dir -r requirements-dev.txt && ruff check . && coverage run -m pytest && coverage report --fail-under=80"

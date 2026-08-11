@@ -44,6 +44,23 @@ The coverage configuration enforces a package-wide minimum of 80 percent.
 New behavior should include focused tests, especially for invalid inputs,
 partial failures, and reproducibility guards.
 
+Before a release, also run the supported clean-checkout Docker path:
+
+```bash
+cp .env.example .env
+docker compose config --quiet
+docker compose build
+docker compose run --rm evalanche sh -lc \
+  "python -m pip install --no-cache-dir -r requirements-dev.txt && ruff check . && coverage run -m pytest && coverage report --fail-under=80"
+docker compose run --rm evalanche python -m evalanche.cli registry-validate --root .
+docker compose run --rm evalanche python -m evalanche.cli evidence-status --root . --check
+```
+
+These commands do not call a model provider. Continuous integration repeats
+the Docker build and runs the core offline commands in a container with
+network access disabled, which protects the boundary between validation and
+paid execution.
+
 ## Change boundaries
 
 - Keep generation separate from evaluation. Saved model outputs must remain
