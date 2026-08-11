@@ -5,6 +5,8 @@ evaluations. It favors sources that change how a decision is made, not papers
 that merely introduce another score.
 
 For live task-specific sources, see [benchmarks.md](benchmarks.md).
+Source review dates, version scope, and maintenance status are tracked on the
+[evidence maintenance status page](status.md).
 
 ## If you read only five
 

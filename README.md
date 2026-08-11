@@ -133,6 +133,14 @@ to source papers, official benchmark sites, and maintained frameworks rather
 than copying fast-changing leaderboard scores into permanent advice.
 
 Explore the [research and evidence directory](docs/evidence/README.md).
+Its [maintenance status page](docs/evidence/status.md) shows when each source
+was last reviewed and whether it is current, stale, or superseded. The offline
+status command can evaluate the catalog for today's date without contacting a
+source site or model provider:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli evidence-status
+```
 
 ## Health Canada case studies
 

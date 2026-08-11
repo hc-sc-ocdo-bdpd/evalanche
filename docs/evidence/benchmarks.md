@@ -7,6 +7,9 @@ available to a user.
 Open the live source before making a decision. Record the model version,
 evaluation date, harness, settings, and score you actually used.
 
+Review dates, version scope, and current, stale, or superseded status are
+tracked on the [evidence maintenance status page](status.md).
+
 ## Quick task map
 
 | Task or question | Useful starting points |

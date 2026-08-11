@@ -34,6 +34,7 @@ Run the required checks before committing:
 ruff check .
 coverage run -m pytest
 coverage report
+python -m evalanche.cli evidence-status --root . --check
 python -m evalanche.cli verify-dataset \
   --manifest configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml \
   --root .
@@ -85,6 +86,9 @@ partial failures, and reproducibility guards.
 - Prefer original papers, official benchmark sites, maintained repositories,
   and official provider documentation.
 - Record a review date and publication status.
+- Keep every curated entry's maintenance status, next review date, version
+  scope, and change trigger current in `docs/evidence/catalog.yaml`.
+- Mark replaced sources as superseded instead of deleting their history.
 - Explain what the source measures, how it is scored, which setup matters, and
   where it should not transfer.
 - Do not copy fast-changing leaderboard scores into evergreen guidance.
@@ -92,6 +96,18 @@ partial failures, and reproducibility guards.
   consensus.
 - Use model and system terminology precisely. Agent-harness results are not
   base-model results.
+
+After reviewing evidence, update `status_report_as_of` and regenerate the
+committed status page:
+
+```bash
+python -m evalanche.cli evidence-status \
+  --root . --as-of YYYY-MM-DD --write
+python -m evalanche.cli evidence-status --root . --check
+```
+
+The command validates metadata and documentation links but makes no network or
+model calls. Source changes still require human interpretation.
 
 ## Configuration changes
 

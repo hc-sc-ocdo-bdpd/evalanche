@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -75,6 +76,12 @@ from evalanche.dpd_evidence_audit import (
 )
 from evalanche.dpd_snapshot import create_dpd_source_snapshot
 from evalanche.evaluation import run_evaluation
+from evalanche.evidence_catalog import (
+    EvidenceCatalogError,
+    build_evidence_status,
+    evaluate_evidence_catalog,
+    render_evidence_status_markdown,
+)
 from evalanche.generation import generate_outputs, preflight_generation
 from evalanche.io import load_eval_cases, save_results
 from evalanche.judges import CriteriaJudge
@@ -116,6 +123,89 @@ from evalanche.task_initializer import (
     task_execution_blocker,
     validate_task_bundle,
 )
+
+
+def run_evidence_status(
+    *,
+    root_path: str = ".",
+    catalog_path: str = "docs/evidence/catalog.yaml",
+    as_of_value: str | None = None,
+    output_path: str = "docs/evidence/status.md",
+    write: bool = False,
+    check: bool = False,
+    fail_on_outdated: bool = False,
+) -> None:
+    try:
+        as_of = date.fromisoformat(as_of_value) if as_of_value else None
+    except ValueError:
+        print("Evidence status failed: --as-of must be YYYY-MM-DD")
+        raise SystemExit(1) from None
+
+    try:
+        catalog, report = build_evidence_status(
+            root_path=root_path,
+            catalog_path=catalog_path,
+            as_of=as_of,
+        )
+        if check and as_of is None:
+            report = evaluate_evidence_catalog(
+                catalog,
+                root_path=root_path,
+                as_of=catalog.status_report_as_of,
+            )
+        rendered = render_evidence_status_markdown(
+            report,
+            report_path=output_path,
+        )
+    except (OSError, EvidenceCatalogError) as error:
+        print(f"Evidence status failed: {error}")
+        raise SystemExit(1) from None
+
+    root = Path(root_path)
+    target = Path(output_path)
+    if not target.is_absolute():
+        target = root / target
+
+    if write:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(rendered, encoding="utf-8")
+        print(f"Saved evidence status to: {target}")
+    elif check:
+        try:
+            saved = target.read_text(encoding="utf-8")
+        except FileNotFoundError:
+            print(f"Evidence status snapshot is missing: {target}")
+            raise SystemExit(1) from None
+        if saved != rendered:
+            print(
+                "Evidence status snapshot is out of date. Regenerate it "
+                "after reviewing the catalog."
+            )
+            raise SystemExit(1) from None
+        print(f"Evidence status snapshot matches: {target}")
+
+    counts = report.counts
+    print("\nEvidence maintenance")
+    print(f"As of: {report.as_of.isoformat()}")
+    print(f"Entries: {len(report.items)}")
+    print(f"Current: {counts['current']}")
+    print(f"Stale: {counts['stale']}")
+    print(f"Superseded: {counts['superseded']}")
+    for item in report.items:
+        if item.effective_status == "current":
+            continue
+        print(
+            f"- {item.effective_status.upper()}: "
+            f"{item.entry.entry_id}, review by {item.entry.review_by}"
+        )
+    print(
+        "Status: "
+        + ("NEEDS REVIEW" if report.outdated_count else "CURRENT")
+    )
+    print("No network or model calls were made.")
+
+    if fail_on_outdated and report.outdated_count:
+        raise SystemExit(2)
 
 
 def run_generate(
@@ -1764,6 +1854,49 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    evidence_parser = subparsers.add_parser(
+        "evidence-status",
+        help="Validate evidence metadata and report review freshness offline.",
+    )
+    evidence_parser.add_argument(
+        "--root",
+        default=".",
+        help="Evalanche repository root.",
+    )
+    evidence_parser.add_argument(
+        "--catalog",
+        default="docs/evidence/catalog.yaml",
+        help="Repository-relative evidence catalog path.",
+    )
+    evidence_parser.add_argument(
+        "--as-of",
+        help="Evaluate freshness on this YYYY-MM-DD date. Defaults to today.",
+    )
+    evidence_parser.add_argument(
+        "--output",
+        default="docs/evidence/status.md",
+        help="Repository-relative Markdown status snapshot path.",
+    )
+    evidence_output_group = evidence_parser.add_mutually_exclusive_group()
+    evidence_output_group.add_argument(
+        "--write",
+        action="store_true",
+        help="Write the generated Markdown status snapshot.",
+    )
+    evidence_output_group.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Confirm the saved snapshot matches the catalog's recorded "
+            "status date."
+        ),
+    )
+    evidence_parser.add_argument(
+        "--fail-on-outdated",
+        action="store_true",
+        help="Exit with status 2 if any evidence is stale or superseded.",
+    )
+
     init_task_parser = subparsers.add_parser(
         "init-task",
         help="Create an offline starter bundle for a user-owned task.",
@@ -2447,7 +2580,17 @@ def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
 
-    if args.command == "init-task":
+    if args.command == "evidence-status":
+        run_evidence_status(
+            root_path=args.root,
+            catalog_path=args.catalog,
+            as_of_value=args.as_of,
+            output_path=args.output,
+            write=args.write,
+            check=args.check,
+            fail_on_outdated=args.fail_on_outdated,
+        )
+    elif args.command == "init-task":
         run_init_task(
             root_path=args.root,
             output_dir=args.output_dir,

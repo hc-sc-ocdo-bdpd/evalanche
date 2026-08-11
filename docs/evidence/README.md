@@ -20,6 +20,7 @@ policy.
 | Understand validity, task transfer, contamination, uncertainty, and human evaluation | [Foundational papers and guidance](foundations.md) |
 | Find a benchmark or leaderboard for a task | [Benchmarks and living evidence sources](benchmarks.md) |
 | Choose an evaluation framework | [Evaluation frameworks](frameworks.md) |
+| Check whether a curated source is current, stale, or superseded | [Evidence maintenance status](status.md) |
 | Decide whether and how to use an LLM judge | [Evalanche LLM judge method](../llm_judges.md) |
 | Apply the evidence to a decision | [Model selection handbook](../choosing_a_model.md) |
 
@@ -44,6 +45,9 @@ Every curated entry should make these fields recoverable:
 - source and official URL;
 - publication or release status;
 - last reviewed date;
+- current, stale, or superseded maintenance status;
+- next review date and change that should trigger an earlier review;
+- exact version scope or living-source scope covered by the note;
 - question the source can help answer;
 - construct and task actually measured;
 - dataset and version;
@@ -57,7 +61,11 @@ When a leaderboard changes frequently, Evalanche links to the current source
 and preserves the interpretation of its method. It does not treat one scraped
 score table as evergreen guidance.
 
-## Evidence status labels
+The machine-readable source of this maintenance metadata is
+[`catalog.yaml`](catalog.yaml). Its generated [status page](status.md) puts
+stale and superseded sources first.
+
+## Publication status labels
 
 | Label | Use |
 | --- | --- |
@@ -72,6 +80,17 @@ Status does not determine relevance. A peer-reviewed benchmark can still be a
 poor match for the intended task. A current provider page can be the right
 source for route availability while remaining a weak source for independent
 quality claims.
+
+## Maintenance status labels
+
+| Label | Meaning |
+| --- | --- |
+| Current | Reviewed for the recorded version scope and not yet due for routine review |
+| Stale | Its review date has passed or a known change requires reassessment |
+| Superseded | Retained for history, but replaced or withdrawn and not suitable as current guidance |
+
+Maintenance status is not an evidence-strength rating. A current source can
+still be weak for a particular decision.
 
 ## A practical evidence stack
 
@@ -102,5 +121,28 @@ decision.
   version.
 - Recheck a source before a consequential decision.
 - Add a source only when it answers a question not already covered well.
+
+Run the offline status check before using the directory for a new decision:
+
+```bash
+python -m evalanche.cli evidence-status --root .
+```
+
+To update the committed snapshot after a human review:
+
+1. Update the entry in `catalog.yaml`, including `last_reviewed`, `review_by`,
+   `status`, `version_scope`, and `review_trigger`.
+2. Update `status_report_as_of` to the review date.
+3. Regenerate and check the snapshot:
+
+```bash
+python -m evalanche.cli evidence-status \
+  --root . --as-of YYYY-MM-DD --write
+python -m evalanche.cli evidence-status --root . --check
+```
+
+These commands read local files only. They do not contact source sites or
+model providers. A person must still inspect changed sources and decide what
+the change means.
 
 Last directory review: 2026-08-06.

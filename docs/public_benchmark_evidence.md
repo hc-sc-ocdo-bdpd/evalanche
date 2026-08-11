@@ -7,11 +7,16 @@ directory:
 - [Benchmarks and living evidence sources](evidence/benchmarks.md)
 - [Foundational papers and guidance](evidence/foundations.md)
 - [Evaluation frameworks](evidence/frameworks.md)
+- [Evidence maintenance status](evidence/status.md)
 - [LLM judge method](llm_judges.md)
 
 The new structure adds task coverage, scoring methods, setup conditions,
 publication status, limitations, and review dates without copying fast-changing
 leaderboard scores into permanent guidance.
+
+The machine-readable catalog records current, stale, and superseded status,
+review dates, version scope, and the change that should trigger another human
+review.
 
 Public evidence can mention any relevant model. It does not prove user access
 and never adds a model to an Evalanche candidate set automatically.

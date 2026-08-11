@@ -66,6 +66,12 @@ Registry and manifest validation:
 docker compose run --rm evalanche python -m evalanche.cli registry-validate
 ```
 
+Evidence metadata and committed status snapshot:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli evidence-status --check
+```
+
 Full development quality gate:
 
 ```bash
@@ -123,6 +129,7 @@ These are designed to make no provider calls:
 - `--help`;
 - `init-task`;
 - `validate-task`;
+- `evidence-status`;
 - `registry-validate`;
 - `verify-dataset`;
 - `validate-judge`;

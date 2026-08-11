@@ -1,0 +1,496 @@
+schema_version: "1.0"
+status_report_as_of: 2026-08-10
+
+# Status is a maintenance state, not an evidence-strength grade.
+# Review dates are deliberately shorter for living leaderboards and preprints.
+entries:
+  - id: benchmark.helm
+    title: HELM
+    evidence_type: Living benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: HELM
+    source_urls:
+      - https://crfm.stanford.edu/helm/
+    version_scope: Current HELM site, scenarios, and maintained leaderboards
+    review_trigger: Review after a new suite, scenario, adapter, or scoring release.
+
+  - id: benchmark.livebench
+    title: LiveBench
+    evidence_type: Living benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: LiveBench
+    source_urls:
+      - https://github.com/LiveBench/LiveBench
+    version_scope: Current repository release and refreshed question sets
+    review_trigger: Review after a dataset refresh, category change, or harness release.
+
+  - id: benchmark.lm_arena
+    title: LM Arena
+    evidence_type: Human-preference arena
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: LM Arena
+    source_urls:
+      - https://lmarena.ai/
+    version_scope: Current public arena methodology and leaderboard categories
+    review_trigger: Review after a ranking-method, category, or voting-policy change.
+
+  - id: benchmark.artificial_analysis
+    title: Artificial Analysis
+    evidence_type: Operational comparison service
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: Artificial Analysis
+    source_urls:
+      - https://artificialanalysis.ai/
+    version_scope: Current capability index and operational measurement methods
+    review_trigger: Review after an index, methodology, provider, or pricing change.
+
+  - id: benchmark.swe_bench_verified
+    title: SWE-bench Verified
+    evidence_type: Executable software benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: SWE-bench Verified
+    source_urls:
+      - https://www.swebench.com/verified.html
+    version_scope: Verified 500-task set and current official harness guidance
+    review_trigger: Review after a benchmark, harness, container, or submission-policy change.
+
+  - id: benchmark.livecodebench
+    title: LiveCodeBench
+    evidence_type: Executable coding benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: LiveCodeBench
+    source_urls:
+      - https://livecodebench.github.io/
+    version_scope: Current release, scenarios, and continuously collected problems
+    review_trigger: Review after a release, scenario, metric, or collection-policy change.
+
+  - id: benchmark.bfcl
+    title: Berkeley Function Calling Leaderboard, BFCL
+    evidence_type: Function-calling benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: Berkeley Function Calling Leaderboard, BFCL
+    source_urls:
+      - https://gorilla.cs.berkeley.edu/leaderboard.html
+    version_scope: Current BFCL version, categories, and leaderboard protocol
+    review_trigger: Review after a BFCL version, category, or scoring-interface change.
+
+  - id: benchmark.webarena
+    title: WebArena
+    evidence_type: Web-agent benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: WebArena
+    source_urls:
+      - https://webarena.dev/
+    version_scope: Current benchmark environments, tasks, and evaluators
+    review_trigger: Review after an environment, task, evaluator, or agent-protocol change.
+
+  - id: benchmark.gaia
+    title: GAIA
+    evidence_type: General-assistant benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: GAIA
+    source_urls:
+      - https://huggingface.co/spaces/gaia-benchmark/leaderboard
+    version_scope: Current official leaderboard, task levels, and submission tracks
+    review_trigger: Review after a task, leaderboard, tool-access, or submission change.
+
+  - id: benchmark.tau_bench
+    title: tau-bench
+    evidence_type: Tool-agent benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: tau-bench
+    source_urls:
+      - https://taubench.com/
+    version_scope: Current tau-bench family, domains, simulators, and evaluation protocol
+    review_trigger: Review after a benchmark-family, domain, simulator, or policy change.
+
+  - id: benchmark.longbench_v2
+    title: LongBench v2
+    evidence_type: Long-context benchmark
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: LongBench v2
+    source_urls:
+      - https://longbench2.github.io/
+    version_scope: LongBench v2 dataset and published evaluation settings
+    review_trigger: Review after a dataset version, setting, or leaderboard change.
+
+  - id: benchmark.docvqa
+    title: DocVQA
+    evidence_type: Document visual question answering benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: DocVQA
+    source_urls:
+      - https://www.docvqa.org/
+    version_scope: Current DocVQA tasks, tracks, datasets, and challenge protocol
+    review_trigger: Review after a task track, dataset, OCR policy, or metric change.
+
+  - id: benchmark.mmmu_pro
+    title: MMMU-Pro
+    evidence_type: Multimodal reasoning benchmark
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: MMMU-Pro
+    source_urls:
+      - https://github.com/MMMU-Benchmark/MMMU
+    version_scope: MMMU-Pro settings and the current official repository
+    review_trigger: Review after a dataset, setting, prompt, or repository release.
+
+  - id: benchmark.mteb_mmteb
+    title: MTEB and MMTEB
+    evidence_type: Embedding and retrieval benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: MTEB and MMTEB
+    source_urls:
+      - https://github.com/embeddings-benchmark/mteb
+    version_scope: Current MTEB task collection and multilingual or multimodal coverage
+    review_trigger: Review after a task, dataset, metric, language, or package release.
+
+  - id: benchmark.ares
+    title: ARES
+    evidence_type: Retrieval-augmented generation evaluation method
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: ARES
+    source_urls:
+      - https://github.com/stanford-futuredata/ARES
+    version_scope: Published ARES method and current official implementation
+    review_trigger: Review after a method, implementation, judge, or dependency change.
+
+  - id: benchmark.facts_grounding
+    title: FACTS Grounding
+    evidence_type: Grounded factuality benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: FACTS Grounding
+    source_urls:
+      - https://arxiv.org/abs/2501.03200
+    version_scope: Published dataset and current evaluator protocol
+    review_trigger: Review after a dataset, eligibility-rule, judge, or leaderboard change.
+
+  - id: benchmark.simpleqa
+    title: SimpleQA
+    evidence_type: Short factuality benchmark
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: SimpleQA
+    source_urls:
+      - https://arxiv.org/abs/2411.04368
+    version_scope: Published question set and grader protocol
+    review_trigger: Review after a dataset, grader, prompt, or official-result change.
+
+  - id: benchmark.global_mmlu
+    title: Global-MMLU
+    evidence_type: Multilingual knowledge benchmark
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: Global-MMLU
+    source_urls:
+      - https://arxiv.org/abs/2412.03304
+    version_scope: Published multilingual dataset and language subsets
+    review_trigger: Review after a dataset, language, translation, or publication change.
+
+  - id: benchmark.ailuminate
+    title: MLCommons AILuminate
+    evidence_type: AI safety benchmark
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/benchmarks.md
+    section: MLCommons AILuminate
+    source_urls:
+      - https://mlcommons.org/ailuminate/
+    version_scope: Current benchmark release, taxonomy, languages, and grading protocol
+    review_trigger: Review after a benchmark, taxonomy, language, grader, or policy change.
+
+  - id: foundation.nist_ai_rmf
+    title: NIST AI Risk Management Framework 1.0
+    evidence_type: Official risk-management framework
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-08-06
+    document: docs/evidence/foundations.md
+    section: NIST AI Risk Management Framework 1.0
+    source_urls:
+      - https://www.nist.gov/itl/ai-risk-management-framework
+    version_scope: NIST AI RMF 1.0 and official supporting material
+    review_trigger: Review after NIST publishes a revision or replacement framework.
+
+  - id: foundation.nist_genai_profile
+    title: NIST Generative AI Profile
+    evidence_type: Official generative-AI risk profile
+    source_kind: versioned
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-08-06
+    document: docs/evidence/foundations.md
+    section: NIST Generative AI Profile
+    source_urls:
+      - https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf
+    version_scope: NIST AI 600-1 final publication
+    review_trigger: Review after NIST publishes a revision, erratum, or replacement profile.
+
+  - id: foundation.nist_evaluation_guidance
+    title: NIST evaluation reporting and statistical guidance
+    evidence_type: Official draft and statistical guidance
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/foundations.md
+    section: NIST evaluation reporting and statistical guidance
+    source_urls:
+      - https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.800-2.ipd.pdf
+      - https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.800-3.pdf
+    version_scope: NIST AI 800-2 initial public draft and NIST AI 800-3 report
+    review_trigger: Review when AI 800-2 changes publication status or either report is revised.
+
+  - id: foundation.helm
+    title: Holistic Evaluation of Language Models, HELM
+    evidence_type: Evaluation framework paper
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/foundations.md
+    section: Holistic Evaluation of Language Models, HELM
+    source_urls:
+      - https://arxiv.org/abs/2211.09110
+    version_scope: Original HELM paper plus maintained official framework context
+    review_trigger: Review after a major HELM framework or reporting-method change.
+
+  - id: foundation.benchmark_lottery
+    title: The Benchmark Lottery
+    evidence_type: Peer-reviewed benchmark-method paper
+    source_kind: static
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-08-06
+    document: docs/evidence/foundations.md
+    section: The Benchmark Lottery
+    source_urls:
+      - https://arxiv.org/abs/2107.07002
+    version_scope: Published 2021 paper
+    review_trigger: Review if an erratum, updated version, or stronger replacement synthesis appears.
+
+  - id: foundation.construct_validity
+    title: Construct Validity in AI Benchmarks
+    evidence_type: Preprint systematic review
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/foundations.md
+    section: Construct Validity in AI Benchmarks
+    source_urls:
+      - https://arxiv.org/abs/2511.04703
+    version_scope: Current 2025 preprint version
+    review_trigger: Review after a preprint revision, peer-review decision, or final publication.
+
+  - id: foundation.dynabench
+    title: Dynabench
+    evidence_type: Peer-reviewed dynamic-benchmark paper
+    source_kind: static
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-08-06
+    document: docs/evidence/foundations.md
+    section: Dynabench
+    source_urls:
+      - https://aclanthology.org/2021.naacl-main.324/
+    version_scope: NAACL 2021 paper and platform proposal
+    review_trigger: Review if a later official method materially replaces its guidance.
+
+  - id: foundation.livebench
+    title: LiveBench method
+    evidence_type: Benchmark-method paper
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/foundations.md
+    section: LiveBench
+    source_urls:
+      - https://arxiv.org/abs/2406.19314
+    version_scope: Published method plus current official repository policy
+    review_trigger: Review after a paper revision or material freshness-policy change.
+
+  - id: foundation.human_evaluation_text
+    title: Human Evaluation of Automatically Generated Text
+    evidence_type: Peer-reviewed human-evaluation tutorial
+    source_kind: static
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-08-06
+    document: docs/evidence/foundations.md
+    section: Human Evaluation of Automatically Generated Text
+    source_urls:
+      - https://aclanthology.org/2024.inlg-tutorials.1/
+    version_scope: INLG 2024 tutorial paper
+    review_trigger: Review if an erratum or materially stronger reporting standard appears.
+
+  - id: foundation.chatbot_arena
+    title: Chatbot Arena
+    evidence_type: Human-preference method and platform
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2026-11-04
+    document: docs/evidence/foundations.md
+    section: Chatbot Arena
+    source_urls:
+      - https://arxiv.org/abs/2403.04132
+      - https://lmarena.ai/how-it-works
+    version_scope: ICML 2024 paper plus current arena methodology
+    review_trigger: Review after a methodology, ranking, filtering, or publication change.
+
+  - id: framework.inspect_ai
+    title: Inspect AI
+    evidence_type: Evaluation framework
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/frameworks.md
+    section: Inspect AI
+    source_urls:
+      - https://inspect.aisi.org.uk/
+    version_scope: Current official documentation, evaluation catalog, and package
+    review_trigger: Review after a major package, API, catalog, or maintainer change.
+
+  - id: framework.helm
+    title: HELM framework
+    evidence_type: Evaluation framework
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/frameworks.md
+    section: HELM
+    source_urls:
+      - https://crfm.stanford.edu/helm/
+    version_scope: Current official framework, scenarios, adapters, and leaderboards
+    review_trigger: Review after a major framework, suite, adapter, or documentation change.
+
+  - id: framework.lm_evaluation_harness
+    title: lm-evaluation-harness
+    evidence_type: Evaluation framework
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/frameworks.md
+    section: lm-evaluation-harness
+    source_urls:
+      - https://github.com/EleutherAI/lm-evaluation-harness
+    version_scope: Current official repository, task format, and model adapters
+    review_trigger: Review after a major package, task-schema, adapter, or policy change.
+
+  - id: framework.mteb
+    title: MTEB framework
+    evidence_type: Evaluation framework
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/frameworks.md
+    section: MTEB
+    source_urls:
+      - https://github.com/embeddings-benchmark/mteb
+    version_scope: Current official package, task registry, and evaluation API
+    review_trigger: Review after a major package, API, task-registry, or metric change.
+
+  - id: framework.openai_evals
+    title: OpenAI Evals
+    evidence_type: Evaluation framework
+    source_kind: living
+    status: current
+    last_reviewed: 2026-08-06
+    review_by: 2027-02-02
+    document: docs/evidence/frameworks.md
+    section: OpenAI Evals
+    source_urls:
+      - https://github.com/openai/evals
+    version_scope: Current official repository, eval definitions, and grader patterns
+    review_trigger: Review after a major repository, API, grader, or support-status change.
+
+  - id: framework.evalanche
+    title: Evalanche
+    evidence_type: Local evaluation framework
+    source_kind: local
+    status: current
+    last_reviewed: 2026-08-10
+    review_by: 2026-11-08
+    document: docs/evidence/frameworks.md
+    section: Evalanche
+    source_urls: []
+    version_scope: Repository behavior and supported workflow at the recorded review date
+    review_trigger: Review after a material CLI, scoring, registry, or reporting change.

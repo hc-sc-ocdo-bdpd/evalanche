@@ -4,6 +4,9 @@ Evalanche should not recreate every established evaluation tool. Choose the
 framework whose abstraction matches the work, then preserve enough metadata to
 interpret the result.
 
+Framework review dates, version scope, and maintenance status are tracked on
+the [evidence maintenance status page](status.md).
+
 ## Quick chooser
 
 | Need | Consider first |
