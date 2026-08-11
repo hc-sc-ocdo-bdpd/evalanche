@@ -1,0 +1,51 @@
+schema_version: "1.0"
+notes:
+  - Overrides use wording printed in the frozen monograph, not live DPD text.
+  - DIN, schedule, status, and sponsor remain alignment metadata and are not scored.
+cases:
+  hc_dpd_2c2174190b036b5a_fr:
+    active_ingredient_names:
+      Rantidine: Ranitidine
+  hc_dpd_467237d19b6080fa_fr:
+    active_ingredient_names:
+      Fimbriae Types 2 et 3: Fimbriae de types 2 et 3
+  hc_dpd_3188d041219430c6_fr:
+    active_ingredient_names:
+      Diméthicone: Diméticone 100 cSt
+  hc_dpd_90c34aee86855e30_fr:
+    dosage_forms: [Vaporisateur-doseur en suspension]
+  hc_dpd_e2756ab087d7a22b_en:
+    routes: [SPINAL]
+  hc_dpd_e2756ab087d7a22b_fr:
+    routes: [Rachidienne]
+  hc_dpd_d98eb0afeeb72237_fr:
+    brand_name: SUDAFED SINUS PLUS
+  hc_dpd_b35e1ec6cb452259_fr:
+    brand_name: Bortézomib pour injection
+    dosage_forms: [Poudre lyophilisée]
+  hc_dpd_b35e1ec6cb452259_en:
+    dosage_forms: [LYOPHILIZED POWDER]
+  hc_dpd_c8e96c44873b5890_fr:
+    brand_name: Shampoing Reddy-Clobétasol
+  hc_dpd_b2ae33ee64e13a77_fr:
+    brand_name: HÉPARINE SODIQUE INJECTABLE, USP
+  hc_dpd_ce8c2274074c61e1_en:
+    routes: [ORAL]
+normalization_aliases:
+  dosage_forms:
+    extended release capsule: CAPSULE (EXTENDED RELEASE)
+    extended release capsules: CAPSULE (EXTENDED RELEASE)
+    capsule à libération prolongée: Capsule (à libération prolongée)
+    capsules à libération prolongée: Capsule (à libération prolongée)
+    metered dose spray: SPRAY, METERED DOSE
+    pulvérisateur nasal à dose mesurée: Pulvérisation, à dose mesurée
+    lyophilized powder for solution: POWDER FOR SOLUTION
+    poudre lyophilisée: Poudre pour solution
+    onguent: Pommade
+  units:
+    units: UNIT
+    unit: UNIT
+    unités: Unité
+    unité: Unité
+    iu: UNIT
+    ui: Unité

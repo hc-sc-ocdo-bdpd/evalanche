@@ -12,6 +12,8 @@ not define which models a new user can access.
 | DPD structured extraction 0.2.0 | Deterministic bilingual rendering of Drug Product Database records | 14,034 | Frozen | Four-model compact release and leaderboard |
 | Product Monograph evidence-window extraction 0.1.0 | Label-selected text windows from official monographs | 80 | Frozen | Four-model leaderboard |
 | Product Monograph native-PDF extraction 0.1.0 | Complete official English and French PDFs | 80 | Draft | Local provisional experiments only |
+| Product Monograph evidence-window extraction 1.0.0 | Label-selected text windows from official monographs | 400 | Draft | Human audit required, no model results |
+| Product Monograph native-PDF extraction 1.0.0 | Complete official English and French PDFs | 400 | Draft | Human audit required, no model results |
 
 Each result applies only to the named input contract, prompt, dataset, model
 route, and scoring policy.
@@ -78,6 +80,18 @@ It does not measure:
 The failed route remains visible rather than being silently removed. It is not
 ranked alongside complete runs.
 
+### Expanded 1.0.0 draft
+
+The new release contains 200 English and French product pairs, including all
+40 exposed pilot families as development data and 160 genuinely new held-out
+families. Exact ingredient groups are unique across all 200 families. The
+release has 2,162 provisional scored facts and a separate 600-check product
+identity, scope, and bilingual audit gate. No 1.0.0 model calls or results are
+included.
+
+Open the
+[1.0.0 expansion card and audit runbook](../hc_benchmark/HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+
 Open:
 
 - [benchmark card and runbook](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md);
@@ -96,7 +110,7 @@ Scores from the evidence-window and native-PDF tasks must not be mixed into one
 ranking. A difference between them can help diagnose whether the bottleneck is
 retrieval and document handling or extraction and schema fidelity.
 
-### Current status
+### Historical 0.1.0 status
 
 - 80 PDFs representing 40 English and French product pairs.
 - Complete source lock with URL, file hash, byte size, page count, and language
@@ -114,6 +128,11 @@ individual ingredients, strengths, dosage forms, and routes.
 The expected labels inherit automated alignment, page-evidence checks, and
 targeted overrides from the evidence-window work. This is useful provisional
 evidence, but it is not independent human labeling.
+
+The 1.0.0 draft supersedes the pilot as the active expansion target. It uses
+400 unique PDFs, 2,162 fact checks, and 600 product-pair checks. The older
+80-PDF local experiments remain historical pilot evidence and are not scores
+on the expanded cohort.
 
 Until the review is complete:
 
@@ -136,7 +155,7 @@ Preflight a native-PDF smoke run:
 ```bash
 docker compose run --rm evalanche \
   python -m evalanche.cli run-benchmark \
-  --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 \
+  --benchmark hc_product_monograph_native_pdf_extraction@1.0.0 \
   --tier smoke \
   --all-compatible \
   --access-set configs/access_sets/my_available_models.yaml \
@@ -154,7 +173,7 @@ Summarize access-confirmed standard results:
 ```bash
 docker compose run --rm evalanche \
   python -m evalanche.cli summarize-benchmark \
-  --benchmark hc_product_monograph_native_pdf_extraction@0.1.0 \
+  --benchmark hc_product_monograph_native_pdf_extraction@1.0.0 \
   --tier standard \
   --access-set configs/access_sets/my_available_models.yaml
 ```
@@ -178,7 +197,8 @@ oracle-window extraction test, not an end-to-end PDF result.
 
 Promotion requires, at minimum:
 
-- review and approval of all 390 reference facts;
+- review and approval of all 2,162 reference facts in 1.0.0;
+- approval of all 600 product identity, scope, and bilingual checks;
 - a new dataset version for any label correction;
 - complete PDF integrity checks;
 - locked prompt before held-out evaluation;
@@ -187,9 +207,10 @@ Promotion requires, at minimum:
 - identical cases for every public leaderboard entry;
 - publication of limitations and retained raw-artifact hashes.
 
-Expanding the PDF corpus is deliberately deferred. Adding one model to the
-fixed 80-case task costs only that model's 80 calls. Expanding the benchmark
-creates a new release and may require comparable new runs across every model.
+The expanded corpus is now a separate 1.0.0 draft. Adding one model to the
+older fixed 80-case pilot still costs only that model's 80 calls, but those
+scores do not transfer to 1.0.0. Comparable expanded results require new runs
+on the same audited 400-case release.
 
 ## Detailed documentation
 
@@ -199,4 +220,5 @@ creates a new release and may require comparable new runs across every model.
 - [DPD and Product Monograph specification](../hc_benchmark/HC_DPD_PM_BENCHMARK_SPEC.md)
 - [Product Monograph evidence-window card](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
 - [Product Monograph native-PDF plan](../hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
+- [Product Monograph 1.0.0 expansion and audit](../hc_benchmark/HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md)
 - [Architecture review](../hc_benchmark/PRODUCT_MONOGRAPH_ARCHITECTURE_REVIEW.md)

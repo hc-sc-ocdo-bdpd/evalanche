@@ -1,5 +1,9 @@
 # Product Monograph architecture review
 
+> This review records the 0.1.0 pilot decision. The implemented 1.0.0
+> expansion, current counts, and enlarged human gate are documented in
+> [`HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md`](HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+
 Reviewed: 2026-08-04
 
 ## Verdict

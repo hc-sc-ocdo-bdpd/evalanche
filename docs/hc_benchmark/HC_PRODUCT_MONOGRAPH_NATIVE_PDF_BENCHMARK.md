@@ -1,5 +1,10 @@
 # Health Canada Product Monograph native-PDF benchmark 0.1.0
 
+> **Expanded draft available:** Version 1.0.0 contains 200 product families,
+> 400 complete PDFs, unique ingredient groups, and fact plus product-scope
+> audit gates. See
+> [`HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md`](HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+
 - **Status:** Draft, local experiments allowed, publication blocked
 - **Dataset:** `hc_product_monograph_native_pdf_extraction@0.1.0`
 - **Cases:** 80 complete official PDFs, 40 English and 40 French

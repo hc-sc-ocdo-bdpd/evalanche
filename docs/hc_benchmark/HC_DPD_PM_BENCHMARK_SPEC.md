@@ -92,8 +92,8 @@ These exclusions reduce infrastructure and label-noise risk in the first release
 
 ## 4. Unit of evaluation
 
-In each Product Monograph version `0.1.0`, one case represents one Product
-Monograph language instance.
+In Product Monograph versions `0.1.0` and `1.0.0`, one case represents one
+Product Monograph language instance.
 
 Each case contains:
 
@@ -227,6 +227,10 @@ A case passes only when the output is valid, schema-compliant JSON and every req
 - Do not include selected evidence text, page numbers, expected outputs, or
   source metadata in the native-PDF model prompt.
 - Keep a 10-product held-out set that is not used for prompt development.
+- In 1.0.0, treat all 40 exposed pilot families as development data and keep
+  160 newly selected families held-out.
+- In 1.0.0, represent every ingredient group only once across all 200
+  families.
 - Group related products by active ingredient and reference-product family when dividing development and held-out cases.
 - Do not tune prompts against held-out outputs.
 - Record model identifier, deployment, parameters, prompt version, evaluator version, dataset version, and run timestamp.
@@ -244,30 +248,27 @@ The evidence-window diagnostic is ready to run only when:
 - no held-out product family appears in the development subset
 - deterministic metrics pass unit tests on representative one-to-one and one-to-many cases
 
-The native-PDF benchmark additionally requires all 390 field-level labels to
-receive human approval, all source PDFs to pass local verification, an English
-and French development case to succeed through every intended provider route,
-token and cost reporting to be checked, and the prompt to be locked before any
-held-out run. Until then, registration and leaderboard publication remain
-blocked. Explicit local experiments may run, but stay provisional and
-unranked.
+The historical 0.1.0 native-PDF benchmark requires all 390 field-level labels
+to receive human approval. The 1.0.0 expansion requires all 2,162 fact checks
+plus 600 product identity, scope, and bilingual checks. Both also require all
+source PDFs to pass local verification, an English and French development case
+to succeed through every intended provider route, token and cost reporting to
+be checked, and the prompt to be locked before any held-out run. Until then,
+registration and leaderboard publication remain blocked. Explicit local
+experiments may run, but stay provisional and unranked.
 
-## 11. Expansion plan
+## 11. Expansion status
 
-After the 40-product pilot:
+The major corpus expansion is complete as draft version 1.0.0:
 
-1. Use the registry-discovered experiment summary for any completed compatible
-   model. Do not create an analysis tied to the current model inventory.
-2. Preserve the 80-document release as the standard pilot while smoke and
-   smaller screening tiers are designed for cheaper candidate triage.
-3. Complete label review, provider smoke tests, and prompt locking only if a
-   public HC benchmark release is an active goal.
-4. If promoted, run any compatible model against the same frozen release and
-   keep native-PDF and evidence-window rankings separate.
-5. Expand the HC corpus only when more precision or document diversity can
-   change a real decision. Expansion creates a new release.
-6. Add harder scanned documents only if OCR is evaluated as a separate factor.
-7. Develop Recalls and Summary Reports as separate optional task packs rather
+1. Preserve the 80-document 0.1.0 release and results as historical pilot
+   evidence.
+2. Human-audit the 400-document 1.0.0 release before any ranked use.
+3. Use smoke and screen tiers before a full 400-case model run.
+4. Run compatible models against identical frozen 1.0.0 cases and keep
+   native-PDF and evidence-window rankings separate.
+5. Add harder scanned documents only if OCR is evaluated as a separate factor.
+6. Develop Recalls and Summary Reports as separate optional task packs rather
    than mixing unrelated task types into one score.
 
 ## 12. Explicit non-goals

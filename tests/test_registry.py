@@ -114,7 +114,9 @@ def test_repository_registry_is_valid() -> None:
     assert {
         "hc_dpd_structured_extraction@0.2.0",
         "hc_product_monograph_native_pdf_extraction@0.1.0",
+        "hc_product_monograph_native_pdf_extraction@1.0.0",
         "hc_product_monograph_structured_extraction@0.1.0",
+        "hc_product_monograph_structured_extraction@1.0.0",
     }.issubset(registry.benchmarks)
 
 
@@ -246,12 +248,8 @@ def test_draft_and_capability_gates_prevent_accidental_execution(
     tmp_path: Path,
 ) -> None:
     _synthetic_registry(tmp_path)
-    benchmark_path = (
-        tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
-    )
-    benchmark_document = yaml.safe_load(
-        benchmark_path.read_text(encoding="utf-8")
-    )
+    benchmark_path = tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
+    benchmark_document = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
     benchmark_document["status"] = "draft"
     benchmark_document["required_capabilities"] = ["pdf_input"]
     _write_yaml(benchmark_path, benchmark_document)
@@ -419,9 +417,7 @@ def test_manifest_line_endings_do_not_change_compatibility(
     before = benchmark_fingerprint(registry, benchmark)
 
     manifest_path = tmp_path / "data/manifest.yaml"
-    manifest_path.write_bytes(
-        manifest_path.read_bytes().replace(b"\n", b"\r\n")
-    )
+    manifest_path.write_bytes(manifest_path.read_bytes().replace(b"\n", b"\r\n"))
     after = benchmark_fingerprint(registry, benchmark)
 
     assert before == after
@@ -429,15 +425,11 @@ def test_manifest_line_endings_do_not_change_compatibility(
 
 def test_published_dpd_registry_scores_match_frozen_release() -> None:
     path = (
-        ROOT
-        / "reports/benchmarks/hc_dpd_structured_extraction/"
-        "0.2.0/leaderboard.json"
+        ROOT / "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/leaderboard.json"
     )
     document = json.loads(path.read_text(encoding="utf-8"))
     rows = {row["model_id"]: row for row in document["models"]}
-    assert {
-        model: row["passed_cases"] for model, row in rows.items()
-    } == {
+    assert {model: row["passed_cases"] for model, row in rows.items()} == {
         "gpt_5_6_sol": 14_021,
         "gpt_5_6_terra": 13_986,
         "gpt_5_4_mini": 10_827,

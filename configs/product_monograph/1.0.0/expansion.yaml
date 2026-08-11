@@ -1,0 +1,44 @@
+schema_version: "1.0"
+version: 1.0.0
+retrieved_at_utc: "2026-08-11T13:46:30Z"
+
+source_dpd_dataset:
+  dataset_id: hc_dpd_structured_extraction_census
+  version: 0.2.0
+  products_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/products.csv.gz
+  cases_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/cases.csv.gz
+
+inherit:
+  version: 0.1.0
+  products_path: data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/products.csv
+  sources_path: data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/source_documents.csv
+  overrides_path: configs/product_monograph/0.1.0/label_overrides.yaml
+
+selection:
+  seed: "20260811"
+  target_products: 200
+  development_products: 40
+  heldout_products: 160
+  target_strata:
+    single_ingredient: 80
+    multi_ingredient: 50
+    multi_variant: 50
+    multi_ingredient_multi_variant: 20
+  route_cycle:
+    - oral
+    - parenteral
+    - topical
+    - oral
+    - other
+    - parenteral
+    - inhaled_or_nasal
+    - ophthalmic_or_otic
+    - oral
+    - topical
+    - other
+
+network:
+  timeout_seconds: 120
+  retries: 3
+  retry_backoff_seconds: 1
+  max_workers: 8

@@ -1,0 +1,256 @@
+schema_version: '1.0'
+benchmark_id: hc_product_monograph_structured_extraction
+version: 1.0.0
+title: Health Canada Product Monograph evidence-window extraction
+description: Draft bilingual extraction from 400 official English and French Product
+  Monographs representing 200 marketed human-drug families. Each model receives label-selected
+  source pages as text.
+status: draft
+dataset:
+  dataset_id: hc_product_monograph_structured_extraction
+  version: 1.0.0
+  manifest_path: configs/datasets/hc_product_monograph_structured_extraction_1.0.0_manifest.yaml
+  cases_path: data/hc/benchmarks/product_monograph_structured_extraction/1.0.0/cases.csv.gz
+prompt:
+  version: '1.0'
+  system: You are a careful structured-data extraction system. Use only the supplied
+    Product Monograph evidence, follow the requested JSON schema exactly, preserve
+    source-language values, and return one JSON object with no Markdown or explanation.
+  template: '{input}'
+scoring:
+  evaluation_type: json
+  version: '1.1'
+  required_output_fields:
+  - brand_name
+  - active_ingredients
+  - dosage_forms
+  - routes
+  metrics:
+    case_sensitive: false
+    trim_whitespace: true
+    collapse_whitespace: true
+    unicode_normalization: NFKC
+    strip_diacritics: true
+    strip_punctuation: true
+    json_comparison:
+      set_list_paths:
+      - /active_ingredients
+      - /dosage_forms
+      - /routes
+      numeric_value_paths:
+      - /active_ingredients/*/strength
+      strip_parenthetical_paths:
+      - /active_ingredients/*/name
+      value_aliases:
+        /active_ingredients/*/name:
+          vardénafil: ingredient vardenafil fr
+          vardénafil sous forme de trihydrate de chlorhydrate de vardénafil: ingredient
+            vardenafil fr
+          zinc sulfate: ingredient zinc sulfate en
+          zinc sulfate monohydrate: ingredient zinc sulfate en
+          sulfate de zinc: ingredient zinc sulfate fr
+          sulfate de zinc monohydraté: ingredient zinc sulfate fr
+          vitamin d3: ingredient vitamin d3
+          cholecalciferol: ingredient vitamin d3
+          vitamine d3: ingredient vitamin d3
+          cholécalciférol: ingredient vitamin d3
+          ranitidine: ingredient ranitidine en
+          ranitidine hydrochloride: ingredient ranitidine en
+          dimethicone: ingredient dimethicone en
+          dimethicone 100 cst: ingredient dimethicone en
+        /active_ingredients/*/unit:
+          mg: unit mg
+          mg/ml: unit mg
+          mg/5 ml: unit mg
+          mg/10 ml: unit mg
+          mg/vial: unit mg
+          mg/flacon: unit mg
+          mcg: unit mcg
+          mcg/ml: unit mcg
+          mcg per metered spray: unit mcg
+          mcg par vaporisation dosée: unit mcg
+          mcg par gélule: unit mcg
+          lf: unit lf
+          unités lf: unit lf
+          '%': unit percent
+          '% w/w': unit percent
+          '% w / w': unit percent
+          '% p/p': unit percent
+          '% w/v': unit percent
+          '% p/v': unit percent
+          unit: unit international en
+          units: unit international en
+          usp units per ml: unit international en
+          iu: unit international en
+          unité: unit international fr
+          unités: unit international fr
+          unités usp/ml: unit international fr
+          ui: unit international fr
+        /dosage_forms/*:
+          tablet: dosage tablet en
+          tablets: dosage tablet en
+          immediate-release tablet: dosage tablet en
+          immediate-release tablets: dosage tablet en
+          film-coated tablet: dosage tablet en
+          film-coated tablets: dosage tablet en
+          comprimé: dosage tablet fr
+          comprimés: dosage tablet fr
+          comprimé à libération immédiate: dosage tablet fr
+          comprimés à libération immédiate: dosage tablet fr
+          comprimé pelliculé: dosage tablet fr
+          comprimés pelliculés: dosage tablet fr
+          capsule: dosage capsule
+          capsules: dosage capsule
+          hard capsule: dosage capsule
+          hard capsules: dosage capsule
+          inhalation powder hard capsule: dosage capsule
+          inhalation powder hard capsules: dosage capsule
+          gélule: dosage capsule
+          gélules: dosage capsule
+          capsule à libération prolongée: dosage capsule extended fr
+          capsules à libération prolongée: dosage capsule extended fr
+          gélule en poudre pour inhalation: dosage capsule
+          gélules en poudre pour inhalation: dosage capsule
+          extended release capsule: dosage capsule extended en
+          extended release capsules: dosage capsule extended en
+          capsule extended release: dosage capsule extended en
+          solution: dosage solution
+          oral solution: dosage solution
+          solution for inhalation: dosage solution
+          topical solution: dosage solution
+          ophthalmic solution: dosage solution
+          sterile hyperbaric solution: dosage solution
+          concentrate for solution for intravenous infusion: dosage solution
+          solution orale: dosage solution
+          solution pour inhalation: dosage solution
+          solution topique: dosage solution
+          solution ophtalmique: dosage solution
+          stérile solution hyperbare: dosage solution
+          solution concentrée pour perfusion: dosage solution
+          concentré pour solution pour perfusion intraveineuse: dosage solution
+          suspension: dosage suspension
+          suspension for injection: dosage suspension
+          suspension pour injection: dosage suspension
+          spray metered dose: dosage metered spray en
+          suspension spray: dosage metered spray en
+          vaporisateur-doseur en suspension: dosage metered spray fr
+          suspension en vaporisateur: dosage metered spray fr
+          mouthwash: dosage mouthwash en
+          oral rinse: dosage mouthwash en
+          shampoo: dosage shampoo en
+          shampoing: dosage shampoo fr
+          lyophilized powder: dosage lyophilized powder en
+          lyophilized powder for solution: dosage lyophilized powder en
+          poudre lyophilisée: dosage lyophilized powder fr
+          onguent: dosage ointment fr
+          pommade: dosage ointment fr
+        /routes/*:
+          oral: route oral en
+          oral use: route oral en
+          orally: route oral en
+          oral administration: route oral en
+          orale: route oral fr
+          voie orale: route oral fr
+          intravenous: route intravenous en
+          intravenous infusion: route intravenous en
+          intravenous injection: route intravenous en
+          iv infusion: route intravenous en
+          intermittent iv injection: route intravenous en
+          intraveineuse: route intravenous fr
+          voie intraveineuse: route intravenous fr
+          perfusion intraveineuse: route intravenous fr
+          injection intraveineuse: route intravenous fr
+          injection intermittente par voie intraveineuse: route intravenous fr
+          subcutaneous: route subcutaneous en
+          subcutaneous injection: route subcutaneous en
+          deep sc injection: route subcutaneous en
+          sous-cutanée: route subcutaneous fr
+          injection sous-cutanée: route subcutaneous fr
+          injection sous-cutanée profonde: route subcutaneous fr
+          intramuscular: route intramuscular en
+          intramusculaire: route intramuscular fr
+          injection intramusculaire: route intramuscular fr
+          inhalation: route inhalation
+          oral inhalation use: route inhalation
+          inhalation orale: route inhalation
+          nasal: route nasal en
+          intranasal: route nasal en
+          nasale: route nasal fr
+          voie intranasale: route nasal fr
+          ophthalmic: route ophthalmic en
+          ophtalmique: route ophthalmic fr
+          pour usage ophtalmique: route ophthalmic fr
+          topical: route topical en
+          topique: route topical fr
+          rectal: route rectal en
+          rectale: route rectal fr
+          buccale: route buccal fr
+          spinal: route spinal en
+          rachidienne: route spinal fr
+slice_columns: &id001
+- language
+- split
+- stratum
+- route_group
+- document_complexity
+group_key: product_id
+language_column: language
+runtime:
+  max_completion_tokens: 900
+  max_workers: 4
+  max_requests_per_minute: 60
+  checkpoint_every: 20
+  resume: true
+limitations:
+- This expanded release is draft until every fact and product audit item is approved.
+- The 200-family purposive sample is not a probability sample of all marketed drugs.
+- Bilingual availability, text extraction, and automated fact alignment are selection
+  requirements.
+- DIN, schedule, product status, and sponsor are not scored.
+tiers:
+  smoke:
+    description: Two bilingual product pairs for transport and parsing checks.
+    sampling:
+      method: balanced
+      unit: group
+      count: 2
+      seed: 20260811
+      stratify_by: *id001
+    cost:
+      initial_prompt_tokens: 18000
+      initial_completion_tokens: 900
+      safety_multiplier: 2.0
+      request_ceiling_multiplier: 2.0
+  screen:
+    description: Twenty-five cumulative bilingual pairs for screening.
+    inherits: smoke
+    sampling:
+      method: balanced
+      unit: group
+      count: 25
+      seed: 20260811
+      stratify_by: *id001
+    cost:
+      sample_from: smoke
+      initial_prompt_tokens: 18000
+      initial_completion_tokens: 900
+      safety_multiplier: 1.75
+      request_ceiling_multiplier: 2.0
+    promotion:
+      minimum_pass_rate: 0.5
+      maximum_generation_failure_rate: 0.05
+  standard:
+    description: The complete 400-case expanded cohort. Earlier tier calls are reused,
+      so promoted models make at most 400 calls.
+    inherits: screen
+    sampling:
+      method: all
+      unit: group
+      seed: 20260811
+      stratify_by: *id001
+    cost:
+      sample_from: screen
+      initial_prompt_tokens: 18000
+      initial_completion_tokens: 900
+      safety_multiplier: 1.5
+      request_ceiling_multiplier: 1.75

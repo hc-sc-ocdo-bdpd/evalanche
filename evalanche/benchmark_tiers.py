@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -118,9 +119,7 @@ def _distribution_distance(
         selected_total = float(selected_counts.sum())
         for value in full_counts.index:
             full_share = float(full_counts[value]) / full_total
-            selected_share = (
-                float(selected_counts.get(value, 0)) / selected_total
-            )
+            selected_share = float(selected_counts.get(value, 0)) / selected_total
             distance += abs(selected_share - full_share)
     return distance
 
@@ -154,29 +153,57 @@ def _select_balanced_units(
             "child tier allows"
         )
 
-    selected_rows = {
-        index for unit_id in selected for index in members[unit_id]
+    values = {
+        column: cases[column].fillna("<missing>").astype(str).tolist()
+        for column in stratify_by
     }
+    full_counts = {
+        column: cases[column].fillna("<missing>").astype(str).value_counts().to_dict()
+        for column in stratify_by
+    }
+    unit_counts = {
+        unit_id: {
+            column: Counter(values[column][index] for index in indices)
+            for column in stratify_by
+        }
+        for unit_id, indices in members.items()
+    }
+    selected_counts = {
+        column: Counter(
+            values[column][index] for unit_id in selected for index in members[unit_id]
+        )
+        for column in stratify_by
+    }
+    selected_row_count = sum(len(members[unit_id]) for unit_id in selected)
+    full_total = float(len(cases))
     while len(selected) < count:
         candidates: list[tuple[float, int, str]] = []
         for unit_id, indices in members.items():
             if unit_id in selected:
                 continue
-            trial_rows = selected_rows.union(indices)
+            trial_total = float(selected_row_count + len(indices))
+            distance = 0.0
+            for column in stratify_by:
+                for value, full_count in full_counts[column].items():
+                    trial_count = selected_counts[column].get(value, 0) + unit_counts[
+                        unit_id
+                    ][column].get(value, 0)
+                    distance += abs(
+                        (float(trial_count) / trial_total)
+                        - (float(full_count) / full_total)
+                    )
             candidates.append(
                 (
-                    _distribution_distance(
-                        cases=cases,
-                        row_indices=trial_rows,
-                        columns=stratify_by,
-                    ),
+                    distance,
                     _stable_order(seed, unit_id),
                     unit_id,
                 )
             )
         _, _, chosen = min(candidates)
         selected.add(chosen)
-        selected_rows.update(members[chosen])
+        selected_row_count += len(members[chosen])
+        for column in stratify_by:
+            selected_counts[column].update(unit_counts[chosen][column])
     return selected
 
 
@@ -229,13 +256,9 @@ def build_tier_cohort(
             stratify_by=tier.sampling.stratify_by,
         )
 
-    selected_rows = {
-        index for unit_id in selected_units for index in members[unit_id]
-    }
+    selected_rows = {index for unit_id in selected_units for index in members[unit_id]}
     if not inherited_rows.issubset(selected_rows):
-        raise ValueError(
-            f"Tier {tier_name!r} does not contain every inherited case"
-        )
+        raise ValueError(f"Tier {tier_name!r} does not contain every inherited case")
     execution_rows = selected_rows - inherited_rows
     cumulative = normalized.iloc[sorted(selected_rows)].copy()
     execution = normalized.iloc[sorted(execution_rows)].copy()
@@ -305,9 +328,7 @@ def materialize_tier_cohort(
         "inherits": cohort.inherited_from,
         "chain": tier_chain(benchmark, tier_name),
         "definition": cohort.tier.model_dump(mode="json"),
-        "definition_sha256": sha256_json(
-            cohort.tier.model_dump(mode="json")
-        ),
+        "definition_sha256": sha256_json(cohort.tier.model_dump(mode="json")),
         "benchmark_compatibility": benchmark_fingerprint(
             registry,
             benchmark,

@@ -152,7 +152,9 @@ Evalanche includes two substantial Health Canada examples:
 They demonstrate bilingual, structured, source-grounded evaluation and remain
 useful benchmark assets. They do not define the repository's model universe or
 its main navigation. Native-PDF quality results remain provisional until the
-reference labels receive the documented human review.
+reference labels receive the documented human review. The publication-sized
+1.0.0 draft expands Product Monographs to 200 bilingual families and includes
+fact, identity, scope, and bilingual audit gates.
 
 Open the [Health Canada landing page](docs/case_studies/health_canada.md) for
 results, status, limitations, and detailed runbooks.

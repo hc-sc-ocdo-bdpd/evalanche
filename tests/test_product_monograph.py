@@ -17,30 +17,20 @@ from evalanche.product_monograph_review import (
 )
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA_DIR = (
-    ROOT
-    / "data/hc/benchmarks/"
-    "product_monograph_structured_extraction/0.1.0"
-)
+DATA_DIR = ROOT / "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0"
 MANIFEST = (
-    ROOT
-    / "configs/datasets/"
+    ROOT / "configs/datasets/"
     "hc_product_monograph_structured_extraction_0.1.0_manifest.yaml"
 )
 NATIVE_PDF_DATA_DIR = (
-    ROOT
-    / "data/hc/benchmarks/"
-    "product_monograph_native_pdf_extraction/0.1.0"
+    ROOT / "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0"
 )
 NATIVE_PDF_MANIFEST = (
-    ROOT
-    / "configs/datasets/"
+    ROOT / "configs/datasets/"
     "hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml"
 )
 NATIVE_PDF_BENCHMARK = (
-    ROOT
-    / "configs/benchmarks/"
-    "hc_product_monograph_native_pdf_extraction_0.1.0.yaml"
+    ROOT / "configs/benchmarks/hc_product_monograph_native_pdf_extraction_0.1.0.yaml"
 )
 
 
@@ -74,18 +64,12 @@ def test_native_pdf_release_is_hash_locked_but_stays_draft() -> None:
         assert len(descriptor_list) == 1
         descriptor = descriptor_list[0]
         assert descriptor["media_type"] == "application/pdf"
-        assert descriptor["path"].startswith(
-            "data/hc/product_monographs/0.1.0/raw/"
-        )
+        assert descriptor["path"].startswith("data/hc/product_monographs/0.1.0/raw/")
         assert len(descriptor["sha256"]) == 64
         assert "detail" not in descriptor
 
-    manifest = yaml.safe_load(
-        NATIVE_PDF_MANIFEST.read_text(encoding="utf-8")
-    )
-    benchmark = yaml.safe_load(
-        NATIVE_PDF_BENCHMARK.read_text(encoding="utf-8")
-    )
+    manifest = yaml.safe_load(NATIVE_PDF_MANIFEST.read_text(encoding="utf-8"))
+    benchmark = yaml.safe_load(NATIVE_PDF_BENCHMARK.read_text(encoding="utf-8"))
     assert manifest["release"]["status"] == "draft"
     assert manifest["release"]["immutable"] is False
     assert benchmark["status"] == "draft"
@@ -143,9 +127,7 @@ def test_native_pdf_builder_is_deterministic_and_preserves_review(
         dtype=str,
         keep_default_na=False,
     )
-    approved = rebuilt_review.loc[
-        rebuilt_review["human_review_status"] == "approved"
-    ]
+    approved = rebuilt_review.loc[rebuilt_review["human_review_status"] == "approved"]
     assert len(approved) == 1
     assert approved.iloc[0]["reviewer"] == "reviewer@example.test"
     assert second["approved_review_item_count"] == 1
@@ -187,10 +169,7 @@ def test_product_monograph_cohort_contract() -> None:
         "multi_ingredient": 10,
         "multi_variant": 10,
     }
-    assert (
-        cases.groupby("product_id")["language"].apply(set)
-        == {"en", "fr"}
-    ).all()
+    assert (cases.groupby("product_id")["language"].apply(set) == {"en", "fr"}).all()
     development_groups = set(
         products.loc[
             products["split"] == "development",
@@ -217,8 +196,7 @@ def test_every_expected_item_has_page_evidence() -> None:
     }
     assert evidence["source_page"].astype(int).ge(1).all()
     assert set(evidence["case_id"]) == {
-        metadata["dpd_case_id"]
-        for metadata in cases["source_metadata"].map(json.loads)
+        metadata["dpd_case_id"] for metadata in cases["source_metadata"].map(json.loads)
     }
     assert cases["evidence_page_count"].astype(int).between(1, 3).all()
 
@@ -236,9 +214,7 @@ def test_every_expected_item_has_page_evidence() -> None:
 
 
 def test_product_monograph_build_report_is_explicit() -> None:
-    report = json.loads(
-        (DATA_DIR / "build_report.json").read_text(encoding="utf-8")
-    )
+    report = json.loads((DATA_DIR / "build_report.json").read_text(encoding="utf-8"))
     assert report["source_documents"] == {
         "documents": 80,
         "languages": {"en": 40, "fr": 40},
@@ -254,15 +230,9 @@ def test_product_monograph_build_report_is_explicit() -> None:
             "language_validation": 1,
         },
     }
-    assert report["evidence"][
-        "all_scored_items_have_source_pages"
-    ] is True
-    assert report["evidence"][
-        "automated_source_evidence_audit"
-    ] == "complete"
-    assert report["evidence"]["independent_human_signoff"] == (
-        "not_claimed"
-    )
+    assert report["evidence"]["all_scored_items_have_source_pages"] is True
+    assert report["evidence"]["automated_source_evidence_audit"] == "complete"
+    assert report["evidence"]["independent_human_signoff"] == ("not_claimed")
     assert report["scoring_contract"]["unscored_alignment_fields"] == [
         "din",
         "schedule",
@@ -308,9 +278,7 @@ def test_product_monograph_normalization_and_overrides() -> None:
     )
     assert expected == {
         "brand_name": "DOCUMENT",
-        "active_ingredients": [
-            {"name": "DRUG NAME", "strength": 5, "unit": "MG"}
-        ],
+        "active_ingredients": [{"name": "DRUG NAME", "strength": 5, "unit": "MG"}],
         "dosage_forms": ["TABLET"],
         "routes": ["ORAL"],
     }
@@ -325,9 +293,7 @@ def test_product_monograph_evidence_and_prompt_rendering(
     ]
     expected = {
         "brand_name": "BRAND X",
-        "active_ingredients": [
-            {"name": "DRUG A", "strength": 100, "unit": "MG"}
-        ],
+        "active_ingredients": [{"name": "DRUG A", "strength": 100, "unit": "MG"}],
         "dosage_forms": ["TABLET"],
         "routes": ["ORAL"],
     }
@@ -363,11 +329,14 @@ def test_product_monograph_evidence_and_prompt_rendering(
     assert "PRODUCT MONOGRAPH EVIDENCE (ENGLISH)" in rendered
     assert "[PDF PAGE 1]" in rendered
     assert "[PDF PAGE 2]" in rendered
-    assert pm._render_input(
-        language="fr",
-        pages=pages,
-        selected_pages={1},
-    ).find("(FRENCH)") > 0
+    assert (
+        pm._render_input(
+            language="fr",
+            pages=pages,
+            selected_pages={1},
+        ).find("(FRENCH)")
+        > 0
+    )
 
     with pytest.raises(ValueError, match="No source evidence"):
         pm._build_evidence(
@@ -523,9 +492,9 @@ def test_product_monograph_source_verification_reports_defects(
     assert result["valid"] is False
     assert result["documents"] == 2
     assert result["unique_hashes"] == 1
-    assert any("Expected 80 documents" in issue for issue in result["issues"])
+    assert any("Expected 4 documents" in issue for issue in result["issues"])
     assert any("not unique" in issue for issue in result["issues"])
+    assert any("Expected 2 English and 2 French" in issue for issue in result["issues"])
     assert any(
-        "Expected 40 English and 40 French" in issue
-        for issue in result["issues"]
+        "without one English and one French" in issue for issue in result["issues"]
     )

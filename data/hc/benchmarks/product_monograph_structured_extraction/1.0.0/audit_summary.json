@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "dataset_version": "1.0.0",
+  "fact_items": 2162,
+  "fact_status_counts": {
+    "pending": 2162
+  },
+  "products": 200,
+  "product_status_counts": {
+    "identity_review_status": {
+      "pending": 200
+    },
+    "scope_review_status": {
+      "pending": 200
+    },
+    "bilingual_review_status": {
+      "pending": 200
+    }
+  },
+  "fact_audit_complete": false,
+  "product_audit_complete": false,
+  "promotion_ready": false
+}

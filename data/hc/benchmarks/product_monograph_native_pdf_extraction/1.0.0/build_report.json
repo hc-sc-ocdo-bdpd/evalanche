@@ -1,0 +1,104 @@
+{
+  "report_schema_version": "1.0",
+  "dataset_version": "1.0.0",
+  "status": "draft",
+  "population": {
+    "products": 200,
+    "cases": 400,
+    "languages": {
+      "en": 200,
+      "fr": 200
+    },
+    "splits": {
+      "heldout": 160,
+      "development": 40
+    },
+    "strata": {
+      "single_ingredient": 80,
+      "multi_ingredient": 50,
+      "multi_variant": 50,
+      "multi_ingredient_multi_variant": 20
+    },
+    "route_groups": {
+      "oral": 91,
+      "parenteral": 39,
+      "ophthalmic_or_otic": 20,
+      "topical": 18,
+      "other": 16,
+      "inhaled_or_nasal": 16
+    },
+    "document_complexity": {
+      "medium": 212,
+      "short": 112,
+      "long": 76
+    }
+  },
+  "screening": {
+    "records": 535,
+    "statuses": {
+      "excluded": 335,
+      "retained": 200
+    },
+    "exclusion_stages": {
+      "document_availability": 195,
+      "fact_alignment": 109,
+      "duplicate_ingredient_group": 23,
+      "document_validation": 7,
+      "variant_alignment": 1
+    }
+  },
+  "source_documents": {
+    "documents": 400,
+    "unique_hashes": 400,
+    "bytes": 370070630,
+    "pages": 17733
+  },
+  "evidence": {
+    "field_items": 2162,
+    "support_methods": {
+      "normalized_exact": 1245,
+      "normalized_name_and_strength": 859,
+      "normalized_name_or_strength": 51,
+      "declared_alias": 7
+    },
+    "maximum_pages_per_case": 4,
+    "all_scored_items_have_source_pages": true,
+    "independent_human_signoff": "pending"
+  },
+  "human_audit": {
+    "schema_version": "1.0",
+    "dataset_version": "1.0.0",
+    "fact_items": 2162,
+    "fact_status_counts": {
+      "pending": 2162
+    },
+    "products": 200,
+    "product_status_counts": {
+      "identity_review_status": {
+        "pending": 200
+      },
+      "scope_review_status": {
+        "pending": 200
+      },
+      "bilingual_review_status": {
+        "pending": 200
+      }
+    },
+    "fact_audit_complete": false,
+    "product_audit_complete": false,
+    "promotion_ready": false
+  },
+  "software": {
+    "evalanche_version": "0.3.0",
+    "pypdf_version": "6.14.2"
+  },
+  "dataset_id": "hc_product_monograph_native_pdf_extraction",
+  "input_contract": {
+    "mode": "native_full_pdf",
+    "request_api": "responses",
+    "files_per_case": 1,
+    "pdfs_committed": false,
+    "pdfs_required": 400,
+    "hash_verification_required_at_request_time": true
+  }
+}

@@ -25,21 +25,14 @@ logging.getLogger("pypdf").setLevel(logging.ERROR)
 PM_DATASET_ID = "hc_product_monograph_structured_extraction"
 PM_BENCHMARK_ID = "hc_product_monograph_structured_extraction"
 PM_VERSION = "0.1.0"
-PM_COHORT_PATH = Path(
-    "configs/product_monograph/0.1.0/cohort.yaml"
-)
-PM_OVERRIDES_PATH = Path(
-    "configs/product_monograph/0.1.0/label_overrides.yaml"
-)
-PM_OUTPUT_DIR = Path(
-    "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0"
-)
+PM_COHORT_PATH = Path("configs/product_monograph/0.1.0/cohort.yaml")
+PM_OVERRIDES_PATH = Path("configs/product_monograph/0.1.0/label_overrides.yaml")
+PM_OUTPUT_DIR = Path("data/hc/benchmarks/product_monograph_structured_extraction/0.1.0")
 PM_SOURCES_PATH = PM_OUTPUT_DIR / "source_documents.csv"
 PM_EXCLUSIONS_PATH = PM_OUTPUT_DIR / "screening_exclusions.csv"
 PM_RAW_DIR = Path("data/hc/product_monographs/0.1.0/raw")
 PM_MANIFEST_PATH = Path(
-    "configs/datasets/"
-    "hc_product_monograph_structured_extraction_0.1.0_manifest.yaml"
+    "configs/datasets/hc_product_monograph_structured_extraction_0.1.0_manifest.yaml"
 )
 PM_MAX_EVIDENCE_PAGES = 8
 PM_RETRIEVED_AT_UTC = "2026-07-30T22:00:00Z"
@@ -55,8 +48,7 @@ PM_NATIVE_PDF_CASES_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "cases.csv.gz"
 PM_NATIVE_PDF_REVIEW_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "label_review.csv"
 PM_NATIVE_PDF_REPORT_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "build_report.json"
 PM_NATIVE_PDF_MANIFEST_PATH = Path(
-    "configs/datasets/"
-    "hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml"
+    "configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml"
 )
 PM_NATIVE_PDF_RELEASE_CREATED_AT_UTC = "2026-08-04T13:30:00Z"
 PM_NATIVE_PDF_REVIEW_STATUSES = {
@@ -107,10 +99,7 @@ def _base_ingredient_name(value: str) -> str:
 
 
 def _document_filename(row: pd.Series | dict[str, Any]) -> str:
-    return (
-        f"{row['product_id']}_{row['language']}_"
-        f"{row['monograph_id']}.pdf"
-    )
+    return f"{row['product_id']}_{row['language']}_{row['monograph_id']}.pdf"
 
 
 def _extract_pdf_pages(path: Path, expected_sha256: str) -> list[str]:
@@ -120,9 +109,8 @@ def _extract_pdf_pages(path: Path, expected_sha256: str) -> list[str]:
             cache = json.loads(cache_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             cache = {}
-        if (
-            cache.get("pdf_sha256") == expected_sha256
-            and isinstance(cache.get("pages"), list)
+        if cache.get("pdf_sha256") == expected_sha256 and isinstance(
+            cache.get("pages"), list
         ):
             return [str(page) for page in cache["pages"]]
 
@@ -152,9 +140,7 @@ def acquire_product_monographs(
     root = Path(root_path).resolve()
     source_file = root / sources_path
     if not source_file.is_file():
-        raise FileNotFoundError(
-            f"Frozen source inventory not found: {source_file}"
-        )
+        raise FileNotFoundError(f"Frozen source inventory not found: {source_file}")
     sources = pd.read_csv(source_file, dtype=str)
     required = {
         "product_id",
@@ -167,9 +153,7 @@ def acquire_product_monographs(
     }
     missing = required - set(sources.columns)
     if missing:
-        raise ValueError(
-            f"Source inventory is missing columns: {sorted(missing)}"
-        )
+        raise ValueError(f"Source inventory is missing columns: {sorted(missing)}")
 
     destination = root / raw_dir
     destination.mkdir(parents=True, exist_ok=True)
@@ -225,6 +209,17 @@ def verify_product_monograph_sources(
     root = Path(root_path).resolve()
     sources = pd.read_csv(root / sources_path, dtype=str)
     issues: list[str] = []
+    required_columns = {
+        "product_id",
+        "language",
+        "monograph_id",
+        "source_url",
+        "sha256",
+        "byte_size",
+        "page_count",
+    }
+    if missing := sorted(required_columns - set(sources.columns)):
+        raise ValueError(f"Source lock is missing columns: {missing}")
     hashes: list[str] = []
     languages = Counter()
     for row in sources.to_dict(orient="records"):
@@ -247,17 +242,34 @@ def verify_product_monograph_sources(
             issues.append(f"Page-count mismatch: {path}")
         languages[str(row["language"])] += 1
 
-    if len(sources) != 80:
-        issues.append(f"Expected 80 documents, found {len(sources)}")
+    product_count = int(sources["product_id"].nunique())
+    expected_documents = product_count * 2
+    if len(sources) != expected_documents:
+        issues.append(
+            f"Expected {expected_documents} documents for {product_count} "
+            f"products, found {len(sources)}"
+        )
+    if sources[["product_id", "language"]].duplicated().any():
+        issues.append("Product-language source rows are not unique")
+    pairs = sources.groupby("product_id")["language"].agg(set)
+    incomplete = sorted(
+        str(product_id) for product_id, pair in pairs.items() if pair != {"en", "fr"}
+    )
+    if incomplete:
+        issues.append(
+            f"Products without one English and one French source: {incomplete}"
+        )
     if len(set(hashes)) != len(hashes):
         issues.append("Document SHA-256 values are not unique")
-    if languages != {"en": 40, "fr": 40}:
+    expected_languages = {"en": product_count, "fr": product_count}
+    if languages != expected_languages:
         issues.append(
-            f"Expected 40 English and 40 French documents, found "
-            f"{dict(languages)}"
+            f"Expected {product_count} English and {product_count} French "
+            f"documents, found {dict(languages)}"
         )
     return {
         "documents": int(len(sources)),
+        "products": product_count,
         "languages": dict(languages),
         "unique_hashes": len(set(hashes)),
         "issues": issues,
@@ -357,10 +369,7 @@ def _find_pages(
     return [
         index
         for index, page in enumerate(pages, start=1)
-        if any(
-            value and value in _normalize(page)
-            for value in normalized_values
-        )
+        if any(value and value in _normalize(page) for value in normalized_values)
     ]
 
 
@@ -381,10 +390,7 @@ def _build_evidence(
     ) -> None:
         matches = _find_pages(pages=pages, values=candidates)
         if not matches:
-            raise ValueError(
-                f"No source evidence found for {case_id} "
-                f"{field}={item!r}"
-            )
+            raise ValueError(f"No source evidence found for {case_id} {field}={item!r}")
         page = matches[0]
         selected_pages.add(page)
         evidence.append(
@@ -419,16 +425,13 @@ def _build_evidence(
                 overrides=overrides,
             )
         ]
-        strength_pages = set(
-            _find_pages(pages=pages, values=strength_values)
-        )
+        strength_pages = set(_find_pages(pages=pages, values=strength_values))
         matches = sorted(name_pages & strength_pages)
         if not matches:
             matches = sorted(name_pages or strength_pages)
         if not matches:
             raise ValueError(
-                f"No source evidence found for {case_id} ingredient "
-                f"{ingredient!r}"
+                f"No source evidence found for {case_id} ingredient {ingredient!r}"
             )
         page = matches[0]
         selected_pages.add(page)
@@ -489,9 +492,7 @@ def _render_input(
     excerpts = []
     for page_number in sorted(selected_pages):
         text = pages[page_number - 1].strip()
-        excerpts.append(
-            f"[PDF PAGE {page_number}]\n{text}"
-        )
+        excerpts.append(f"[PDF PAGE {page_number}]\n{text}")
     language_name = "ENGLISH" if language == "en" else "FRENCH"
     return (
         f"{contract}\n\nPRODUCT MONOGRAPH EVIDENCE ({language_name})\n\n"
@@ -528,8 +529,7 @@ def _manifest_file(
         "sha256": _sha256(absolute),
         "record_count": record_count,
         "record_count_method": (
-            "csv_rows" if "csv" in media_type or path.suffix == ".gz"
-            else "declared"
+            "csv_rows" if "csv" in media_type or path.suffix == ".gz" else "declared"
         ),
         "page_count": None,
         "parser_schema_version": "hc_pm/1.0",
@@ -547,14 +547,22 @@ def _build_manifest(
     build_report_path: Path,
 ) -> dict[str, Any]:
     product_ids = products["product_id"].astype(str).tolist()
-    development = products.loc[
-        products["split"] == "development",
-        "product_id",
-    ].astype(str).tolist()
-    heldout = products.loc[
-        products["split"] == "heldout",
-        "product_id",
-    ].astype(str).tolist()
+    development = (
+        products.loc[
+            products["split"] == "development",
+            "product_id",
+        ]
+        .astype(str)
+        .tolist()
+    )
+    heldout = (
+        products.loc[
+            products["split"] == "heldout",
+            "product_id",
+        ]
+        .astype(str)
+        .tolist()
+    )
     files = [
         _manifest_file(
             root=root,
@@ -611,9 +619,7 @@ def _build_manifest(
             "dataset_id": PM_DATASET_ID,
             "version": PM_VERSION,
             "release_type": "benchmark",
-            "title": (
-                "Health Canada Product Monograph structured extraction"
-            ),
+            "title": ("Health Canada Product Monograph structured extraction"),
             "description": (
                 "A bilingual 40-product, 80-document evidence-grounded "
                 "structured-extraction pilot using official Product "
@@ -668,9 +674,7 @@ def _build_manifest(
             {
                 "source_id": "evalanche_pm_builder",
                 "name": "Evalanche Product Monograph benchmark builder",
-                "source_url": (
-                    "https://github.com/hc-sc-ocdo-bdpd/evalanche"
-                ),
+                "source_url": ("https://github.com/hc-sc-ocdo-bdpd/evalanche"),
                 "retrieved_at_utc": PM_RETRIEVED_AT_UTC,
                 "source_modified_date": None,
                 "license_or_terms": "Evalanche repository terms.",
@@ -771,9 +775,7 @@ def build_product_monograph_benchmark(
             + "; ".join(source_verification["issues"])
         )
 
-    dpd_products_path = (
-        root / cohort["source_dpd_dataset"]["products_path"]
-    )
+    dpd_products_path = root / cohort["source_dpd_dataset"]["products_path"]
     dpd_cases_path = root / cohort["source_dpd_dataset"]["cases_path"]
     dpd_products = pd.read_csv(dpd_products_path, dtype=str)
     dpd_cases = pd.read_csv(dpd_cases_path, dtype=str)
@@ -781,8 +783,7 @@ def build_product_monograph_benchmark(
     exclusions = pd.read_csv(root / PM_EXCLUSIONS_PATH, dtype=str)
     if len(exclusions) != 23:
         raise ValueError(
-            f"Expected 23 documented screening exclusions, "
-            f"found {len(exclusions)}"
+            f"Expected 23 documented screening exclusions, found {len(exclusions)}"
         )
     cohort_rows = pd.DataFrame(cohort["products"])
     products = cohort_rows.merge(
@@ -808,13 +809,9 @@ def build_product_monograph_benchmark(
         ("heldout", "multi_ingredient"): 2,
         ("heldout", "multi_variant"): 3,
     }
-    observed_counts = Counter(
-        zip(products["split"], products["stratum"], strict=True)
-    )
+    observed_counts = Counter(zip(products["split"], products["stratum"], strict=True))
     if observed_counts != expected_counts:
-        raise ValueError(
-            f"Cohort quotas do not match: {dict(observed_counts)}"
-        )
+        raise ValueError(f"Cohort quotas do not match: {dict(observed_counts)}")
     development_groups = set(
         products.loc[
             products["split"] == "development",
@@ -828,20 +825,15 @@ def build_product_monograph_benchmark(
         ]
     )
     if development_groups & heldout_groups:
-        raise ValueError(
-            "Ingredient groups overlap development and heldout splits"
-        )
+        raise ValueError("Ingredient groups overlap development and heldout splits")
 
     case_records: list[dict[str, Any]] = []
     evidence_records: list[dict[str, Any]] = []
     for product in products.to_dict(orient="records"):
-        product_sources = sources[
-            sources["product_id"] == product["product_id"]
-        ]
+        product_sources = sources[sources["product_id"] == product["product_id"]]
         if set(product_sources["language"]) != {"en", "fr"}:
             raise ValueError(
-                f"Product lacks a bilingual source pair: "
-                f"{product['product_id']}"
+                f"Product lacks a bilingual source pair: {product['product_id']}"
             )
         for source in product_sources.to_dict(orient="records"):
             language = source["language"]
@@ -851,9 +843,7 @@ def build_product_monograph_benchmark(
                 & (dpd_cases["language"] == language)
             ]
             if len(matches) != 1:
-                raise ValueError(
-                    f"Expected one DPD alignment case: {dpd_case_id}"
-                )
+                raise ValueError(f"Expected one DPD alignment case: {dpd_case_id}")
             dpd_case = matches.iloc[0]
             expected = _apply_expected_overrides(
                 source_expected=json.loads(dpd_case["expected_output"]),
@@ -879,12 +869,8 @@ def build_product_monograph_benchmark(
                 "monograph_sha256": source["sha256"],
                 "monograph_page_count": int(source["page_count"]),
                 "evidence_pages": sorted(selected_pages),
-                "dpd_dataset_id": (
-                    cohort["source_dpd_dataset"]["dataset_id"]
-                ),
-                "dpd_dataset_version": (
-                    cohort["source_dpd_dataset"]["version"]
-                ),
+                "dpd_dataset_id": (cohort["source_dpd_dataset"]["dataset_id"]),
+                "dpd_dataset_version": (cohort["source_dpd_dataset"]["version"]),
                 "dpd_case_id": dpd_case_id,
                 "drug_codes": json.loads(product["drug_codes"]),
                 "din_list": json.loads(product["din_list"]),
@@ -903,9 +889,7 @@ def build_product_monograph_benchmark(
                     ),
                     "benchmark_version": PM_VERSION,
                     "product_id": product["product_id"],
-                    "ingredient_group_id": product[
-                        "ingredient_group_id"
-                    ],
+                    "ingredient_group_id": product["ingredient_group_id"],
                     "drug_codes": product["drug_codes"],
                     "din_list": product["din_list"],
                     "brand_name": expected["brand_name"],
@@ -995,18 +979,12 @@ def build_product_monograph_benchmark(
         },
         "screening": {
             "documented_exclusions": len(exclusions),
-            "by_stage": (
-                exclusions["exclusion_stage"].value_counts().to_dict()
-            ),
+            "by_stage": (exclusions["exclusion_stage"].value_counts().to_dict()),
         },
         "evidence": {
             "field_items": len(evidence),
-            "support_methods": (
-                evidence["support_method"].value_counts().to_dict()
-            ),
-            "maximum_pages_per_case": int(
-                cases["evidence_page_count"].max()
-            ),
+            "support_methods": (evidence["support_method"].value_counts().to_dict()),
+            "maximum_pages_per_case": int(cases["evidence_page_count"].max()),
             "all_scored_items_have_source_pages": True,
             "automated_source_evidence_audit": "complete",
             "independent_human_signoff": "not_claimed",
@@ -1156,8 +1134,7 @@ def _build_native_pdf_review_queue(
         case = case_by_dpd_id.get(source_case_id)
         if case is None:
             raise ValueError(
-                "Evidence item does not map to a native-PDF case: "
-                f"{source_case_id}"
+                f"Evidence item does not map to a native-PDF case: {source_case_id}"
             )
         source = source_by_product_language[
             (str(case["product_id"]), str(case["language"]))
@@ -1216,23 +1193,27 @@ def _build_native_pdf_review_queue(
                 f"{sorted(missing)}"
             )
         if previous["review_item_id"].duplicated().any():
-            raise ValueError(
-                "Existing native-PDF label review has duplicate IDs"
-            )
+            raise ValueError("Existing native-PDF label review has duplicate IDs")
         if set(previous["review_item_id"]) != set(queue["review_item_id"]):
             raise ValueError(
                 "Existing native-PDF label review does not match the "
                 "current evidence inventory"
             )
-        expected_immutable = queue[immutable_columns].fillna("").sort_values(
-            "review_item_id",
-            kind="stable",
+        expected_immutable = (
+            queue[immutable_columns]
+            .fillna("")
+            .sort_values(
+                "review_item_id",
+                kind="stable",
+            )
         )
-        observed_immutable = previous[
-            immutable_columns
-        ].fillna("").sort_values(
-            "review_item_id",
-            kind="stable",
+        observed_immutable = (
+            previous[immutable_columns]
+            .fillna("")
+            .sort_values(
+                "review_item_id",
+                kind="stable",
+            )
         )
         expected_immutable = expected_immutable.reset_index(drop=True)
         observed_immutable = observed_immutable.reset_index(drop=True)
@@ -1261,13 +1242,11 @@ def _build_native_pdf_review_queue(
         .str.casefold()
     )
     invalid_statuses = sorted(
-        set(queue["human_review_status"])
-        - PM_NATIVE_PDF_REVIEW_STATUSES
+        set(queue["human_review_status"]) - PM_NATIVE_PDF_REVIEW_STATUSES
     )
     if invalid_statuses:
         raise ValueError(
-            "Native-PDF label review has invalid statuses: "
-            f"{invalid_statuses}"
+            f"Native-PDF label review has invalid statuses: {invalid_statuses}"
         )
     return queue
 
@@ -1280,14 +1259,22 @@ def _build_native_pdf_manifest(
     evidence: pd.DataFrame,
     review: pd.DataFrame,
 ) -> dict[str, Any]:
-    development = products.loc[
-        products["split"] == "development",
-        "product_id",
-    ].astype(str).tolist()
-    heldout = products.loc[
-        products["split"] == "heldout",
-        "product_id",
-    ].astype(str).tolist()
+    development = (
+        products.loc[
+            products["split"] == "development",
+            "product_id",
+        ]
+        .astype(str)
+        .tolist()
+    )
+    heldout = (
+        products.loc[
+            products["split"] == "heldout",
+            "product_id",
+        ]
+        .astype(str)
+        .tolist()
+    )
     files = [
         _manifest_file(
             root=root,
@@ -1344,9 +1331,7 @@ def _build_native_pdf_manifest(
             "dataset_id": PM_NATIVE_PDF_DATASET_ID,
             "version": PM_NATIVE_PDF_VERSION,
             "release_type": "benchmark",
-            "title": (
-                "Health Canada Product Monograph native-PDF extraction"
-            ),
+            "title": ("Health Canada Product Monograph native-PDF extraction"),
             "description": (
                 "A draft bilingual benchmark that sends each complete "
                 "official Product Monograph PDF to the model through a "
@@ -1406,9 +1391,7 @@ def _build_native_pdf_manifest(
             {
                 "source_id": "evalanche_pm_builder",
                 "name": "Evalanche Product Monograph benchmark builder",
-                "source_url": (
-                    "https://github.com/hc-sc-ocdo-bdpd/evalanche"
-                ),
+                "source_url": ("https://github.com/hc-sc-ocdo-bdpd/evalanche"),
                 "retrieved_at_utc": PM_RETRIEVED_AT_UTC,
                 "source_modified_date": None,
                 "license_or_terms": "Evalanche repository terms.",
@@ -1435,13 +1418,11 @@ def _build_native_pdf_manifest(
                 "An exact hash-locked official English PDF is available.",
                 "An exact hash-locked official French PDF is available.",
                 "The monograph scope aligns with the selected DPD family.",
-                "Every scored reference item has automated source-page "
-                "evidence.",
+                "Every scored reference item has automated source-page evidence.",
             ],
             "exclusion_criteria": [
                 "A language PDF is missing or duplicates the other language.",
-                "The monograph covers unresolved sibling products or "
-                "strengths.",
+                "The monograph covers unresolved sibling products or strengths.",
                 "The PDF is malformed, image-only, or lacks scored evidence.",
             ],
             "strata": [
@@ -1478,8 +1459,7 @@ def _build_native_pdf_manifest(
             "parent_dataset_version": PM_VERSION,
             "code_version": __version__,
             "transformations": [
-                "Reuse the frozen bilingual Product Monograph cohort and "
-                "source lock.",
+                "Reuse the frozen bilingual Product Monograph cohort and source lock.",
                 "Replace label-selected text windows with hash-verified "
                 "complete-PDF input descriptors.",
                 "Preserve the existing four-field reference JSON and source "
@@ -1508,9 +1488,7 @@ def build_product_monograph_native_pdf_benchmark(
     )
     sources = pd.read_csv(root / sources_path, dtype=str)
     if len(parent_cases) != 80 or len(sources) != 80:
-        raise ValueError(
-            "Native-PDF benchmark requires 80 parent cases and 80 sources"
-        )
+        raise ValueError("Native-PDF benchmark requires 80 parent cases and 80 sources")
 
     source_by_product_language = {
         (str(row["product_id"]), str(row["language"])): row
@@ -1522,8 +1500,7 @@ def build_product_monograph_native_pdf_benchmark(
         source = source_by_product_language.get(key)
         if source is None:
             raise ValueError(
-                "Parent case has no source-locked PDF: "
-                f"{parent['case_id']}"
+                f"Parent case has no source-locked PDF: {parent['case_id']}"
             )
         if int(source["byte_size"]) > 50 * 1024 * 1024:
             raise ValueError(

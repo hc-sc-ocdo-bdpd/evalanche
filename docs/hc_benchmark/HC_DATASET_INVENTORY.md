@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery, source snapshot, DPD releases, and four-model full-census evaluation complete
-**Implementation gate:** Validate the DPD result, then acquire and freeze matched Product Monographs without changing a frozen DPD release.
+**Status:** Dataset discovery, DPD releases, four-model census evaluation, and the 200-family Product Monograph 1.0.0 draft are complete
+**Implementation gate:** Human-audit all expanded Product Monograph facts and bilingual product scopes before ranked publication.
 
 ## Decision
 
@@ -139,11 +139,15 @@ the slice, it uses DPD renderings rather than Product Monograph documents.
    census and publish the aggregate evidence.
 7. Next: validate labels, adjudicate model disagreements, and complete grouped
    product-family analysis.
-8. Acquire matched English and French monographs for candidate products.
-9. Audit document-to-DPD alignment and construct deterministic JSON cases.
-10. Run the reviewed monograph pilot and examine error patterns.
-11. Expand monograph coverage only after the pilot demonstrates reliable
-    labels and useful model separation.
+8. Complete: acquire, hash-lock, and screen matched English and French
+   monographs for the 40-family pilot.
+9. Complete: run the evidence-window pilot and preserve its historical results.
+10. Complete: expand to 200 families, 400 unique PDFs, and 160 new held-out
+    families as draft version 1.0.0.
+11. Next: approve or correct all 2,162 facts and all 600 product identity,
+    scope, and bilingual checks.
+12. After audit: lock the release and use cumulative smoke, screen, and
+    standard tiers for comparable model runs.
 
 The remaining activities are implementation of this defined plan, not unresolved dataset discovery or an unowned preparation stream.
 

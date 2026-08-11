@@ -114,6 +114,12 @@ from evalanche.product_monograph import (
 from evalanche.product_monograph_review import (
     check_product_monograph_label_review,
 )
+from evalanche.product_monograph_expansion import (
+    EXPANSION_CONFIG_PATH,
+    check_expanded_product_monograph_audit,
+    expand_product_monograph_benchmark,
+    refresh_expanded_product_monograph_release,
+)
 from evalanche.routing import JUDGE
 from evalanche.task_initializer import (
     initialize_task_bundle,
@@ -198,10 +204,7 @@ def run_evidence_status(
             f"- {item.effective_status.upper()}: "
             f"{item.entry.entry_id}, review by {item.entry.review_by}"
         )
-    print(
-        "Status: "
-        + ("NEEDS REVIEW" if report.outdated_count else "CURRENT")
-    )
+    print("Status: " + ("NEEDS REVIEW" if report.outdated_count else "CURRENT"))
     print("No network or model calls were made.")
 
     if fail_on_outdated and report.outdated_count:
@@ -224,28 +227,13 @@ def run_generate(
             raise SystemExit(1) from None
 
         print("\nGeneration cost preflight")
+        print(f"Expected outputs: {preflight['expected_output_count']}")
+        print(f"Checkpointed outputs: {preflight['checkpointed_output_count']}")
+        print(f"Pending outputs: {preflight['pending_output_count']}")
+        print(f"Projected token cost: ${preflight['projected_total_cost_usd']:.2f} USD")
+        print(f"Safety multiplier: {preflight['cost_safety_multiplier']:.2f}x")
         print(
-            "Expected outputs: "
-            f"{preflight['expected_output_count']}"
-        )
-        print(
-            "Checkpointed outputs: "
-            f"{preflight['checkpointed_output_count']}"
-        )
-        print(
-            f"Pending outputs: {preflight['pending_output_count']}"
-        )
-        print(
-            "Projected token cost: "
-            f"${preflight['projected_total_cost_usd']:.2f} USD"
-        )
-        print(
-            "Safety multiplier: "
-            f"{preflight['cost_safety_multiplier']:.2f}x"
-        )
-        print(
-            "Budgeted projection: "
-            f"${preflight['projected_budgeted_total_usd']:.2f} USD"
+            f"Budgeted projection: ${preflight['projected_budgeted_total_usd']:.2f} USD"
         )
         print(
             "Configured limit: "
@@ -316,17 +304,12 @@ def run_judge(config_path: str) -> None:
     config = load_config(config_path)
     cases = load_eval_cases(config.run.input_path)
 
-    judge_cases = cases[
-        cases["evaluation_type"] == JUDGE
-    ].copy()
+    judge_cases = cases[cases["evaluation_type"] == JUDGE].copy()
 
     skipped_count = len(cases) - len(judge_cases)
 
     if judge_cases.empty:
-        print(
-            "No cases were routed to LLM judge evaluation. "
-            "Nothing to judge."
-        )
+        print("No cases were routed to LLM judge evaluation. Nothing to judge.")
         return
 
     judge = CriteriaJudge(config)
@@ -371,10 +354,7 @@ def run_judge(config_path: str) -> None:
     print_failures(results)
 
     if skipped_count:
-        print(
-            f"\nSkipped {skipped_count} case(s) routed "
-            "to deterministic evaluation."
-        )
+        print(f"\nSkipped {skipped_count} case(s) routed to deterministic evaluation.")
 
     print(f"\nSaved case results to: {config.run.output_path}")
     print(f"Saved model summary to: {summary_path}")
@@ -436,14 +416,8 @@ def run_combined_evaluation(config_path: str) -> None:
 
     print(f"\nSaved combined case results to: {output_path}")
     print(f"Saved combined model summary to: {summary_path}")
-    print(
-        "Saved combined pairwise comparisons to: "
-        f"{comparison_path}"
-    )
-    print(
-        "Saved combined model selection to: "
-        f"{selection_path}"
-    )
+    print(f"Saved combined pairwise comparisons to: {comparison_path}")
+    print(f"Saved combined model selection to: {selection_path}")
     print(f"Saved combined run metadata to: {metadata_path}")
     print(f"Saved combined comparison to: {report_path}")
 
@@ -463,11 +437,7 @@ def run_verify_dataset(
         print(f"Dataset manifest validation failed: {error}")
         raise SystemExit(1) from None
 
-    print(
-        "\nDataset: "
-        f"{verification['dataset_id']} "
-        f"{verification['dataset_version']}"
-    )
+    print(f"\nDataset: {verification['dataset_id']} {verification['dataset_version']}")
     print(f"Manifest: {verification['manifest_path']}")
     print(
         "Verified files: "
@@ -509,10 +479,7 @@ def run_snapshot_dpd(
         print(f"DPD source snapshot failed: {error}")
         raise SystemExit(1) from None
 
-    print(
-        "\nDataset: "
-        f"{result['dataset_id']} {result['dataset_version']}"
-    )
+    print(f"\nDataset: {result['dataset_id']} {result['dataset_version']}")
     print(f"Source date: {result['source_date']}")
     print(f"Snapshot: {result['snapshot_path']}")
     print(f"Manifest: {result['manifest_path']}")
@@ -539,15 +506,8 @@ def run_build_dpd_benchmark(
         print(f"DPD benchmark slice build failed: {error}")
         raise SystemExit(1) from None
 
-    print(
-        "\nDataset: "
-        f"{result['dataset_id']} {result['dataset_version']}"
-    )
-    print(
-        "Parent: "
-        f"{result['source_dataset_id']} "
-        f"{result['source_dataset_version']}"
-    )
+    print(f"\nDataset: {result['dataset_id']} {result['dataset_version']}")
+    print(f"Parent: {result['source_dataset_id']} {result['source_dataset_version']}")
     print(f"Products: {result['product_count']}")
     print(f"Cases: {result['case_count']}")
     print(
@@ -577,15 +537,8 @@ def run_build_dpd_census(
         raise SystemExit(1) from None
 
     verification = result["verification"]
-    print(
-        "\nDataset: "
-        f"{result['dataset_id']} {result['dataset_version']}"
-    )
-    print(
-        "Parent: "
-        f"{result['source_dataset_id']} "
-        f"{result['source_dataset_version']}"
-    )
+    print(f"\nDataset: {result['dataset_id']} {result['dataset_version']}")
+    print(f"Parent: {result['source_dataset_id']} {result['source_dataset_version']}")
     print(f"Products: {result['product_count']}")
     print(f"Cases: {result['case_count']}")
     print(
@@ -639,18 +592,9 @@ def run_assemble_dpd_comparison(
         required_models=required_models,
     )
     print("\nHealth Canada DPD model-comparison outputs")
-    print(
-        "Models: "
-        + ", ".join(result["available_models"])
-    )
-    print(
-        "Cases per model: "
-        f"{result['case_count_per_model']}"
-    )
-    print(
-        "Combined rows: "
-        f"{result['combined_row_count']}"
-    )
+    print("Models: " + ", ".join(result["available_models"]))
+    print(f"Cases per model: {result['case_count_per_model']}")
+    print(f"Combined rows: {result['combined_row_count']}")
     print(f"Output: {result['output_path']}")
     print(f"Metadata: {result['metadata_path']}")
     print("Status: READY FOR EVALUATION")
@@ -667,18 +611,9 @@ def run_assemble_dpd_census_comparison(
         required_models=required_models,
     )
     print("\nHealth Canada DPD full-census comparison outputs")
-    print(
-        "Models: "
-        + ", ".join(result["available_models"])
-    )
-    print(
-        "Cases per model: "
-        f"{result['case_count_per_model']}"
-    )
-    print(
-        "Combined rows: "
-        f"{result['combined_row_count']}"
-    )
+    print("Models: " + ", ".join(result["available_models"]))
+    print(f"Cases per model: {result['case_count_per_model']}")
+    print(f"Combined rows: {result['combined_row_count']}")
     print(f"Output: {result['output_path']}")
     print(f"Metadata: {result['metadata_path']}")
     print("Status: READY FOR EVALUATION")
@@ -697,10 +632,7 @@ def run_analyze_dpd_census(
     all_pass_sample: int,
     review_seed: int,
 ) -> dict[str, Any]:
-    print(
-        "Analyzing saved DPD census results. "
-        "No model calls will be made."
-    )
+    print("Analyzing saved DPD census results. No model calls will be made.")
     try:
         result = build_dpd_census_analysis(
             root_path=root_path,
@@ -718,22 +650,10 @@ def run_analyze_dpd_census(
         raise SystemExit(1) from None
 
     print("\nHealth Canada DPD census analysis")
-    print(
-        "Models: "
-        + ", ".join(result["source"]["models"])
-    )
-    print(
-        "Cases: "
-        f"{result['benchmark']['case_count']}"
-    )
-    print(
-        "Product families: "
-        f"{result['benchmark']['product_family_count']}"
-    )
-    print(
-        "Manual review cases: "
-        f"{result['review_set']['total_unique_cases']}"
-    )
+    print("Models: " + ", ".join(result["source"]["models"]))
+    print(f"Cases: {result['benchmark']['case_count']}")
+    print(f"Product families: {result['benchmark']['product_family_count']}")
+    print(f"Manual review cases: {result['review_set']['total_unique_cases']}")
     print(f"Output: {result['output_dir']}")
     print(f"Manifest: {result['manifest_path']}")
     print("Status: ANALYSIS COMPLETE")
@@ -774,22 +694,13 @@ def run_audit_dpd_review(
     verification = result["verification"]
     print("\nHealth Canada DPD evidence audit")
     print(f"Review cases: {verification['review_cases']}")
-    print(
-        "Frozen-source rebuild matches: "
-        f"{verification['source_rebuild_matches']}"
-    )
+    print(f"Frozen-source rebuild matches: {verification['source_rebuild_matches']}")
     print(
         "Independent expected-answer parses: "
         f"{verification['independent_expected_parses_match']}"
     )
-    print(
-        "Model outputs rescored: "
-        f"{verification['model_outputs_rescored']}"
-    )
-    print(
-        "Strict-score disagreements: "
-        f"{verification['strict_score_disagreements']}"
-    )
+    print(f"Model outputs rescored: {verification['model_outputs_rescored']}")
+    print(f"Strict-score disagreements: {verification['strict_score_disagreements']}")
     print(f"Output: {result['output']['path']}")
     print(f"Summary: {result['summary_path']}")
     print(
@@ -810,9 +721,7 @@ def run_registry_validate(*, root_path: str) -> dict[str, Any]:
     try:
         registry = load_registry(root_path)
         result = validate_registry(registry)
-        access_paths = sorted(
-            (registry.root / "configs/access_sets").glob("*.yaml")
-        )
+        access_paths = sorted((registry.root / "configs/access_sets").glob("*.yaml"))
         access_issues: list[str] = []
         for path in access_paths:
             try:
@@ -911,8 +820,7 @@ def run_init_task(
             ]
             if missing:
                 raise ValueError(
-                    "non-interactive initialization requires "
-                    + ", ".join(missing)
+                    "non-interactive initialization requires " + ", ".join(missing)
                 )
         else:
             print("\nGuided task initialization")
@@ -960,8 +868,7 @@ def run_init_task(
             privacy_notes = privacy_notes or _prompt(
                 "Privacy or local-artifact note",
                 default=(
-                    "Keep cases and generated outputs local until sharing "
-                    "is reviewed."
+                    "Keep cases and generated outputs local until sharing is reviewed."
                 ),
             )
             normalized_family = normalize_family(family)
@@ -985,8 +892,7 @@ def run_init_task(
                 )
                 if criteria is None:
                     raw_criteria = _prompt(
-                        "Criteria as NAME=WEIGHT=DESCRIPTION, separated by "
-                        "semicolons",
+                        "Criteria as NAME=WEIGHT=DESCRIPTION, separated by semicolons",
                         default="",
                     )
                     criteria = _split_values(
@@ -1014,12 +920,8 @@ def run_init_task(
                 default="smoke",
             )
 
-        parsed_models = [
-            parse_model_route(value) for value in (model_routes or [])
-        ]
-        parsed_criteria = [
-            parse_criterion(value) for value in (criteria or [])
-        ]
+        parsed_models = [parse_model_route(value) for value in (model_routes or [])]
+        parsed_criteria = [parse_criterion(value) for value in (criteria or [])]
         result = initialize_task_bundle(
             root_path=root_path,
             output_dir=output_dir,
@@ -1052,10 +954,7 @@ def run_init_task(
     print(f"Bundle: {result['task_root']}")
     if result["backup"] is not None:
         print(f"Previous bundle preserved at: {result['backup']}")
-    print(
-        "Structure: "
-        + ("VALID" if validation["schema_valid"] else "INVALID")
-    )
+    print("Structure: " + ("VALID" if validation["schema_valid"] else "INVALID"))
     if validation["ready_for_plan"]:
         print("Readiness: READY FOR OFFLINE PLAN")
     else:
@@ -1081,10 +980,7 @@ def run_validate_task(
     print("\nEvalanche task bundle")
     print(f"Task: {result['task_id'] or 'unknown'}")
     print(f"Root: {result['task_root']}")
-    print(
-        "Structure: "
-        + ("VALID" if result["schema_valid"] else "INVALID")
-    )
+    print("Structure: " + ("VALID" if result["schema_valid"] else "INVALID"))
     if result["structural_issues"]:
         print("Structural issues:")
         for item in result["structural_issues"]:
@@ -1146,9 +1042,7 @@ def run_register_result(
         raise SystemExit(1) from None
 
     print("\nRegistered result bundle")
-    print(
-        f"Benchmark: {benchmark.benchmark_id}@{benchmark.version}"
-    )
+    print(f"Benchmark: {benchmark.benchmark_id}@{benchmark.version}")
     print(f"Model: {model_id}")
     print(f"Run: {result['run_id']}")
     print(f"Cases: {result['summary']['cases']}")
@@ -1168,13 +1062,9 @@ def run_build_leaderboard(
         if build_all:
             benchmarks = list(registry.benchmarks.values())
         elif benchmark_reference is not None:
-            benchmarks = [
-                registry.resolve_benchmark(benchmark_reference)
-            ]
+            benchmarks = [registry.resolve_benchmark(benchmark_reference)]
         else:
-            raise ValueError(
-                "Provide --benchmark or use --all."
-            )
+            raise ValueError("Provide --benchmark or use --all.")
         results = [
             build_leaderboard(
                 registry=registry,
@@ -1222,9 +1112,7 @@ def _resolve_access_confirmed_models(
         )
         selected = resolution["compatible_model_ids"]
         scope = dict(resolution["scope"])
-        scope["excluded_incompatible"] = resolution[
-            "incompatible_models"
-        ]
+        scope["excluded_incompatible"] = resolution["incompatible_models"]
         return selected, scope
 
     if not explicit_ids:
@@ -1237,9 +1125,7 @@ def _resolve_access_confirmed_models(
         path=access_set_path,
         benchmark=benchmark,
     )
-    outside = sorted(
-        set(explicit_ids) - set(resolution["access_set"].model_ids)
-    )
+    outside = sorted(set(explicit_ids) - set(resolution["access_set"].model_ids))
     if outside:
         raise ValueError(
             "Explicitly selected models are not in the access set: "
@@ -1291,9 +1177,7 @@ def run_tier_campaign_from_registry(
             )
             candidate_ids = resolution["compatible_model_ids"]
             access_scope = dict(resolution["scope"])
-            access_scope["excluded_incompatible"] = resolution[
-                "incompatible_models"
-            ]
+            access_scope["excluded_incompatible"] = resolution["incompatible_models"]
             promotion = select_models_for_promotion(
                 registry=registry,
                 benchmark=benchmark,
@@ -1333,14 +1217,8 @@ def run_tier_campaign_from_registry(
     print(f"Campaign: {preflight['campaign_id']}")
     print(f"Benchmark: {benchmark_reference}")
     print(f"Tier: {tier_name}")
-    print(
-        "Cumulative cases: "
-        f"{materialized['plan']['cumulative']['cases']}"
-    )
-    print(
-        "New tier cases: "
-        f"{materialized['plan']['execution']['cases']}"
-    )
+    print(f"Cumulative cases: {materialized['plan']['cumulative']['cases']}")
+    print(f"New tier cases: {materialized['plan']['execution']['cases']}")
     if promotion is not None:
         print(f"Promotion source: {promote_from}")
     print("\nModel cost preflight")
@@ -1407,13 +1285,9 @@ def run_tier_campaign_from_registry(
         raise SystemExit(2) from None
     print("\nTier campaign complete")
     print(
-        "Models completed now: "
-        + (", ".join(execution["completed_models"]) or "none")
+        "Models completed now: " + (", ".join(execution["completed_models"]) or "none")
     )
-    print(
-        "Observed budgeted cost: "
-        f"${execution['observed_budgeted_cost_usd']:.4f} USD"
-    )
+    print(f"Observed budgeted cost: ${execution['observed_budgeted_cost_usd']:.4f} USD")
     print(f"Campaign record: {execution['paths']['campaign']}")
     print("Status: LOCAL EXPERIMENT COMPLETE, NOT REGISTERED")
     return {"preflight": preflight, "execution": execution}
@@ -1463,10 +1337,7 @@ def run_benchmark_from_registry(
             access_set_path=access_set_path,
         )
     if promote_from is not None or preflight_only or maximum_cost_usd is not None:
-        print(
-            "--promote-from, --preflight-only, and --max-cost-usd require "
-            "--tier."
-        )
+        print("--promote-from, --preflight-only, and --max-cost-usd require --tier.")
         raise SystemExit(1)
     try:
         registry = load_registry(root_path)
@@ -1489,8 +1360,7 @@ def run_benchmark_from_registry(
         ]
         if incompatible:
             raise ValueError(
-                "Selected models do not satisfy benchmark capabilities: "
-                f"{incompatible}"
+                f"Selected models do not satisfy benchmark capabilities: {incompatible}"
             )
 
         results = []
@@ -1529,10 +1399,7 @@ def run_benchmark_from_registry(
             print("Status: LOCAL EXPERIMENT, NOT REGISTERED")
         else:
             print(f"Run: {result['bundle']['run_id']}")
-            print(
-                "Leaderboard: "
-                f"{result['leaderboard']['html_path']}"
-            )
+            print(f"Leaderboard: {result['leaderboard']['html_path']}")
             print("Status: COMPLETE AND REGISTERED")
 
     experiment_summary = None
@@ -1550,9 +1417,7 @@ def run_benchmark_from_registry(
             print(f"Experiment summary failed: {error}")
             raise SystemExit(1) from None
         print_benchmark_experiment_summary(experiment_summary)
-        report = experiment_summary["paths"]["report"].relative_to(
-            registry.root
-        )
+        report = experiment_summary["paths"]["report"].relative_to(registry.root)
         print(f"Experiment report: {report}")
         print("No leaderboard was published or changed.")
     return {
@@ -1585,9 +1450,7 @@ def run_summarize_benchmark(
             )
             selected_ids = resolution["compatible_model_ids"]
             access_scope = dict(resolution["scope"])
-            access_scope["excluded_incompatible"] = resolution[
-                "incompatible_models"
-            ]
+            access_scope["excluded_incompatible"] = resolution["incompatible_models"]
             if not selected_ids:
                 raise ValueError(
                     "No access-confirmed models in the access set satisfy "
@@ -1597,9 +1460,7 @@ def run_summarize_benchmark(
             selected_ids = list(dict.fromkeys(model_ids))
             access_scope = explicit_model_scope(selected_ids)
         else:
-            raise ValueError(
-                "Choose --model, --access-set, or --all-results."
-            )
+            raise ValueError("Choose --model, --access-set, or --all-results.")
         result = build_benchmark_experiment_summary(
             registry=registry,
             benchmark=benchmark,
@@ -1614,8 +1475,7 @@ def run_summarize_benchmark(
 
     print_benchmark_experiment_summary(result)
     print(
-        "\nModels discovered: "
-        + ", ".join(result["summary"]["model_name"].astype(str))
+        "\nModels discovered: " + ", ".join(result["summary"]["model_name"].astype(str))
     )
     print(f"Status: {result['comparison_status'].upper()}")
     if tier_name is not None:
@@ -1651,10 +1511,7 @@ def run_rescore_benchmark_from_registry(
     print(f"Cases: {plan['case_count']}")
     print("Model generation calls: 0")
     print(f"Run: {result['bundle']['run_id']}")
-    print(
-        "Leaderboard: "
-        f"{result['leaderboard']['html_path']}"
-    )
+    print(f"Leaderboard: {result['leaderboard']['html_path']}")
     print("Status: RESCORED AND REGISTERED")
     return result
 
@@ -1743,10 +1600,7 @@ def run_build_product_monograph(
 
     verification = result["verification"]
     print("\nHealth Canada Product Monograph benchmark")
-    print(
-        f"Dataset: {result['dataset_id']} "
-        f"{result['dataset_version']}"
-    )
+    print(f"Dataset: {result['dataset_id']} {result['dataset_version']}")
     print(f"Products: {result['product_count']}")
     print(f"Cases: {result['case_count']}")
     print(f"Evidence items: {result['evidence_item_count']}")
@@ -1781,10 +1635,7 @@ def run_build_product_monograph_native_pdf(
 
     verification = result["verification"]
     print("\nHealth Canada Product Monograph native-PDF benchmark")
-    print(
-        f"Dataset: {result['dataset_id']} "
-        f"{result['dataset_version']}"
-    )
+    print(f"Dataset: {result['dataset_id']} {result['dataset_version']}")
     print(f"Products: {result['product_count']}")
     print(f"Cases: {result['case_count']}")
     print(
@@ -1820,15 +1671,11 @@ def run_check_product_monograph_label_review(
     print("\nProduct Monograph native-PDF label review")
     print(f"Items reviewed: {result['reviewed']}/{result['items']}")
     print(f"Items approved: {result['approved']}/{result['items']}")
-    print(
-        "Cases fully approved: "
-        f"{result['cases_approved']}/{result['cases']}"
-    )
+    print(f"Cases fully approved: {result['cases_approved']}/{result['cases']}")
     print(
         "Statuses: "
         + ", ".join(
-            f"{status}={count}"
-            for status, count in result["status_counts"].items()
+            f"{status}={count}" for status, count in result["status_counts"].items()
         )
     )
     print(f"Review file: {result['review_path']}")
@@ -1841,12 +1688,114 @@ def run_check_product_monograph_label_review(
         print("Status: LABEL REVIEW COMPLETE")
     else:
         print("Status: REVIEW INCOMPLETE")
-        print(
-            f"Remaining approvals: {result['remaining']}. "
-            "No model calls were made."
-        )
+        print(f"Remaining approvals: {result['remaining']}. No model calls were made.")
         if require_complete:
             raise SystemExit(2)
+    return result
+
+
+def run_expand_product_monograph_benchmark(
+    *,
+    root_path: str,
+    config_path: str,
+    max_candidates: int | None,
+    show_progress: bool,
+) -> dict[str, Any]:
+    try:
+        result = expand_product_monograph_benchmark(
+            root_path=root_path,
+            config_path=config_path,
+            max_candidates=max_candidates,
+            progress=print if show_progress else None,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph expansion failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nHealth Canada Product Monograph expansion")
+    print(f"Version: {result['version']}")
+    print(f"Products: {result['products']}")
+    print(f"Evidence-window cases: {result['cases']}")
+    print(f"Native-PDF cases: {result['native_pdf_cases']}")
+    print(f"Provisional fact items: {result['facts']}")
+    print(f"Candidates screened: {result['screened_candidates']}")
+    print(f"Candidates excluded: {result['screening_exclusions']}")
+    print(f"Output: {result['output_dir']}")
+    print("Status: DRAFT, HUMAN AUDIT REQUIRED")
+    print("Model calls: 0")
+    return result
+
+
+def run_refresh_product_monograph_expansion(
+    *,
+    root_path: str,
+    config_path: str,
+) -> dict[str, Any]:
+    try:
+        result = refresh_expanded_product_monograph_release(
+            root_path=root_path,
+            config_path=config_path,
+        )
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph expansion refresh failed: {error}")
+        raise SystemExit(1) from None
+
+    print("\nProduct Monograph expansion audit refresh")
+    print(f"Version: {result['version']}")
+    print(f"Products: {result['products']}")
+    print(f"Cases: {result['cases']}")
+    print(f"Fact items: {result['facts']}")
+    for label, verification in result["verifications"].items():
+        print(
+            f"{label} files verified: {verification['files_passed']}/"
+            f"{verification['files_checked']}"
+        )
+    print("Network calls: 0")
+    print("Model calls: 0")
+    print("Status: REFRESHED")
+    return result
+
+
+def run_check_product_monograph_expansion_audit(
+    *,
+    root_path: str,
+    require_complete: bool,
+) -> dict[str, Any]:
+    try:
+        result = check_expanded_product_monograph_audit(root_path=root_path)
+    except (OSError, ValueError) as error:
+        print(f"Product Monograph expansion audit check failed: {error}")
+        raise SystemExit(1) from None
+
+    fact_approved = int(result["fact_status_counts"].get("approved", 0))
+    product_approved = sum(
+        int(counts.get("approved", 0))
+        for counts in result["product_status_counts"].values()
+    )
+    total_checks = int(result["fact_items"]) + 3 * int(result["products"])
+    approved_checks = fact_approved + product_approved
+    print("\nProduct Monograph expansion human audit")
+    print(f"Fact approvals: {fact_approved}/{result['fact_items']}")
+    print(
+        f"Product identity, scope, and bilingual approvals: "
+        f"{product_approved}/{3 * int(result['products'])}"
+    )
+    print(f"Total approvals: {approved_checks}/{total_checks}")
+    print(f"Fact audit: {result['fact_audit_path']}")
+    print(f"Product audit: {result['product_audit_path']}")
+    if result["issues"]:
+        print("Status: INVALID AUDIT OR ARTIFACT METADATA")
+        for issue in result["issues"]:
+            print(f"- {issue}")
+        raise SystemExit(1)
+    if result["promotion_ready"]:
+        print("Status: HUMAN AUDIT COMPLETE")
+    else:
+        print("Status: DRAFT, REVIEW INCOMPLETE")
+        print(f"Remaining approvals: {total_checks - approved_checks}")
+        if require_complete:
+            raise SystemExit(2)
+    print("Model calls: 0")
     return result
 
 
@@ -1886,10 +1835,7 @@ def build_parser() -> argparse.ArgumentParser:
     evidence_output_group.add_argument(
         "--check",
         action="store_true",
-        help=(
-            "Confirm the saved snapshot matches the catalog's recorded "
-            "status date."
-        ),
+        help=("Confirm the saved snapshot matches the catalog's recorded status date."),
     )
     evidence_parser.add_argument(
         "--fail-on-outdated",
@@ -1956,10 +1902,7 @@ def build_parser() -> argparse.ArgumentParser:
     init_task_parser.add_argument(
         "--criterion",
         action="append",
-        help=(
-            "Open-ended criterion as NAME=WEIGHT=DESCRIPTION. Repeat as "
-            "needed."
-        ),
+        help=("Open-ended criterion as NAME=WEIGHT=DESCRIPTION. Repeat as needed."),
     )
     init_task_parser.add_argument("--measured-construct")
     init_task_parser.add_argument("--intended-use")
@@ -2100,9 +2043,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Per-archive HTTP timeout in seconds.",
     )
 
-    dpd_benchmark_parser = subparsers.add_parser(
-        "build-dpd-benchmark"
-    )
+    dpd_benchmark_parser = subparsers.add_parser("build-dpd-benchmark")
     dpd_benchmark_parser.add_argument(
         "--root",
         default=".",
@@ -2137,9 +2078,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Path to the frozen DPD source manifest.",
     )
 
-    dpd_comparison_parser = subparsers.add_parser(
-        "build-dpd-comparison"
-    )
+    dpd_comparison_parser = subparsers.add_parser("build-dpd-comparison")
     dpd_comparison_parser.add_argument(
         "--root",
         default=".",
@@ -2161,9 +2100,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    assemble_comparison_parser = subparsers.add_parser(
-        "assemble-dpd-comparison"
-    )
+    assemble_comparison_parser = subparsers.add_parser("assemble-dpd-comparison")
     assemble_comparison_parser.add_argument(
         "--root",
         default=".",
@@ -2173,15 +2110,10 @@ def build_parser() -> argparse.ArgumentParser:
         "--require-model",
         action="append",
         dest="required_models",
-        help=(
-            "Model name that must be present. Repeat to require multiple "
-            "models."
-        ),
+        help=("Model name that must be present. Repeat to require multiple models."),
     )
 
-    assemble_census_parser = subparsers.add_parser(
-        "assemble-dpd-census-comparison"
-    )
+    assemble_census_parser = subparsers.add_parser("assemble-dpd-census-comparison")
     assemble_census_parser.add_argument(
         "--root",
         default=".",
@@ -2197,9 +2129,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
 
-    analyze_census_parser = subparsers.add_parser(
-        "analyze-dpd-census"
-    )
+    analyze_census_parser = subparsers.add_parser("analyze-dpd-census")
     analyze_census_parser.add_argument(
         "--root",
         default=".",
@@ -2249,9 +2179,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Recorded seed for deterministic review samples.",
     )
 
-    audit_review_parser = subparsers.add_parser(
-        "audit-dpd-review"
-    )
+    audit_review_parser = subparsers.add_parser("audit-dpd-review")
     audit_review_parser.add_argument(
         "--root",
         default=".",
@@ -2321,9 +2249,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=".",
         help="Repository root containing the registry.",
     )
-    leaderboard_group = leaderboard_parser.add_mutually_exclusive_group(
-        required=True
-    )
+    leaderboard_group = leaderboard_parser.add_mutually_exclusive_group(required=True)
     leaderboard_group.add_argument(
         "--benchmark",
         help="Benchmark reference in benchmark_id@version form.",
@@ -2345,9 +2271,7 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Benchmark reference in benchmark_id@version form.",
     )
-    run_model_group = run_benchmark_parser.add_mutually_exclusive_group(
-        required=True
-    )
+    run_model_group = run_benchmark_parser.add_mutually_exclusive_group(required=True)
     run_model_group.add_argument(
         "--model",
         action="append",
@@ -2431,16 +2355,12 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Benchmark reference in benchmark_id@version form.",
     )
-    summarize_scope_group = summarize_parser.add_mutually_exclusive_group(
-        required=True
-    )
+    summarize_scope_group = summarize_parser.add_mutually_exclusive_group(required=True)
     summarize_scope_group.add_argument(
         "--model",
         action="append",
         dest="models",
-        help=(
-            "Include this access-confirmed model. Repeat for more models."
-        ),
+        help=("Include this access-confirmed model. Repeat for more models."),
     )
     summarize_scope_group.add_argument(
         "--access-set",
@@ -2466,14 +2386,10 @@ def build_parser() -> argparse.ArgumentParser:
     )
     summarize_parser.add_argument(
         "--tier",
-        help=(
-            "Summarize the cumulative cohort for this manifest-defined tier."
-        ),
+        help=("Summarize the cumulative cohort for this manifest-defined tier."),
     )
 
-    rescore_benchmark_parser = subparsers.add_parser(
-        "rescore-benchmark"
-    )
+    rescore_benchmark_parser = subparsers.add_parser("rescore-benchmark")
     rescore_benchmark_parser.add_argument(
         "--root",
         default=".",
@@ -2486,9 +2402,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     rescore_benchmark_parser.add_argument("--model", required=True)
 
-    verify_pm_parser = subparsers.add_parser(
-        "verify-product-monograph-sources"
-    )
+    verify_pm_parser = subparsers.add_parser("verify-product-monograph-sources")
     verify_pm_parser.add_argument("--root", default=".")
     verify_pm_parser.add_argument(
         "--sources",
@@ -2499,9 +2413,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=PM_RAW_DIR.as_posix(),
     )
 
-    acquire_pm_parser = subparsers.add_parser(
-        "acquire-product-monographs"
-    )
+    acquire_pm_parser = subparsers.add_parser("acquire-product-monographs")
     acquire_pm_parser.add_argument("--root", default=".")
     acquire_pm_parser.add_argument(
         "--sources",
@@ -2513,9 +2425,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     acquire_pm_parser.add_argument("--timeout", type=float, default=120.0)
 
-    build_pm_parser = subparsers.add_parser(
-        "build-product-monograph-benchmark"
-    )
+    build_pm_parser = subparsers.add_parser("build-product-monograph-benchmark")
     build_pm_parser.add_argument("--root", default=".")
     build_pm_parser.add_argument(
         "--cohort",
@@ -2571,6 +2481,47 @@ def build_parser() -> argparse.ArgumentParser:
         "--require-complete",
         action="store_true",
         help="Exit unsuccessfully unless every label item is approved.",
+    )
+
+    expand_pm_parser = subparsers.add_parser(
+        "expand-product-monograph-benchmark",
+        help=("Build the complete 1.0.0 bilingual expansion and audit package."),
+    )
+    expand_pm_parser.add_argument("--root", default=".")
+    expand_pm_parser.add_argument(
+        "--config",
+        default=EXPANSION_CONFIG_PATH.as_posix(),
+    )
+    expand_pm_parser.add_argument(
+        "--max-candidates",
+        type=int,
+        help="Optional screening cap for failure-path testing.",
+    )
+    expand_pm_parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="Suppress per-candidate screening progress.",
+    )
+
+    refresh_pm_parser = subparsers.add_parser(
+        "refresh-product-monograph-expansion",
+        help="Refresh audit summaries and artifact hashes without network calls.",
+    )
+    refresh_pm_parser.add_argument("--root", default=".")
+    refresh_pm_parser.add_argument(
+        "--config",
+        default=EXPANSION_CONFIG_PATH.as_posix(),
+    )
+
+    check_pm_expansion_parser = subparsers.add_parser(
+        "check-product-monograph-expansion-audit",
+        help="Validate expanded fact, product, and artifact audit gates.",
+    )
+    check_pm_expansion_parser.add_argument("--root", default=".")
+    check_pm_expansion_parser.add_argument(
+        "--require-complete",
+        action="store_true",
+        help="Exit unsuccessfully unless every fact and product check is approved.",
     )
 
     return parser
@@ -2775,6 +2726,23 @@ def main() -> None:
         run_check_product_monograph_label_review(
             root_path=args.root,
             review_path=args.review,
+            require_complete=args.require_complete,
+        )
+    elif args.command == "expand-product-monograph-benchmark":
+        run_expand_product_monograph_benchmark(
+            root_path=args.root,
+            config_path=args.config,
+            max_candidates=args.max_candidates,
+            show_progress=not args.quiet,
+        )
+    elif args.command == "refresh-product-monograph-expansion":
+        run_refresh_product_monograph_expansion(
+            root_path=args.root,
+            config_path=args.config,
+        )
+    elif args.command == "check-product-monograph-expansion-audit":
+        run_check_product_monograph_expansion_audit(
+            root_path=args.root,
             require_complete=args.require_complete,
         )
     else:

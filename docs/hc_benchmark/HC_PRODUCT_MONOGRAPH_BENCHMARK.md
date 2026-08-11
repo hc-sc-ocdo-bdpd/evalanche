@@ -1,5 +1,10 @@
 # Health Canada Product Monograph evidence-window benchmark 0.1.0
 
+> **Expanded draft available:** Version 1.0.0 contains 200 product families,
+> 400 bilingual cases, unique ingredient groups, and a complete human audit
+> package. See
+> [`HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md`](HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+
 - **Status:** Frozen and ready for registered model runs
 - **Dataset:** `hc_product_monograph_structured_extraction@0.1.0`
 - **Cases:** 80 label-selected text-window instances
