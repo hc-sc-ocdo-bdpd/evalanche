@@ -214,4 +214,12 @@ and resource-specific endpoint URLs belong only in `.env`.
 - Exact versions, source dates, prompts, settings, and limitations preserved.
 - Health Canada examples kept useful without dominating the general resource.
 
+## Development note
+
+Evalanche has been developed with substantial assistance from OpenAI's
+GPT-5.6 Sol, including support for implementation, testing, documentation, and
+analysis. AI-generated contributions are treated as proposed work: maintainers
+direct the project, review and validate changes, and remain accountable for the
+repository and its outputs.
+
 For contribution and release rules, see [CONTRIBUTING.md](CONTRIBUTING.md).
