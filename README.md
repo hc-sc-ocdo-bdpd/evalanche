@@ -73,6 +73,13 @@ The evaluation engine supports:
 - comparison reports that preserve tradeoffs instead of selecting a model by
   default.
 
+An isolated [Inspect AI integration](docs/integrations/inspect_ai_dpd.md) can
+import retained full-census responses, replay the audit set, or generate a new
+DPD run with Inspect-native logs while reusing the exact Evalanche dataset,
+fingerprint, prompt, and deterministic scorer. Historical imports make no
+provider calls. The integration has its own dependency file and Docker
+profile, so it does not change the default runtime.
+
 Unvalidated judge results remain exploratory. A matching validation contract
 and report are required before judge evidence can support a comparative leader
 or an opt-in policy selection. See [LLM judges](docs/llm_judges.md).
@@ -185,6 +192,7 @@ docs/         Handbook, research directory, methods, and case studies
 configs/      Model, access, benchmark, dataset, pricing, and run definitions
 data/         Synthetic examples and versioned benchmark releases
 evalanche/    Optional evaluation software
+integrations/ Optional adapters with isolated dependencies
 reports/      Compact result releases and leaderboards
 notebooks/    Reproducible case-study analysis
 tests/        Unit, integration, and repository-contract tests

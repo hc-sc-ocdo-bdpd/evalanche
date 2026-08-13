@@ -6,3 +6,20 @@ services:
     volumes:
       - .:/app
     working_dir: /app
+
+  inspect:
+    profiles:
+      - inspect
+    build:
+      context: .
+      dockerfile: Dockerfile.inspect
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    working_dir: /app
+    command:
+      - python
+      - -m
+      - integrations.inspect_ai.cli
+      - --help

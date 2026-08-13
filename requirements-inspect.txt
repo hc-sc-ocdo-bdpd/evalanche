@@ -1,0 +1,3 @@
+-r requirements.txt
+inspect-ai==0.3.257
+openai==2.54.0

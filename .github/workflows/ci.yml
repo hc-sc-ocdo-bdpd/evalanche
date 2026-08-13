@@ -61,6 +61,43 @@ jobs:
             --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml \
             --root .
 
+  inspect-integration:
+    name: Optional Inspect AI integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+            requirements-inspect.txt
+
+      - name: Install optional integration
+        run: |
+          python -m pip install --disable-pip-version-check \
+            -r requirements-dev.txt -r requirements-inspect.txt
+
+      - name: Verify scorer parity and Inspect-native replay
+        run: |
+          python -m integrations.inspect_ai.cli doctor
+          python -m integrations.inspect_ai.cli parity
+          python -m integrations.inspect_ai.cli run \
+            --scope full --all-models --campaign ci-plan \
+            --plan-only --output-root /tmp/evalanche-inspect-plan
+          python -m integrations.inspect_ai.cli replay \
+            --display none --output-dir /tmp/evalanche-inspect-replay
+
+      - name: Run integration tests
+        run: pytest tests/test_inspect_ai_integration.py
+
   docker:
     name: Clean-checkout Docker workflow
     runs-on: ubuntu-latest
@@ -74,7 +111,9 @@ jobs:
         run: cp .env.example .env
 
       - name: Validate Compose configuration
-        run: docker compose config --quiet
+        run: |
+          docker compose config --quiet
+          docker compose --profile inspect config --quiet
 
       - name: Build runtime image
         run: |

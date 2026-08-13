@@ -35,9 +35,11 @@ one evidence source in an Evalanche decision brief.
   safety or capability suites, or established Inspect tasks.
 - **Important checks:** Exact Inspect version, task revision, solver, scorer,
   sandbox, model adapter, token or action budget, and log retention.
-- **Relationship to Evalanche:** Inspect is documented as an external
-  framework. Evalanche does not import or wrap Inspect in its current runtime,
-  so `inspect-ai` is not a required dependency.
+- **Relationship to Evalanche:** Inspect remains optional and is not a core
+  dependency. A supported, isolated [DPD integration](../integrations/inspect_ai_dpd.md)
+  can import retained responses, replay the audit set, or generate a new run
+  for the frozen structured-extraction benchmark with Inspect logs while
+  preserving the Evalanche prompt, fingerprint, and scorer.
 
 ## HELM
 
@@ -130,4 +132,4 @@ Before choosing a tool, answer:
 The best framework is not the one with the most tasks. It is the one that can
 support the intended claim with the least unnecessary custom machinery.
 
-Last source review: 2026-08-06.
+Last source review: 2026-08-11.
