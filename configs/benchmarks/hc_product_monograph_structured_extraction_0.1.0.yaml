@@ -7,6 +7,11 @@ description: >-
   English and French Product Monographs representing 40 marketed human-drug
   product families. This benchmark does not send PDFs to the model.
 status: frozen
+ranking:
+  enabled: false
+  reason: >-
+    Reference labels were not independently human validated. This frozen pilot
+    is retained as permanently provisional development evidence.
 dataset:
   dataset_id: hc_product_monograph_structured_extraction
   version: 0.1.0

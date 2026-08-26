@@ -75,8 +75,7 @@ docker compose run --rm evalanche python -m evalanche.cli evidence-status --chec
 Full development quality gate:
 
 ```bash
-docker compose run --rm evalanche sh -lc \
-  "python -m pip install --no-cache-dir -r requirements-dev.txt && ruff check . && coverage run -m pytest && coverage report --fail-under=80"
+docker compose run --rm evalanche sh -lc "python -m pip install --no-cache-dir -r requirements-dev.txt && ruff check . && coverage run -m pytest && coverage report --fail-under=80"
 ```
 
 Windows Command Prompt, as one line:
@@ -101,8 +100,7 @@ their default settings.
 Launch JupyterLab in a temporary container:
 
 ```bash
-docker compose run --rm -p 8888:8888 evalanche sh -lc \
-  "python -m pip install --no-cache-dir -r notebooks/requirements.txt && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root"
+docker compose run --rm -p 8888:8888 evalanche sh -lc "python -m pip install --no-cache-dir -r notebooks/requirements.txt && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root"
 ```
 
 Open the local URL printed by JupyterLab. Stop the container when finished.

@@ -10,7 +10,19 @@ import pandas as pd
 from evalanche.registry import BenchmarkManifest, LoadedRegistry
 from evalanche.result_bundle import load_active_bundles
 
-LEADERBOARD_SCHEMA_VERSION = "1.1"
+LEADERBOARD_SCHEMA_VERSION = "1.2"
+
+
+def _ranking_policy(benchmark: BenchmarkManifest) -> dict[str, Any]:
+    return {
+        "enabled": benchmark.ranking.enabled,
+        "reason": benchmark.ranking.reason,
+        "method": (
+            "Strict case pass rate among complete runs only. Runs with any "
+            "generation failures or unscored cases are ineligible. Cost, "
+            "latency, reliability, and slice metrics are descriptive."
+        ),
+    }
 
 
 def _ranking_eligible(bundle: dict[str, Any]) -> bool:
@@ -46,10 +58,14 @@ def _bundle_rows(
     for bundle in bundles:
         metadata = bundle["metadata"]
         summary = metadata["summary"]
+        if not _ranking_eligible(bundle):
+            ranking_status = "ineligible"
+        elif benchmark.ranking.enabled:
+            ranking_status = "eligible"
+        else:
+            ranking_status = "provisional"
         row: dict[str, Any] = {
-            "ranking_status": (
-                "eligible" if _ranking_eligible(bundle) else "ineligible"
-            ),
+            "ranking_status": ranking_status,
             "model_id": metadata["model"]["model_id"],
             "model": metadata["model"]["display_name"],
             "run_id": metadata["run_id"],
@@ -129,9 +145,11 @@ def _bundle_rows(
         "p95_latency_seconds",
     ]
     extra = [column for column in leaderboard if column not in ordered]
-    leaderboard["_eligible_order"] = (~eligible).astype(int)
+    leaderboard["_status_order"] = leaderboard["ranking_status"].map(
+        {"eligible": 0, "provisional": 0, "ineligible": 1}
+    )
     ordered_frame = leaderboard.sort_values(
-        ["_eligible_order", "rank", "model_id"],
+        ["_status_order", "rank", "model_id"],
         kind="stable",
     )
     return ordered_frame[ordered + sorted(extra)]
@@ -234,6 +252,16 @@ def _markdown(
         f"Benchmark: `{benchmark.benchmark_id}@{benchmark.version}`",
         "",
     ]
+    if not benchmark.ranking.enabled:
+        lines.extend(
+            [
+                "**Ranking is disabled.** Complete results are shown as "
+                "provisional descriptive evidence.",
+                "",
+                f"Reason: {benchmark.ranking.reason}",
+                "",
+            ]
+        )
     if leaderboard.empty:
         lines.extend(
             [
@@ -268,16 +296,19 @@ def _markdown(
             )
             + " |"
         )
-    lines.extend(
-        [
-            "",
+    if benchmark.ranking.enabled:
+        explanation = (
             "Ranks use strict pass rate. Cost and latency are displayed "
             "separately and are not collapsed into a recommendation score. "
             "Runs with any generation failures or unscored cases are shown "
-            "but are not ranked.",
-            "",
-        ]
-    )
+            "but are not ranked."
+        )
+    else:
+        explanation = (
+            "No official rank is assigned. Pass rate, field score, cost, "
+            "latency, reliability, and slices remain descriptive."
+        )
+    lines.extend(["", explanation, ""])
     return "\n".join(lines)
 
 
@@ -349,11 +380,30 @@ def _html(
     slices: list[dict[str, Any]],
     pairwise: pd.DataFrame,
 ) -> str:
+    ranking_policy = _ranking_policy(benchmark)
+    if benchmark.ranking.enabled:
+        ranking_notice = ""
+        reading_note = (
+            "Rank uses strict case pass rate among complete runs. Runs with "
+            "any generation failures or unscored cases remain visible but "
+            "are ineligible for rank."
+        )
+    else:
+        ranking_notice = (
+            '  <div class="notice"><strong>Ranking is disabled.</strong> '
+            + html.escape(str(benchmark.ranking.reason))
+            + " Complete results are provisional and descriptive.</div>\n"
+        )
+        reading_note = (
+            "No official rank is assigned. Complete results are marked "
+            "provisional; incomplete runs remain ineligible."
+        )
     payload = json.dumps(
         {
             "leaderboard": _json_records(leaderboard),
             "slices": slices,
             "pairwise": pairwise.to_dict(orient="records"),
+            "ranking_policy": ranking_policy,
         },
         ensure_ascii=False,
         allow_nan=False,
@@ -408,6 +458,10 @@ def _html(
     th:nth-child(2), td:nth-child(2) {{ text-align: left; }}
     tbody tr:hover {{ background: color-mix(in srgb, var(--accent) 7%, transparent); }}
     .empty {{ color: var(--muted); padding: 24px 0; }}
+    .notice {{
+      margin-top: 20px; padding: 14px 16px; border: 1px solid var(--accent);
+      border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }}
     footer {{ color: var(--muted); margin-top: 24px; }}
     code {{ font-size: 0.95em; }}
   </style>
@@ -418,16 +472,15 @@ def _html(
   <h1>{html.escape(benchmark.title)}</h1>
   <p class="intro">{html.escape(benchmark.description)}</p>
   <p><code>{html.escape(benchmark.benchmark_id)}@{html.escape(benchmark.version)}</code></p>
-  <section class="card">
+{ranking_notice}  <section class="card">
     <h2>Results</h2>
     <div class="scroll">{_table_html(leaderboard)}</div>
   </section>
   <section class="card">
     <h2>How to read this</h2>
     <p class="intro">
-      Rank uses strict case pass rate among complete runs. Runs with any
-      generation failures or unscored cases remain visible but are ineligible
-      for rank. Field score, language slices, cost, and latency remain separate.
+      {html.escape(reading_note)} Field score, language slices, cost, and
+      latency remain separate.
     </p>
   </section>
   <footer>Generated from compatible, versioned result bundles.</footer>
@@ -505,11 +558,7 @@ def build_leaderboard(
         "models": _json_records(leaderboard),
         "slices": slices,
         "pairwise": pairwise.to_dict(orient="records"),
-        "ranking_policy": (
-            "Strict case pass rate among complete runs only. Runs with any "
-            "generation failures or unscored cases are ineligible. Cost, "
-            "latency, reliability, and slice metrics are descriptive."
-        ),
+        "ranking_policy": _ranking_policy(benchmark),
     }
     json_path.write_text(
         json.dumps(
@@ -578,6 +627,8 @@ def build_benchmark_index(
             f"<strong>{html.escape(benchmark.title)}</strong>"
             f"<span>{html.escape(key)}</span>"
             f"<span>Status: {html.escape(benchmark.status)}</span>"
+            f"<span>Ranking: "
+            f"{'enabled' if benchmark.ranking.enabled else 'disabled'}</span>"
             f"<span>{model_count} registered model"
             f"{'' if model_count == 1 else 's'}</span>"
             + closing

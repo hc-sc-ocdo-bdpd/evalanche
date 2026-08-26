@@ -155,10 +155,10 @@ def test_historical_source_membership_and_frozen_inputs_are_strict() -> None:
 def test_published_score_bundles_are_hash_checked() -> None:
     context = load_dpd_context(ROOT)
     expected_runs = {
-        "gpt_5_4_mini": "64061d23515229e9",
-        "gpt_5_6_luna": "6c858ef5e4051b42",
-        "gpt_5_6_terra": "8869d790e4bd789f",
-        "gpt_5_6_sol": "63b33a7a08f0522f",
+        "gpt_5_4_mini": "21a2133d90f17f63",
+        "gpt_5_6_luna": "28add3264b58f7e7",
+        "gpt_5_6_terra": "4262a9bcd13c8ecd",
+        "gpt_5_6_sol": "b127e027b3f34940",
     }
 
     for model_id, run_id in expected_runs.items():

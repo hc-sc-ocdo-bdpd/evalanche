@@ -2,7 +2,7 @@
   "report_schema_version": "1.0",
   "dataset_id": "hc_product_monograph_native_pdf_extraction",
   "dataset_version": "0.1.0",
-  "status": "draft",
+  "status": "retired",
   "population": {
     "products": 40,
     "cases": 80,
@@ -29,13 +29,9 @@
     "status_counts": {
       "pending": 390
     },
-    "all_items_approved": false
-  },
-  "promotion_gates": {
-    "human_label_review_complete": false,
-    "local_source_hash_verification_required": true,
-    "provider_pdf_smoke_test_required": true,
-    "heldout_prompt_lock_required": true
+    "all_items_approved": false,
+    "disposition": "historical_snapshot",
+    "action_required": false
   },
   "artifacts": {
     "cases": {

@@ -66,14 +66,9 @@ prints credential values.
 Run the full offline gate:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli doctor
-
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli parity
-
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli replay --display plain
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli doctor
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli parity
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli replay --display plain
 ```
 
 `doctor` may pass with `ready_for_paid_run: false` when credentials are absent.
@@ -146,12 +141,7 @@ case count, models, routes, request settings, fingerprint, rate, and
 approximate request window without provider calls:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli run \
-  --scope full \
-  --all-models \
-  --campaign dpd-inspect-full-2026-08-11 \
-  --plan-only
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli run --scope full --all-models --campaign dpd-inspect-full-2026-08-11 --plan-only
 ```
 
 The scopes are fixed views of the frozen 0.2.0 release:
@@ -172,24 +162,14 @@ sequentially so each model has an independent 60-request-per-minute budget.
 Start with one model on the 24-case demo:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli doctor --require-credentials
-
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli run \
-  --scope demo \
-  --model gpt_5_6_sol \
-  --campaign dpd-inspect-demo-2026-08-11
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli doctor --require-credentials
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli run --scope demo --model gpt_5_6_sol --campaign dpd-inspect-demo-2026-08-11
 ```
 
 Then run one complete census if the demo is healthy:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli run \
-  --scope full \
-  --model gpt_5_6_sol \
-  --campaign dpd-inspect-sol-full-2026-08-11
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli run --scope full --model gpt_5_6_sol --campaign dpd-inspect-sol-full-2026-08-11
 ```
 
 Use `--all-models` instead of repeated `--model` arguments to rerun all four
@@ -213,9 +193,7 @@ sample errors, retry that exact log instead of starting the completed cases
 again:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli retry \
-  --log-file results/inspect_ai/MY-CAMPAIGN/logs/FAILED.eval
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli retry --log-file results/inspect_ai/MY-CAMPAIGN/logs/FAILED.eval
 ```
 
 The reporter merges retry logs by model and sample ID, keeping the newest
@@ -244,10 +222,7 @@ and stratum slices. Historical reports also contain scorer-parity counts. To
 rebuild a report from existing logs:
 
 ```bash
-docker compose --profile inspect run --rm inspect \
-  python -m integrations.inspect_ai.cli report \
-  --log-dir results/inspect_ai/MY-CAMPAIGN/logs \
-  --output-dir results/inspect_ai/MY-CAMPAIGN/report
+docker compose --profile inspect run --rm inspect python -m integrations.inspect_ai.cli report --log-dir results/inspect_ai/MY-CAMPAIGN/logs --output-dir results/inspect_ai/MY-CAMPAIGN/report
 ```
 
 ## Direct Inspect CLI use

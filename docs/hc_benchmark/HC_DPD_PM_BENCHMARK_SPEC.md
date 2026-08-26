@@ -1,12 +1,13 @@
 # Evalanche HC Benchmark 1: DPD and Product Monograph Extraction
 
-- **Specification status:** DPD census and Product Monograph evidence-window releases complete; native-PDF release draft
+- **Specification status:** DPD census complete; Product Monograph pilots frozen or retired and permanently provisional
 - **Benchmark type:** Bilingual structured extraction
 - **Primary scoring:** Deterministic JSON and field-level metrics
 
 ## 1. Research question
 
-How reliably can candidate language models extract auditable drug-product facts from Health Canada-authorized English and French Product Monographs?
+How reliably can candidate language models perform bilingual structured
+extraction under explicit, source-grounded Health Canada input contracts?
 
 The benchmark produces task-specific evidence and a versioned leaderboard. It
 does not declare a universal model recommendation, test general medical
@@ -68,9 +69,8 @@ extraction and JSON fidelity rather than end-to-end document retrieval.
 
 A separate `hc_product_monograph_native_pdf_extraction` version `0.1.0`
 release sends one complete, hash-verified PDF per case through the Responses
-API. It reuses the same cohort and provisional labels, but it is deliberately
-`draft` until human label review, provider smoke testing, and prompt locking
-are complete. The two input contracts must have separate leaderboards.
+API. It reuses the same cohort and provisional labels. It is retired,
+local-only, and permanently unranked. The two input contracts remain separate.
 
 The materialized DPD slice includes varied oral, injectable, topical, inhaled,
 ophthalmic, and other routes and dosage forms. Sampling is reproducible from
@@ -92,8 +92,8 @@ These exclusions reduce infrastructure and label-noise risk in the first release
 
 ## 4. Unit of evaluation
 
-In Product Monograph versions `0.1.0` and `1.0.0`, one case represents one
-Product Monograph language instance.
+In Product Monograph version `0.1.0`, one case represents one Product
+Monograph language instance.
 
 Each case contains:
 
@@ -227,10 +227,6 @@ A case passes only when the output is valid, schema-compliant JSON and every req
 - Do not include selected evidence text, page numbers, expected outputs, or
   source metadata in the native-PDF model prompt.
 - Keep a 10-product held-out set that is not used for prompt development.
-- In 1.0.0, treat all 40 exposed pilot families as development data and keep
-  160 newly selected families held-out.
-- In 1.0.0, represent every ingredient group only once across all 200
-  families.
 - Group related products by active ingredient and reference-product family when dividing development and held-out cases.
 - Do not tune prompts against held-out outputs.
 - Record model identifier, deployment, parameters, prompt version, evaluator version, dataset version, and run timestamp.
@@ -248,28 +244,18 @@ The evidence-window diagnostic is ready to run only when:
 - no held-out product family appears in the development subset
 - deterministic metrics pass unit tests on representative one-to-one and one-to-many cases
 
-The historical 0.1.0 native-PDF benchmark requires all 390 field-level labels
-to receive human approval. The 1.0.0 expansion requires all 2,162 fact checks
-plus 600 product identity, scope, and bilingual checks. Both also require all
-source PDFs to pass local verification, an English and French development case
-to succeed through every intended provider route, token and cost reporting to
-be checked, and the prompt to be locked before any held-out run. Until then,
-registration and leaderboard publication remain blocked. Explicit local
-experiments may run, but stay provisional and unranked.
+The evidence-window pilot has complete automated source-page checks, but its
+labels lack independent human validation. Its ranking policy is therefore
+disabled. The native-PDF pilot is retired and registered execution is blocked.
+The retained historical review snapshot is not an outstanding quality gate.
 
-## 11. Expansion status
+## 11. Product Monograph disposition
 
-The major corpus expansion is complete as draft version 1.0.0:
-
-1. Preserve the 80-document 0.1.0 release and results as historical pilot
-   evidence.
-2. Human-audit the 400-document 1.0.0 release before any ranked use.
-3. Use smoke and screen tiers before a full 400-case model run.
-4. Run compatible models against identical frozen 1.0.0 cases and keep
-   native-PDF and evidence-window rankings separate.
-5. Add harder scanned documents only if OCR is evaluated as a separate factor.
-6. Develop Recalls and Summary Reports as separate optional task packs rather
-   than mixing unrelated task types into one score.
+The unfinished 1.0.0 expansion and its audit program were retired on
+2026-08-17. The 0.1.0 evidence-window release remains as frozen descriptive
+evidence. The 0.1.0 native-PDF release remains as a retired local pilot.
+Neither is an official ranked benchmark, and no future audit or expansion is
+implied by the retained 0.1.0 artifacts.
 
 ## 12. Explicit non-goals
 

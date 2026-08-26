@@ -36,14 +36,7 @@ no provider calls.
 For a scripted classification starter:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli init-task \
-  --non-interactive \
-  --task-id my_classification_task \
-  --description "Classify one approved input into one closed label." \
-  --family classification \
-  --language en \
-  --unacceptable-error "Assigning a high-risk item to the routine label." \
-  --model my_deployment=azure/my-deployment
+docker compose run --rm evalanche python -m evalanche.cli init-task --non-interactive --task-id my_classification_task --description "Classify one approved input into one closed label." --family classification --language en --unacceptable-error "Assigning a high-risk item to the routine label." --model my_deployment=azure/my-deployment
 ```
 
 Use `--family structured-extraction` with repeated `--output-field`,
@@ -77,8 +70,7 @@ in `task.yaml` are confirmed. Run its generated validation command after each
 material edit:
 
 ```bash
-docker compose run --rm evalanche python -m evalanche.cli validate-task \
-  --root local_tasks/my_classification_task
+docker compose run --rm evalanche python -m evalanche.cli validate-task --root local_tasks/my_classification_task
 ```
 
 `init-task` refuses to overwrite an existing task. `--replace` is explicit and
@@ -175,6 +167,12 @@ Copy the template:
 cp examples/local_comparison/access_set.example.yaml configs/access_sets/my_available_models.yaml
 ```
 
+Windows Command Prompt:
+
+```cmd
+copy examples\local_comparison\access_set.example.yaml configs\access_sets\my_available_models.yaml
+```
+
 Replace every row and the date:
 
 ```yaml
@@ -258,8 +256,13 @@ Copy one into `configs/benchmarks/`, then update:
 For example:
 
 ```bash
-cp examples/local_comparison/json_benchmark.example.yaml \
-  configs/benchmarks/my_json_task_0.1.0.yaml
+cp examples/local_comparison/json_benchmark.example.yaml configs/benchmarks/my_json_task_0.1.0.yaml
+```
+
+Windows Command Prompt:
+
+```cmd
+copy examples\local_comparison\json_benchmark.example.yaml configs\benchmarks\my_json_task_0.1.0.yaml
 ```
 
 The sample dataset record is intentionally minimal for local development. A
@@ -270,8 +273,7 @@ license, sampling, split, lineage, file size, row count, and SHA-256 hash.
 Validate every registry record without model calls:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli registry-validate
+docker compose run --rm evalanche python -m evalanche.cli registry-validate
 ```
 
 Fix every reported issue before proceeding.
@@ -281,12 +283,7 @@ Fix every reported issue before proceeding.
 ### One or more explicitly selected models
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --model my_first_deployment \
-  --model my_second_deployment \
-  --plan-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --model my_first_deployment --model my_second_deployment --plan-only
 ```
 
 Each `--model` is an explicit access confirmation for this run.
@@ -297,13 +294,7 @@ For a tiered task, inspect route compatibility, resume state, and aggregate
 projected cost:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier smoke \
-  --all-compatible \
-  --access-set configs/access_sets/my_available_models.yaml \
-  --preflight-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --tier smoke --all-compatible --access-set configs/access_sets/my_available_models.yaml --preflight-only
 ```
 
 `--all-compatible` without `--access-set` is rejected. Capability compatibility
@@ -329,14 +320,7 @@ cannot guarantee the provider's final invoice for an in-flight request.
 Choose a cap at or above the reviewed projection:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier smoke \
-  --all-compatible \
-  --access-set configs/access_sets/my_available_models.yaml \
-  --experiment \
-  --max-cost-usd 5.00
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --tier smoke --all-compatible --access-set configs/access_sets/my_available_models.yaml --experiment --max-cost-usd 5.00
 ```
 
 Review transport, parse status, outputs, tokens, cost evidence, and errors.
@@ -345,13 +329,7 @@ Do not continue merely because the command completed.
 Preflight and run the screen tier with the same access set:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier screen \
-  --all-compatible \
-  --access-set configs/access_sets/my_available_models.yaml \
-  --preflight-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --tier screen --all-compatible --access-set configs/access_sets/my_available_models.yaml --preflight-only
 ```
 
 Add `--experiment --max-cost-usd <reviewed_cap>` to execute. A child tier only
@@ -361,13 +339,7 @@ and does not repeat a completed case and model pair.
 Promotion is also access-scoped:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier standard \
-  --promote-from screen \
-  --access-set configs/access_sets/my_available_models.yaml \
-  --preflight-only
+docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --tier standard --promote-from screen --access-set configs/access_sets/my_available_models.yaml --preflight-only
 ```
 
 Promotion gates come from the benchmark manifest, not model-name logic.
@@ -377,32 +349,19 @@ Promotion gates come from the benchmark manifest, not model-name logic.
 For access-confirmed candidates:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli summarize-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier screen \
-  --access-set configs/access_sets/my_available_models.yaml
+docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark my_json_task@0.1.0 --tier screen --access-set configs/access_sets/my_available_models.yaml
 ```
 
 Or select exact models for the summary:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli summarize-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier screen \
-  --model my_first_deployment \
-  --model my_second_deployment
+docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark my_json_task@0.1.0 --tier screen --model my_first_deployment --model my_second_deployment
 ```
 
 To study all past compatible results without claiming current access:
 
 ```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli summarize-benchmark \
-  --benchmark my_json_task@0.1.0 \
-  --tier screen \
-  --all-results
+docker compose run --rm evalanche python -m evalanche.cli summarize-benchmark --benchmark my_json_task@0.1.0 --tier screen --all-results
 ```
 
 The report labels this last mode as historical evidence only.

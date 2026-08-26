@@ -1,8 +1,8 @@
 # Product Monograph architecture review
 
-> This review records the 0.1.0 pilot decision. The implemented 1.0.0
-> expansion, current counts, and enlarged human gate are documented in
-> [`HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md`](HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+> This review records the 0.1.0 pilot decision. The later 1.0.0 expansion and
+> proposed audit program were retired on 2026-08-17 because they were not
+> needed to interpret or operate the supported resource.
 
 Reviewed: 2026-08-04
 
@@ -72,7 +72,7 @@ or to publish its scores as document-understanding results.
 | Evidence windows could be mistaken for full-document input | Claims would exceed what the benchmark measured | Renamed and documented the release as an evidence-window diagnostic |
 | Input modality and model compatibility were implicit | An incompatible route could be treated like a bad model | Added benchmark-required capability gates for PDF input, Responses, and vision |
 | No native file-input path existed | Complete-PDF evaluation could not run through the registry | Added hash-verified Base64 PDF input through the Responses adapter |
-| A draft benchmark could create publishable-looking output | Provisional labels and untested transport could leak into a leaderboard | Registered execution remains blocked for `draft`; explicit local experiments are unregistered and cannot change leaderboards |
+| Provisional labels could create publishable-looking ranks | Measurements could overstate reference validity | Ranking is disabled for both Product Monograph pilots; the native-PDF pilot is retired |
 | The benchmark index linked to missing draft leaderboards | The generated report surface contained a broken link | Drafts without leaderboards now render as non-clickable status cards |
 
 ## Options considered
@@ -94,7 +94,7 @@ The evidence-window benchmark remains frozen:
 hc_product_monograph_structured_extraction@0.1.0
 ```
 
-The native-PDF benchmark is a separate draft:
+The native-PDF benchmark is a separate retired local pilot:
 
 ```text
 hc_product_monograph_native_pdf_extraction@0.1.0
@@ -108,8 +108,9 @@ downloaded locally from the source lock and are not committed.
 
 The provisional expected JSON is inherited from the evidence-window release,
 but no selected page text, page number, expected output, or source metadata is
-placed in the model prompt. A 390-item review queue records the source page and
-human approval state for every scored item.
+placed in the model prompt. A 390-item historical review snapshot records the
+original source-page evidence. It is retained for reproducibility and is not
+an outstanding work queue.
 
 ## How to interpret paired results
 
@@ -124,21 +125,14 @@ Do not average the two scores or merge them into one rank. Input processing can
 differ between providers, so comparisons are valid only within a declared and
 versioned input contract.
 
-## Required next sequence
+## Final disposition
 
-1. Review and approve or correct all 390 native-PDF label items against their
-   exact hash-locked source pages.
-2. Acquire and verify all 80 PDFs locally.
-3. Smoke-test one development English case and one development French case on
-   every intended provider route. Confirm output text, token usage, cost
-   reporting, retry behavior, and the provider's accepted PDF request shape.
-4. Lock the prompt and release a promoted dataset and benchmark version.
-5. Rerun GPT-5.4 Mini on the evidence-window benchmark with the corrected
-   request configuration.
-6. Run the promoted native-PDF benchmark one model at a time, with checkpoints
-   and conservative concurrency.
-7. Compare paired case and field outcomes against the evidence-window
-   diagnostic. Publish each leaderboard separately.
+The evidence-window pilot stays frozen as descriptive evidence. The native-PDF
+pilot stays retired as local architecture evidence. Both have ranking disabled
+and neither has a planned audit, promotion, or rerun requirement. The DPD
+census remains Evalanche's ranked Health Canada release.
 
-The label review and provider smoke test are real release gates, not paperwork.
-No native-PDF model ranking should be published before they are complete.
+A later validated Product Monograph benchmark would require a new version,
+independently validated labels, a reproducible source and input contract, a
+versioned scorer, and an explicit ranking decision. The retained pilots do not
+imply such a benchmark.

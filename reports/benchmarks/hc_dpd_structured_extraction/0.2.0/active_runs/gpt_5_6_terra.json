@@ -3,7 +3,7 @@
   "benchmark_id": "hc_dpd_structured_extraction",
   "benchmark_version": "0.2.0",
   "model_id": "gpt_5_6_terra",
-  "run_id": "8869d790e4bd789f",
-  "run_metadata_path": "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/runs/gpt_5_6_terra/8869d790e4bd789f/run.json",
-  "run_metadata_sha256": "191c6e2917773563bb4f4e8c16b7877edb550ce2b6ce099507a42881a3bc5c70"
+  "run_id": "4262a9bcd13c8ecd",
+  "run_metadata_path": "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/runs/gpt_5_6_terra/4262a9bcd13c8ecd/run.json",
+  "run_metadata_sha256": "b34f54583b38ddee0863e01c7941be641992c2118174eb65693dcbdbe3c517fe"
 }

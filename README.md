@@ -158,10 +158,11 @@ Evalanche includes two substantial Health Canada examples:
 
 They demonstrate bilingual, structured, source-grounded evaluation and remain
 useful benchmark assets. They do not define the repository's model universe or
-its main navigation. Native-PDF quality results remain provisional until the
-reference labels receive the documented human review. The publication-sized
-1.0.0 draft expands Product Monographs to 200 bilingual families and includes
-fact, identity, scope, and bilingual audit gates.
+its main navigation. The DPD census is the ranked case study. The two Product
+Monograph pilots are permanently provisional and unranked because their labels
+were not independently validated. No Product Monograph audit campaign is
+part of the supported resource, and the unfinished 1.0.0 expansion has been
+removed from the repository.
 
 Open the [Health Canada landing page](docs/case_studies/health_canada.md) for
 results, status, limitations, and detailed runbooks.
@@ -184,6 +185,12 @@ docker compose run --rm evalanche python -m evalanche.cli --help
 ```
 
 Windows Command Prompt uses `copy .env.example .env` for the first command.
+
+The current package version is available without network access:
+
+```bash
+docker compose run --rm evalanche python -m evalanche.cli --version
+```
 
 ## Repository map
 
@@ -219,7 +226,9 @@ and resource-specific endpoint URLs belong only in `.env`.
 Evalanche has been developed with substantial assistance from OpenAI's
 GPT-5.6 Sol, including support for implementation, testing, documentation, and
 analysis. AI-generated contributions are treated as proposed work: maintainers
-direct the project, review and validate changes, and remain accountable for the
-repository and its outputs.
+review and validate changes and remain accountable for the repository and its
+outputs.
 
 For contribution and release rules, see [CONTRIBUTING.md](CONTRIBUTING.md).
+For technical upkeep, see the [maintenance guide](docs/maintenance.md).
+Release history is in [CHANGELOG.md](CHANGELOG.md).

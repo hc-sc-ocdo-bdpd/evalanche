@@ -1,12 +1,17 @@
 schema_version: "1.0"
 benchmark_id: hc_product_monograph_native_pdf_extraction
 version: 0.1.0
-title: Health Canada Product Monograph native-PDF extraction
+title: Health Canada Product Monograph native-PDF pilot
 description: >-
-  Draft end-to-end bilingual extraction from 80 complete, official English and
+  Retired local-only bilingual pilot using 80 complete official English and
   French Product Monograph PDFs representing 40 marketed human-drug product
-  families. Each model receives the entire PDF through a native file-input API.
-status: draft
+  families. It is retained for reproducibility, not official model ranking.
+status: retired
+ranking:
+  enabled: false
+  reason: >-
+    Reference labels were not independently human validated. This local-only
+    pilot is retained as permanently provisional development evidence.
 dataset:
   dataset_id: hc_product_monograph_native_pdf_extraction
   version: 0.1.0
@@ -249,9 +254,6 @@ tiers:
       initial_completion_tokens: 900
       safety_multiplier: 1.75
       request_ceiling_multiplier: 2.0
-    promotion:
-      minimum_pass_rate: 0.50
-      maximum_generation_failure_rate: 0.05
   standard:
     description: >-
       The complete 80-case pilot. Execution adds only cases not already run in
@@ -273,8 +275,9 @@ tiers:
       safety_multiplier: 1.50
       request_ceiling_multiplier: 1.75
 limitations:
-  - This benchmark is draft and cannot execute as a registered run until its promotion gates pass.
-  - Provisional labels come from DPD alignment plus automated source-page evidence, not completed independent human review.
+  - This retired pilot is permanently provisional and must not produce an official model ranking.
+  - Provisional labels come from DPD alignment plus automated source-page evidence, not independent human review.
+  - The historical label-review snapshot is retained only to reproduce the original pilot; no review campaign is planned.
   - Native PDF rendering and tokenization may differ between providers, so input-contract differences must remain explicit.
   - DIN, schedule, product status, and sponsor are alignment metadata and are not scored.
   - Results from 40 products do not represent every drug or document format.

@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.2",
+  "benchmark": {
+    "benchmark_id": "hc_product_monograph_native_pdf_extraction",
+    "version": "0.1.0",
+    "title": "Health Canada Product Monograph native-PDF pilot",
+    "status": "retired"
+  },
+  "models": [],
+  "slices": [],
+  "pairwise": [],
+  "ranking_policy": {
+    "enabled": false,
+    "reason": "Reference labels were not independently human validated. This local-only pilot is retained as permanently provisional development evidence.",
+    "method": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."
+  }
+}

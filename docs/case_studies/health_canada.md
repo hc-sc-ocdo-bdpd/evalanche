@@ -1,22 +1,21 @@
 # Health Canada case studies
 
-Evalanche includes three related Health Canada benchmark paths. They are useful
-public examples of bilingual structured evaluation and remain benchmark assets
-in their own right. They are not the main model-selection handbook and they do
-not define which models a new user can access.
+Evalanche includes one publication-quality census benchmark and two Product
+Monograph pilots. They demonstrate bilingual, structured, source-grounded
+evaluation. They do not define which models a new user can access.
 
 ## At a glance
 
-| Benchmark | Input | Cases | Status | Public result |
+| Benchmark | Input | Cases | Lifecycle | Ranking |
 | --- | --- | ---: | --- | --- |
-| DPD structured extraction 0.2.0 | Deterministic bilingual rendering of Drug Product Database records | 14,034 | Frozen | Four-model compact release and leaderboard |
-| Product Monograph evidence-window extraction 0.1.0 | Label-selected text windows from official monographs | 80 | Frozen | Four-model leaderboard |
-| Product Monograph native-PDF extraction 0.1.0 | Complete official English and French PDFs | 80 | Draft | Local provisional experiments only |
-| Product Monograph evidence-window extraction 1.0.0 | Label-selected text windows from official monographs | 400 | Draft | Human audit required, no model results |
-| Product Monograph native-PDF extraction 1.0.0 | Complete official English and French PDFs | 400 | Draft | Human audit required, no model results |
+| DPD structured extraction 0.2.0 | Deterministic bilingual Drug Product Database records | 14,034 | Frozen | Enabled |
+| Product Monograph evidence-window extraction 0.1.0 | Label-selected official monograph text | 80 | Frozen pilot | Disabled, permanently provisional |
+| Product Monograph native-PDF extraction 0.1.0 | Complete official English and French PDFs | 80 | Retired local pilot | Disabled, permanently provisional |
 
-Each result applies only to the named input contract, prompt, dataset, model
-route, and scoring policy.
+Every result applies only to its named input contract, prompt, dataset, model
+route, and scoring policy. The unfinished Product Monograph 1.0.0 expansion
+and its proposed audit campaign were retired on 2026-08-17. They are not
+part of the supported resource and carry no future audit commitment.
 
 ## Drug Product Database census
 
@@ -24,8 +23,8 @@ route, and scoring policy.
 
 The DPD task asks a model to reproduce selected structured fields from a
 deterministic bilingual case rendering. Strict pass requires the complete JSON
-record to match after symmetric canonicalization. It is primarily a structured
-copying and schema-following task, not an unstructured document benchmark.
+record to match after symmetric canonicalization. It measures structured
+copying and schema following, not unstructured document understanding.
 
 ### Frozen result
 
@@ -36,181 +35,79 @@ copying and schema-following task, not an unstructured document benchmark.
 | GPT-5.4 Mini | 10,827 / 14,034 | 77.15% | 92.34% | US$11.40 |
 | GPT-5.6 Luna | 10,662 / 14,034 | 75.97% | 95.92% | US$15.12 |
 
-Cost and quality are deliberately separate. The table is not a product
-recommendation.
+Cost and quality are deliberately separate. This table is benchmark evidence,
+not a universal product recommendation.
 
-The automated analysis includes product-family dependence, English and French
-slices, field accuracy, failure mechanisms, every frontier disagreement, and
-a deterministic 105-case evidence set. The evidence audit rebuilt sources,
-parsed expected answers independently, and rescored 420 selected model outputs.
-Independent human sign-off is not claimed.
+The analysis covers product-family dependence, English and French slices,
+field accuracy, failure mechanisms, every frontier disagreement, and a
+deterministic 105-case evidence set. The evidence audit rebuilt sources,
+parsed expected answers independently, and rescored 420 selected outputs.
+Independent human sign-off is not claimed or needed for the stated automated
+validation claim.
 
 Open:
 
-- [release overview](../../reports/hc_dpd_census/0.2.0/README.md);
-- [analysis and validation](../../reports/hc_dpd_census/0.2.0/analysis/README.md);
-- [selected-case evidence audit](../../reports/hc_dpd_census/0.2.0/analysis/EVIDENCE_AUDIT.md);
-- [sortable leaderboard](../../reports/benchmarks/hc_dpd_structured_extraction/0.2.0/leaderboard.html).
+- [release overview](../../reports/hc_dpd_census/0.2.0/README.md)
+- [analysis and validation](../../reports/hc_dpd_census/0.2.0/analysis/README.md)
+- [selected-case evidence audit](../../reports/hc_dpd_census/0.2.0/analysis/EVIDENCE_AUDIT.md)
+- [sortable leaderboard](../../reports/benchmarks/hc_dpd_structured_extraction/0.2.0/leaderboard.html)
 
-## Product Monograph evidence window
+## Product Monograph evidence-window pilot
 
-### What it measures
+This task supplies only text windows selected to contain expected evidence. It
+isolates extraction and JSON fidelity after relevant pages have already been
+found. It does not measure native PDF transport, page layout, long-document
+retrieval, or complete-PDF context behavior.
 
-This task supplies only the text windows selected to contain the expected
-label evidence. It isolates extraction and JSON fidelity after relevant pages
-have already been found.
+The saved measurements are descriptive because the labels were not
+independently validated. Evalanche therefore assigns no official ranks:
 
-It does not measure:
-
-- finding evidence in the full monograph;
-- native PDF transport;
-- page layout and visual interpretation;
-- long-document retrieval;
-- complete-PDF context behavior.
-
-### Frozen result
-
-| Model route in the release | Strict passes | Pass rate | Average field score | Observed cost | Run status |
+| Model route in the release | Strict passes | Pass rate | Average field score | Observed cost | Status |
 | --- | ---: | ---: | ---: | ---: | --- |
-| GPT-5.6 Sol | 64 / 80 | 80.00% | 93.75% | US$0.4365 | Eligible |
-| GPT-5.6 Luna | 56 / 80 | 70.00% | 91.25% | US$0.0863 | Eligible |
-| GPT-5.6 Terra | 56 / 80 | 70.00% | 90.00% | US$0.2154 | Eligible |
-| GPT-5.4 Mini | 0 / 80 | 0.00% | 0.00% | Unknown | Ineligible because every generation failed |
+| GPT-5.4 Mini | 0 / 80 | 0.00% | 0.00% | Unknown | Ineligible, generation failed |
+| GPT-5.6 Luna | 56 / 80 | 70.00% | 91.25% | US$0.0863 | Provisional |
+| GPT-5.6 Sol | 64 / 80 | 80.00% | 93.75% | US$0.4365 | Provisional |
+| GPT-5.6 Terra | 56 / 80 | 70.00% | 90.00% | US$0.2154 | Provisional |
 
-The failed route remains visible rather than being silently removed. It is not
-ranked alongside complete runs.
-
-### Expanded 1.0.0 draft
-
-The new release contains 200 English and French product pairs, including all
-40 exposed pilot families as development data and 160 genuinely new held-out
-families. Exact ingredient groups are unique across all 200 families. The
-release has 2,162 provisional scored facts and a separate 600-check product
-identity, scope, and bilingual audit gate. No 1.0.0 model calls or results are
-included.
-
-Open the
-[1.0.0 expansion card and audit runbook](../hc_benchmark/HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md).
+The evidence-window release is frozen to preserve reproducibility. It will not
+be promoted to an official ranked benchmark, and no label audit is planned.
 
 Open:
 
-- [benchmark card and runbook](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md);
-- [Markdown leaderboard](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.md);
-- [sortable leaderboard](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.html).
+- [benchmark card](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
+- [descriptive result table](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.md)
+- [interactive descriptive report](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.html)
 
-## Product Monograph native PDF
+## Product Monograph native-PDF pilot
 
-### What it measures
+The retired native-PDF pilot sends a complete official PDF through a native
+file-input route. It adds retrieval, layout, context, transport, and provider
+PDF processing to the extraction problem.
 
-This separate draft sends each complete official PDF through a native
-file-input route. It adds retrieval, layout, context, file transport, and
-provider PDF processing to the extraction problem.
+Its retained assets include:
 
-Scores from the evidence-window and native-PDF tasks must not be mixed into one
-ranking. A difference between them can help diagnose whether the bottleneck is
-retrieval and document handling or extraction and schema fidelity.
+- 80 source-locked PDF descriptors representing 40 bilingual product pairs;
+- deterministic JSON scoring for brand, ingredients, strengths, dosage forms,
+  and routes;
+- URL, SHA-256, byte-size, page-count, and language checks;
+- historical local outputs that remain outside the public ranked reports.
 
-### Historical 0.1.0 status
+Its expected labels inherit DPD alignment and automated page-evidence checks,
+not independent human labeling. The pilot is therefore permanently
+provisional and unranked. The old `label_review.csv` is retained only to
+reproduce the historical snapshot. It is not an outstanding work queue.
 
-- 80 PDFs representing 40 English and French product pairs.
-- Complete source lock with URL, file hash, byte size, page count, and language
-  checks.
-- Deterministic JSON scoring for brand, ingredients, strengths, dosage forms,
-  and routes.
-- Smoke, screen, and standard tiers of 2, 20, and 80 cumulative PDFs.
-- Project records describe completed local experiments, but no native-PDF
-  leaderboard is tracked as a public release.
-- Human reference review remains 0 of 390 scored facts in the release state.
+See the [retired native-PDF pilot card](../hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md).
 
-The 390 items are facts across 80 PDFs, not 390 documents. They include
-individual ingredients, strengths, dosage forms, and routes.
+## Interpretation boundaries
 
-The expected labels inherit automated alignment, page-evidence checks, and
-targeted overrides from the evidence-window work. This is useful provisional
-evidence, but it is not independent human labeling.
-
-The 1.0.0 draft supersedes the pilot as the active expansion target. It uses
-400 unique PDFs, 2,162 fact checks, and 600 product-pair checks. The older
-80-PDF local experiments remain historical pilot evidence and are not scores
-on the expanded cohort.
-
-Until the review is complete:
-
-- results are local, provisional, and unranked;
-- the benchmark remains `draft`;
-- normal registered execution and publication are blocked;
-- models can still be tested locally without repeating prior outputs;
-- label review is not required for the main Evalanche handbook or software.
-
-Open the [native-PDF benchmark plan](../hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
-for acquisition, source verification, review, tier, and publication details.
-
-## Compare another model you can access
-
-Do not run every registry model. Add the available route to a dated access set
-first.
-
-Preflight a native-PDF smoke run:
-
-```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli run-benchmark \
-  --benchmark hc_product_monograph_native_pdf_extraction@1.0.0 \
-  --tier smoke \
-  --all-compatible \
-  --access-set configs/access_sets/my_available_models.yaml \
-  --preflight-only
-```
-
-After reviewing the projected cost, repeat with:
-
-```text
---experiment --max-cost-usd <reviewed_cap>
-```
-
-Summarize access-confirmed standard results:
-
-```bash
-docker compose run --rm evalanche \
-  python -m evalanche.cli summarize-benchmark \
-  --benchmark hc_product_monograph_native_pdf_extraction@1.0.0 \
-  --tier standard \
-  --access-set configs/access_sets/my_available_models.yaml
-```
-
-Use `--all-results` only for a historical evidence summary. That mode does not
-assert that any included route remains available.
-
-## Publication boundaries
-
-### DPD
-
-The compact release is published with automated validation and an explicit
-statement that independent human sign-off is not claimed.
-
-### Evidence window
-
-The benchmark and current leaderboard are frozen. Interpret the task as an
-oracle-window extraction test, not an end-to-end PDF result.
-
-### Native PDF
-
-Promotion requires, at minimum:
-
-- review and approval of all 2,162 reference facts in 1.0.0;
-- approval of all 600 product identity, scope, and bilingual checks;
-- a new dataset version for any label correction;
-- complete PDF integrity checks;
-- locked prompt before held-out evaluation;
-- documented token and cost coverage;
-- frozen dataset, benchmark, scorer, and model setup;
-- identical cases for every public leaderboard entry;
-- publication of limitations and retained raw-artifact hashes.
-
-The expanded corpus is now a separate 1.0.0 draft. Adding one model to the
-older fixed 80-case pilot still costs only that model's 80 calls, but those
-scores do not transfer to 1.0.0. Comparable expanded results require new runs
-on the same audited 400-case release.
+- Do not compare scores across the DPD, evidence-window, and native-PDF input
+  contracts as if they measured one task.
+- Do not treat a registry entry or historical result as proof of current model
+  access.
+- Do not convert missing cost, latency, or reliability evidence to zero.
+- Use the DPD census for the committed ranked case study.
+- Use Product Monograph measurements only as explicitly provisional examples.
 
 ## Detailed documentation
 
@@ -219,6 +116,5 @@ on the same audited 400-case release.
 - [DPD analysis and validation](../hc_benchmark/HC_DPD_CENSUS_ANALYSIS.md)
 - [DPD and Product Monograph specification](../hc_benchmark/HC_DPD_PM_BENCHMARK_SPEC.md)
 - [Product Monograph evidence-window card](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md)
-- [Product Monograph native-PDF plan](../hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
-- [Product Monograph 1.0.0 expansion and audit](../hc_benchmark/HC_PRODUCT_MONOGRAPH_EXPANSION_1_0_0.md)
+- [Product Monograph native-PDF pilot](../hc_benchmark/HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md)
 - [Architecture review](../hc_benchmark/PRODUCT_MONOGRAPH_ARCHITECTURE_REVIEW.md)

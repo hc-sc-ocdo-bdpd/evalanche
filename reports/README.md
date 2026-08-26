@@ -21,6 +21,11 @@ Publication does not imply that labels or conclusions have received human
 validation. A release must state whether manual review, grouped analysis, and
 error adjudication are complete.
 
+A benchmark can disable ranking when its reference validity supports
+descriptive analysis but not an ordered model claim. Complete runs then remain
+visible as `provisional`, with no numeric rank. Frozen means reproducible; it
+does not automatically mean independently validated.
+
 Analysis subdirectories may add compact field, slice, taxonomy, and
 case-review tables derived from retained case-level evidence. Derived files
 must record their source hash, method version, deterministic sample seed, and

@@ -26,6 +26,7 @@ from evalanche.config import (
 )
 
 REGISTRY_SCHEMA_VERSION = "1.0"
+EVALUATOR_COMPATIBILITY_VERSION = "0.3.0"
 DEFAULT_MODELS_DIR = Path("configs/models")
 DEFAULT_BENCHMARKS_DIR = Path("configs/benchmarks")
 
@@ -329,6 +330,21 @@ class BenchmarkTier(RegistryModel):
         return _identifier(value, "inherits")
 
 
+class BenchmarkRanking(RegistryModel):
+    """Whether complete results may be ordered as an official ranking."""
+
+    enabled: bool = True
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def validate_reason(self) -> "BenchmarkRanking":
+        if not self.enabled and not (self.reason and self.reason.strip()):
+            raise ValueError("disabled benchmark ranking requires a reason")
+        if self.reason is not None:
+            self.reason = self.reason.strip()
+        return self
+
+
 class BenchmarkManifest(RegistryModel):
     schema_version: Literal["1.0"] = REGISTRY_SCHEMA_VERSION
     benchmark_id: str
@@ -336,6 +352,7 @@ class BenchmarkManifest(RegistryModel):
     title: str
     description: str
     status: Literal["draft", "ready", "frozen", "retired"]
+    ranking: BenchmarkRanking = Field(default_factory=BenchmarkRanking)
     dataset: BenchmarkDataset
     prompt: BenchmarkPrompt
     scoring: BenchmarkScoring
@@ -571,10 +588,11 @@ def benchmark_fingerprint(
         ),
         "prompt_sha256": sha256_json(prompt_payload),
         "scoring_sha256": sha256_json(scoring_payload),
-        "evaluator_version": __version__,
+        "evaluator_version": EVALUATOR_COMPATIBILITY_VERSION,
     }
     return {
         **components,
+        "software_version": __version__,
         "compatibility_sha256": sha256_json(components),
     }
 

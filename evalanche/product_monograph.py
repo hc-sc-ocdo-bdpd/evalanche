@@ -1312,7 +1312,7 @@ def _build_native_pdf_manifest(
             root=root,
             path=PM_NATIVE_PDF_REVIEW_PATH,
             file_id="pm_native_pdf_label_review",
-            role="human_label_review_queue",
+            role="historical_label_review_snapshot",
             record_count=len(review),
             media_type="text/csv",
         ),
@@ -1331,15 +1331,15 @@ def _build_native_pdf_manifest(
             "dataset_id": PM_NATIVE_PDF_DATASET_ID,
             "version": PM_NATIVE_PDF_VERSION,
             "release_type": "benchmark",
-            "title": ("Health Canada Product Monograph native-PDF extraction"),
+            "title": ("Health Canada Product Monograph native-PDF pilot"),
             "description": (
-                "A draft bilingual benchmark that sends each complete "
+                "A retired local-only bilingual pilot that sends each complete "
                 "official Product Monograph PDF to the model through a "
                 "native file-input API."
             ),
             "created_at_utc": PM_NATIVE_PDF_RELEASE_CREATED_AT_UTC,
-            "status": "draft",
-            "immutable": False,
+            "status": "retired",
+            "immutable": True,
             "license_or_terms": (
                 "Official Product Monographs are publicly posted by Health "
                 "Canada. Copyright in individual monographs may remain with "
@@ -1347,16 +1347,18 @@ def _build_native_pdf_manifest(
                 "descriptors, not source PDF bytes."
             ),
             "intended_use": (
-                "Measure end-to-end full-document retrieval, visual reading, "
-                "and structured extraction on English and French Product "
-                "Monographs after the label review gate is complete."
+                "Reproduce local experiments in end-to-end full-document "
+                "retrieval, visual reading, and structured extraction. The "
+                "pilot must not be used for official model ranking."
             ),
             "limitations": [
-                "This release is draft and must not produce a published "
-                "leaderboard until human label review is complete.",
+                "This retired release is permanently provisional and must "
+                "not produce an official model ranking.",
                 "Reference labels originate in the frozen DPD alignment and "
                 "have automated page-evidence checks, not independent human "
                 "sign-off.",
+                "The historical label-review snapshot is retained only to "
+                "reproduce the original pilot; no review campaign is planned.",
                 "Native PDF processing and tokenization can differ between "
                 "providers, so results are comparable only within a declared "
                 "input contract.",
@@ -1396,8 +1398,8 @@ def _build_native_pdf_manifest(
                 "source_modified_date": None,
                 "license_or_terms": "Evalanche repository terms.",
                 "snapshot_notes": (
-                    "Derives full-PDF case descriptors and a human review "
-                    "queue from the frozen evidence-window release."
+                    "Derives full-PDF case descriptors and preserves the "
+                    "original review snapshot from the evidence-window release."
                 ),
             },
         ],
@@ -1445,7 +1447,7 @@ def _build_native_pdf_manifest(
             },
             {
                 "name": "heldout",
-                "purpose": "Final prompt-locked comparison after promotion.",
+                "purpose": "Original held-out pilot partition.",
                 "unit": "product_family",
                 "target_count": len(heldout),
                 "group_key": "ingredient_group_id",
@@ -1464,8 +1466,8 @@ def _build_native_pdf_manifest(
                 "complete-PDF input descriptors.",
                 "Preserve the existing four-field reference JSON and source "
                 "evidence as provisional labels.",
-                "Create a field-level human review queue required for "
-                "benchmark promotion.",
+                "Preserve the original field-level review snapshot as inert "
+                "historical metadata.",
             ],
         },
     }
@@ -1577,7 +1579,7 @@ def build_product_monograph_native_pdf_benchmark(
         "report_schema_version": "1.0",
         "dataset_id": PM_NATIVE_PDF_DATASET_ID,
         "dataset_version": PM_NATIVE_PDF_VERSION,
-        "status": "draft",
+        "status": "retired",
         "population": {
             "products": int(len(products)),
             "cases": int(len(native_cases)),
@@ -1597,12 +1599,8 @@ def build_product_monograph_native_pdf_benchmark(
             "approved": approved,
             "status_counts": status_counts,
             "all_items_approved": approved == len(review),
-        },
-        "promotion_gates": {
-            "human_label_review_complete": approved == len(review),
-            "local_source_hash_verification_required": True,
-            "provider_pdf_smoke_test_required": True,
-            "heldout_prompt_lock_required": True,
+            "disposition": "historical_snapshot",
+            "action_required": False,
         },
         "artifacts": {
             "cases": {
@@ -1652,7 +1650,7 @@ def build_product_monograph_native_pdf_benchmark(
     return {
         "dataset_id": PM_NATIVE_PDF_DATASET_ID,
         "dataset_version": PM_NATIVE_PDF_VERSION,
-        "status": "draft",
+        "status": "retired",
         "product_count": int(len(products)),
         "case_count": int(len(native_cases)),
         "review_item_count": int(len(review)),

@@ -1,7 +1,7 @@
 # Evalanche Health Canada Dataset Inventory
 
-**Status:** Dataset discovery, DPD releases, four-model census evaluation, and the 200-family Product Monograph 1.0.0 draft are complete
-**Implementation gate:** Human-audit all expanded Product Monograph facts and bilingual product scopes before ranked publication.
+**Status:** Dataset discovery, DPD releases, four-model census evaluation, and Product Monograph pilot disposition are complete.
+**Ranking boundary:** DPD 0.2.0 is ranked. Product Monograph pilots are permanently provisional and unranked.
 
 ## Decision
 
@@ -51,7 +51,7 @@ Indications, contraindications, warnings, interactions, adverse reactions, and p
 - Not every drug has a posted monograph.
 - Older products may lack a French monograph, and monograph templates vary by age.
 - DPD and monograph values can differ because of timing, scope, naming, or normalization rather than model error.
-- The benchmark therefore freezes both sources to a dated snapshot and manually audits every pilot reference record.
+- The benchmark therefore freezes both sources to a dated snapshot and records automated source evidence and unresolved label limitations explicitly.
 - The official read-me and published archive differ in some structural details, so source-specific validation records the observed file names and column counts and fails on an unreviewed change.
 
 ### Recalls and Safety Alerts
@@ -126,30 +126,24 @@ complete generation, deterministic evaluation, operational measurement, and
 reporting workflow without triggering a full 14,034-call run per model. Like
 the slice, it uses DPD renderings rather than Product Monograph documents.
 
-## Sequencing
+## Available artifacts
 
-1. Complete: materialize DPD source release `2026.7.2` and verify its schema `1.0` manifest.
-2. Complete: normalize and validate the marketed DPD tables by `DRUG_CODE`.
-3. Complete: build the eligible human-marketed product-family backbone.
-4. Complete: materialize benchmark slice `0.1.0` with deterministic sampling,
-   bilingual cases, source-row traceability, and fixed splits.
-5. Complete: materialize full-population DPD census `0.2.0` and bounded
-   24-case live-demo view.
-6. Complete: run GPT-5.4 mini and GPT-5.6 Luna, Terra, and Sol across the full
-   census and publish the aggregate evidence.
-7. Next: validate labels, adjudicate model disagreements, and complete grouped
-   product-family analysis.
-8. Complete: acquire, hash-lock, and screen matched English and French
-   monographs for the 40-family pilot.
-9. Complete: run the evidence-window pilot and preserve its historical results.
-10. Complete: expand to 200 families, 400 unique PDFs, and 160 new held-out
-    families as draft version 1.0.0.
-11. Next: approve or correct all 2,162 facts and all 600 product identity,
-    scope, and bilingual checks.
-12. After audit: lock the release and use cumulative smoke, screen, and
-    standard tiers for comparable model runs.
+- Frozen DPD source release `2026.7.2` with a verified schema `1.0` manifest.
+- DPD benchmark slice `0.1.0` with deterministic sampling, bilingual cases,
+  source-row traceability, and fixed splits.
+- Full-population DPD census `0.2.0` with 14,034 cases and a bounded 24-case
+  demonstration view.
+- Compatible census results for GPT-5.4 Mini and GPT-5.6 Luna, Terra, and Sol,
+  with independent source parsing and grouped product-family analysis.
+- Frozen Product Monograph evidence-window pilot `0.1.0`, preserved as
+  permanently provisional descriptive evidence.
+- Retired Product Monograph native-PDF pilot `0.1.0`, preserved without
+  published model results.
+- The unfinished Product Monograph 1.0.0 expansion and proposed audit program
+  are intentionally absent from the supported resource.
 
-The remaining activities are implementation of this defined plan, not unresolved dataset discovery or an unowned preparation stream.
+There is no remaining Product Monograph audit, promotion, or expansion stream.
+The DPD census is the committed ranked Health Canada case study.
 
 ## Official references
 

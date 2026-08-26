@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.1",
+  "schema_version": "1.2",
   "benchmark": {
     "benchmark_id": "hc_product_monograph_structured_extraction",
     "version": "0.1.0",
@@ -8,32 +8,11 @@
   },
   "models": [
     {
-      "rank": 1,
-      "ranking_status": "eligible",
-      "model_id": "gpt_5_6_sol",
-      "model": "GPT-5.6 Sol",
-      "run_id": "0e5d2986f5a63ec7",
-      "cases": 80,
-      "passed_cases": 64,
-      "failed_cases": 16,
-      "pass_rate": 0.8,
-      "average_field_score": 0.9375,
-      "generation_failure_rate": 0.0,
-      "total_cost_usd": 0.436455,
-      "average_cost_usd": 0.0054556875,
-      "median_latency_seconds": 3.955377768,
-      "p95_latency_seconds": 5.1904484655,
-      "en_cases": 40,
-      "en_pass_rate": 0.8,
-      "fr_cases": 40,
-      "fr_pass_rate": 0.8
-    },
-    {
-      "rank": 2,
-      "ranking_status": "eligible",
+      "rank": null,
+      "ranking_status": "provisional",
       "model_id": "gpt_5_6_luna",
       "model": "GPT-5.6 Luna",
-      "run_id": "fde781564aad7b46",
+      "run_id": "f56ab48e8a6eb6a7",
       "cases": 80,
       "passed_cases": 56,
       "failed_cases": 24,
@@ -50,11 +29,32 @@
       "fr_pass_rate": 0.7
     },
     {
-      "rank": 2,
-      "ranking_status": "eligible",
+      "rank": null,
+      "ranking_status": "provisional",
+      "model_id": "gpt_5_6_sol",
+      "model": "GPT-5.6 Sol",
+      "run_id": "513c0c9463fa167b",
+      "cases": 80,
+      "passed_cases": 64,
+      "failed_cases": 16,
+      "pass_rate": 0.8,
+      "average_field_score": 0.9375,
+      "generation_failure_rate": 0.0,
+      "total_cost_usd": 0.436455,
+      "average_cost_usd": 0.0054556875,
+      "median_latency_seconds": 3.955377768,
+      "p95_latency_seconds": 5.1904484655,
+      "en_cases": 40,
+      "en_pass_rate": 0.8,
+      "fr_cases": 40,
+      "fr_pass_rate": 0.8
+    },
+    {
+      "rank": null,
+      "ranking_status": "provisional",
       "model_id": "gpt_5_6_terra",
       "model": "GPT-5.6 Terra",
-      "run_id": "237018ef86e693a0",
+      "run_id": "be315a65dafa8106",
       "cases": 80,
       "passed_cases": 56,
       "failed_cases": 24,
@@ -75,7 +75,7 @@
       "ranking_status": "ineligible",
       "model_id": "gpt_5_4_mini",
       "model": "GPT-5.4 Mini",
-      "run_id": "1895d4b7a4df216c",
+      "run_id": "a1777bac4840b9fe",
       "cases": 80,
       "passed_cases": 0,
       "failed_cases": 80,
@@ -426,5 +426,9 @@
       "paired_net_wins_a": 8
     }
   ],
-  "ranking_policy": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."
+  "ranking_policy": {
+    "enabled": false,
+    "reason": "Reference labels were not independently human validated. This frozen pilot is retained as permanently provisional development evidence.",
+    "method": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."
+  }
 }

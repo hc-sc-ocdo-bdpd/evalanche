@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 import yaml
 
+from evalanche import __version__
 from evalanche.benchmark_runner import (
     build_run_plan,
     rescore_registered_benchmark,
@@ -114,10 +115,15 @@ def test_repository_registry_is_valid() -> None:
     assert {
         "hc_dpd_structured_extraction@0.2.0",
         "hc_product_monograph_native_pdf_extraction@0.1.0",
-        "hc_product_monograph_native_pdf_extraction@1.0.0",
         "hc_product_monograph_structured_extraction@0.1.0",
-        "hc_product_monograph_structured_extraction@1.0.0",
     }.issubset(registry.benchmarks)
+    assert len(registry.benchmarks) == 3
+    fingerprint = benchmark_fingerprint(
+        registry,
+        registry.resolve_benchmark("hc_dpd_structured_extraction@0.2.0"),
+    )
+    assert fingerprint["evaluator_version"] == "0.3.0"
+    assert fingerprint["software_version"] == __version__
 
 
 def test_manifest_only_model_and_dataset_extension(
@@ -322,6 +328,71 @@ def test_generation_failed_bundle_is_visible_but_unranked(
     document = json.loads(built["json_path"].read_text(encoding="utf-8"))
     assert document["models"][0]["rank"] is None
     assert document["pairwise"] == []
+
+
+def test_disabled_ranking_keeps_complete_results_descriptive(
+    tmp_path: Path,
+) -> None:
+    _synthetic_registry(tmp_path)
+    benchmark_path = tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
+    document = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
+    document["ranking"] = {
+        "enabled": False,
+        "reason": "Reference labels are permanently provisional.",
+    }
+    _write_yaml(benchmark_path, document)
+    registry = load_registry(tmp_path)
+    benchmark = registry.resolve_benchmark("synthetic@1.0.0")
+
+    for model_id, passed in (
+        ("model_a", [True, False]),
+        ("model_b", [True, True]),
+    ):
+        result_path = tmp_path / f"{model_id}.csv"
+        pd.DataFrame(
+            {
+                "case_id": ["case_en", "case_fr"],
+                "model_name": [model_id, model_id],
+                "final_passed": passed,
+                "final_score": [float(value) for value in passed],
+                "generation_status": ["success", "success"],
+            }
+        ).to_csv(result_path, index=False)
+        register_result_bundle(
+            registry=registry,
+            benchmark=benchmark,
+            model_id=model_id,
+            results_path=result_path,
+            reports_root="reports",
+        )
+
+    built = build_leaderboard(
+        registry=registry,
+        benchmark=benchmark,
+        reports_root="reports",
+    )
+    leaderboard = pd.read_csv(built["leaderboard_path"])
+    assert set(leaderboard["ranking_status"]) == {"provisional"}
+    assert leaderboard["rank"].isna().all()
+    assert len(pd.read_csv(built["pairwise_path"])) == 1
+    leaderboard_json = json.loads(
+        built["json_path"].read_text(encoding="utf-8")
+    )
+    assert leaderboard_json["ranking_policy"]["enabled"] is False
+    assert "permanently provisional" in (
+        built["markdown_path"].read_text(encoding="utf-8")
+    )
+
+
+def test_disabled_ranking_requires_a_reason(tmp_path: Path) -> None:
+    _synthetic_registry(tmp_path)
+    benchmark_path = tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
+    document = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
+    document["ranking"] = {"enabled": False}
+    _write_yaml(benchmark_path, document)
+
+    with pytest.raises(ValueError, match="requires a reason"):
+        load_registry(tmp_path)
 
 
 def test_result_registration_is_byte_reproducible(

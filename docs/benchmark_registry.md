@@ -14,7 +14,7 @@ The registry composes independent artifacts:
 | Model manifest | Provider route, request settings, version metadata, capabilities, and pricing reference |
 | Access set | Dated confirmation of deployment routes available to the user |
 | Dataset manifest | Source provenance, immutable files, membership, sampling, and splits |
-| Benchmark manifest | Dataset binding, prompt, scoring rules, slices, grouping, runtime settings, and optional run tiers |
+| Benchmark manifest | Dataset binding, prompt, scoring rules, ranking policy, slices, grouping, runtime settings, and optional run tiers |
 | Result bundle | Compatibility fingerprint, compact case scores, operational evidence, and source-result hash |
 
 A model can be added without editing a benchmark. A benchmark can be added
@@ -58,11 +58,32 @@ Every result bundle records a SHA-256 compatibility fingerprint over:
 - dataset-manifest hash;
 - prompt contract;
 - scoring and canonicalization contract;
-- Evalanche evaluator version.
+- Evalanche evaluator compatibility version.
 
 A changed case, prompt, scorer, or dataset release cannot silently enter an
 existing leaderboard. The leaderboard build fails with the expected and
 observed compatibility hashes.
+
+The package release version is recorded separately for traceability. A package
+release can improve documentation or reporting without invalidating frozen
+result bundles when the evaluator compatibility contract has not changed.
+
+## Ranking policy
+
+A benchmark may disable official ranking while keeping complete measurements
+visible:
+
+```yaml
+ranking:
+  enabled: false
+  reason: Reference labels are permanently provisional.
+```
+
+A disabled policy requires a nonblank reason. Complete runs are labelled
+`provisional`, receive no numeric rank, and retain their pass rate, field
+score, slices, cost, latency, reliability, and pairwise diagnostics. Incomplete
+or failed runs remain `ineligible`. Freezing inputs preserves reproducibility;
+it does not, by itself, establish label validity or permission to rank.
 
 ## Plan models without calls
 
@@ -97,8 +118,9 @@ arguments explicitly confirm access for that command.
 
 ## Run a publishable benchmark
 
-Only `ready` and `frozen` benchmarks can register results and publish
-leaderboards. After reviewing the plan, run selected models:
+Only `ready` and `frozen` benchmarks can register results and publish report
+surfaces. Official rank is assigned only when the benchmark's ranking policy
+is also enabled. After reviewing the plan, run selected models:
 
 ```bash
 python -m evalanche.cli run-benchmark \

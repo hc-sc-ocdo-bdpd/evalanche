@@ -9,6 +9,7 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm.auto import tqdm
 
+from evalanche import __version__
 from evalanche.access_sets import (
     explicit_model_scope,
     historical_results_scope,
@@ -110,15 +111,6 @@ from evalanche.product_monograph import (
     build_product_monograph_native_pdf_benchmark,
     build_product_monograph_benchmark,
     verify_product_monograph_sources,
-)
-from evalanche.product_monograph_review import (
-    check_product_monograph_label_review,
-)
-from evalanche.product_monograph_expansion import (
-    EXPANSION_CONFIG_PATH,
-    check_expanded_product_monograph_audit,
-    expand_product_monograph_benchmark,
-    refresh_expanded_product_monograph_release,
 )
 from evalanche.routing import JUDGE
 from evalanche.task_initializer import (
@@ -1638,169 +1630,24 @@ def run_build_product_monograph_native_pdf(
     print(f"Dataset: {result['dataset_id']} {result['dataset_version']}")
     print(f"Products: {result['product_count']}")
     print(f"Cases: {result['case_count']}")
-    print(
-        "Approved label items: "
-        f"{result['approved_review_item_count']}/"
-        f"{result['review_item_count']}"
-    )
     print(f"Output: {result['output_dir']}")
     print(f"Manifest: {result['manifest_path']}")
     print(
         f"Verified files: {verification['files_passed']}/"
         f"{verification['files_checked']}"
     )
-    print("Status: DRAFT, NOT RANKABLE")
-    return result
-
-
-def run_check_product_monograph_label_review(
-    *,
-    root_path: str,
-    review_path: str,
-    require_complete: bool,
-) -> dict[str, Any]:
-    try:
-        result = check_product_monograph_label_review(
-            root_path=root_path,
-            review_path=review_path,
-        )
-    except (OSError, ValueError) as error:
-        print(f"Product Monograph label review check failed: {error}")
-        raise SystemExit(1) from None
-
-    print("\nProduct Monograph native-PDF label review")
-    print(f"Items reviewed: {result['reviewed']}/{result['items']}")
-    print(f"Items approved: {result['approved']}/{result['items']}")
-    print(f"Cases fully approved: {result['cases_approved']}/{result['cases']}")
-    print(
-        "Statuses: "
-        + ", ".join(
-            f"{status}={count}" for status, count in result["status_counts"].items()
-        )
-    )
-    print(f"Review file: {result['review_path']}")
-    if result["issues"]:
-        print("Status: INVALID REVIEW METADATA")
-        for issue in result["issues"]:
-            print(f"- {issue}")
-        raise SystemExit(1)
-    if result["promotion_ready"]:
-        print("Status: LABEL REVIEW COMPLETE")
-    else:
-        print("Status: REVIEW INCOMPLETE")
-        print(f"Remaining approvals: {result['remaining']}. No model calls were made.")
-        if require_complete:
-            raise SystemExit(2)
-    return result
-
-
-def run_expand_product_monograph_benchmark(
-    *,
-    root_path: str,
-    config_path: str,
-    max_candidates: int | None,
-    show_progress: bool,
-) -> dict[str, Any]:
-    try:
-        result = expand_product_monograph_benchmark(
-            root_path=root_path,
-            config_path=config_path,
-            max_candidates=max_candidates,
-            progress=print if show_progress else None,
-        )
-    except (OSError, ValueError) as error:
-        print(f"Product Monograph expansion failed: {error}")
-        raise SystemExit(1) from None
-
-    print("\nHealth Canada Product Monograph expansion")
-    print(f"Version: {result['version']}")
-    print(f"Products: {result['products']}")
-    print(f"Evidence-window cases: {result['cases']}")
-    print(f"Native-PDF cases: {result['native_pdf_cases']}")
-    print(f"Provisional fact items: {result['facts']}")
-    print(f"Candidates screened: {result['screened_candidates']}")
-    print(f"Candidates excluded: {result['screening_exclusions']}")
-    print(f"Output: {result['output_dir']}")
-    print("Status: DRAFT, HUMAN AUDIT REQUIRED")
-    print("Model calls: 0")
-    return result
-
-
-def run_refresh_product_monograph_expansion(
-    *,
-    root_path: str,
-    config_path: str,
-) -> dict[str, Any]:
-    try:
-        result = refresh_expanded_product_monograph_release(
-            root_path=root_path,
-            config_path=config_path,
-        )
-    except (OSError, ValueError) as error:
-        print(f"Product Monograph expansion refresh failed: {error}")
-        raise SystemExit(1) from None
-
-    print("\nProduct Monograph expansion audit refresh")
-    print(f"Version: {result['version']}")
-    print(f"Products: {result['products']}")
-    print(f"Cases: {result['cases']}")
-    print(f"Fact items: {result['facts']}")
-    for label, verification in result["verifications"].items():
-        print(
-            f"{label} files verified: {verification['files_passed']}/"
-            f"{verification['files_checked']}"
-        )
-    print("Network calls: 0")
-    print("Model calls: 0")
-    print("Status: REFRESHED")
-    return result
-
-
-def run_check_product_monograph_expansion_audit(
-    *,
-    root_path: str,
-    require_complete: bool,
-) -> dict[str, Any]:
-    try:
-        result = check_expanded_product_monograph_audit(root_path=root_path)
-    except (OSError, ValueError) as error:
-        print(f"Product Monograph expansion audit check failed: {error}")
-        raise SystemExit(1) from None
-
-    fact_approved = int(result["fact_status_counts"].get("approved", 0))
-    product_approved = sum(
-        int(counts.get("approved", 0))
-        for counts in result["product_status_counts"].values()
-    )
-    total_checks = int(result["fact_items"]) + 3 * int(result["products"])
-    approved_checks = fact_approved + product_approved
-    print("\nProduct Monograph expansion human audit")
-    print(f"Fact approvals: {fact_approved}/{result['fact_items']}")
-    print(
-        f"Product identity, scope, and bilingual approvals: "
-        f"{product_approved}/{3 * int(result['products'])}"
-    )
-    print(f"Total approvals: {approved_checks}/{total_checks}")
-    print(f"Fact audit: {result['fact_audit_path']}")
-    print(f"Product audit: {result['product_audit_path']}")
-    if result["issues"]:
-        print("Status: INVALID AUDIT OR ARTIFACT METADATA")
-        for issue in result["issues"]:
-            print(f"- {issue}")
-        raise SystemExit(1)
-    if result["promotion_ready"]:
-        print("Status: HUMAN AUDIT COMPLETE")
-    else:
-        print("Status: DRAFT, REVIEW INCOMPLETE")
-        print(f"Remaining approvals: {total_checks - approved_checks}")
-        if require_complete:
-            raise SystemExit(2)
-    print("Model calls: 0")
+    print("Status: PERMANENTLY PROVISIONAL, NOT RANKABLE")
+    print("Human audit: NOT PLANNED")
     return result
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="evalanche")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     evidence_parser = subparsers.add_parser(
@@ -2464,66 +2311,6 @@ def build_parser() -> argparse.ArgumentParser:
         default=PM_RAW_DIR.as_posix(),
     )
 
-    check_pm_review_parser = subparsers.add_parser(
-        "check-product-monograph-label-review"
-    )
-    check_pm_review_parser.add_argument("--root", default=".")
-    check_pm_review_parser.add_argument(
-        "--review",
-        default=(
-            "data/hc/benchmarks/"
-            "product_monograph_native_pdf_extraction/0.1.0/"
-            "label_review.csv"
-        ),
-        help="Review CSV whose human-only columns were edited.",
-    )
-    check_pm_review_parser.add_argument(
-        "--require-complete",
-        action="store_true",
-        help="Exit unsuccessfully unless every label item is approved.",
-    )
-
-    expand_pm_parser = subparsers.add_parser(
-        "expand-product-monograph-benchmark",
-        help=("Build the complete 1.0.0 bilingual expansion and audit package."),
-    )
-    expand_pm_parser.add_argument("--root", default=".")
-    expand_pm_parser.add_argument(
-        "--config",
-        default=EXPANSION_CONFIG_PATH.as_posix(),
-    )
-    expand_pm_parser.add_argument(
-        "--max-candidates",
-        type=int,
-        help="Optional screening cap for failure-path testing.",
-    )
-    expand_pm_parser.add_argument(
-        "--quiet",
-        action="store_true",
-        help="Suppress per-candidate screening progress.",
-    )
-
-    refresh_pm_parser = subparsers.add_parser(
-        "refresh-product-monograph-expansion",
-        help="Refresh audit summaries and artifact hashes without network calls.",
-    )
-    refresh_pm_parser.add_argument("--root", default=".")
-    refresh_pm_parser.add_argument(
-        "--config",
-        default=EXPANSION_CONFIG_PATH.as_posix(),
-    )
-
-    check_pm_expansion_parser = subparsers.add_parser(
-        "check-product-monograph-expansion-audit",
-        help="Validate expanded fact, product, and artifact audit gates.",
-    )
-    check_pm_expansion_parser.add_argument("--root", default=".")
-    check_pm_expansion_parser.add_argument(
-        "--require-complete",
-        action="store_true",
-        help="Exit unsuccessfully unless every fact and product check is approved.",
-    )
-
     return parser
 
 
@@ -2721,29 +2508,6 @@ def main() -> None:
             source_cases_path=args.source_cases,
             sources_path=args.sources,
             raw_dir=args.raw_dir,
-        )
-    elif args.command == "check-product-monograph-label-review":
-        run_check_product_monograph_label_review(
-            root_path=args.root,
-            review_path=args.review,
-            require_complete=args.require_complete,
-        )
-    elif args.command == "expand-product-monograph-benchmark":
-        run_expand_product_monograph_benchmark(
-            root_path=args.root,
-            config_path=args.config,
-            max_candidates=args.max_candidates,
-            show_progress=not args.quiet,
-        )
-    elif args.command == "refresh-product-monograph-expansion":
-        run_refresh_product_monograph_expansion(
-            root_path=args.root,
-            config_path=args.config,
-        )
-    elif args.command == "check-product-monograph-expansion-audit":
-        run_check_product_monograph_expansion_audit(
-            root_path=args.root,
-            require_complete=args.require_complete,
         )
     else:
         raise ValueError(f"Unknown command: {args.command}")

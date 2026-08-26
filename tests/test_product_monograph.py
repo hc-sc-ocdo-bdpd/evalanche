@@ -10,11 +10,8 @@ import pytest
 import yaml
 
 import evalanche.product_monograph as pm
-from evalanche import __version__
 from evalanche.dataset_manifest import verify_dataset_manifest_file
-from evalanche.product_monograph_review import (
-    check_product_monograph_label_review,
-)
+from evalanche.registry import EVALUATOR_COMPATIBILITY_VERSION
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0"
@@ -44,7 +41,7 @@ def test_product_monograph_release_verifies() -> None:
     assert verification["files_checked"] == 6
 
 
-def test_native_pdf_release_is_hash_locked_but_stays_draft() -> None:
+def test_native_pdf_release_is_hash_locked_and_retired() -> None:
     verification = verify_dataset_manifest_file(
         NATIVE_PDF_MANIFEST,
         root_path=ROOT,
@@ -70,9 +67,9 @@ def test_native_pdf_release_is_hash_locked_but_stays_draft() -> None:
 
     manifest = yaml.safe_load(NATIVE_PDF_MANIFEST.read_text(encoding="utf-8"))
     benchmark = yaml.safe_load(NATIVE_PDF_BENCHMARK.read_text(encoding="utf-8"))
-    assert manifest["release"]["status"] == "draft"
-    assert manifest["release"]["immutable"] is False
-    assert benchmark["status"] == "draft"
+    assert manifest["release"]["status"] == "retired"
+    assert manifest["release"]["immutable"] is True
+    assert benchmark["status"] == "retired"
     assert benchmark["runtime"]["request_api"] == "responses"
     assert set(benchmark["required_capabilities"]) == {
         "pdf_input",
@@ -80,14 +77,11 @@ def test_native_pdf_release_is_hash_locked_but_stays_draft() -> None:
         "vision",
     }
 
-    status = check_product_monograph_label_review(root_path=ROOT)
-    assert status["valid"] is True
-    assert status["promotion_ready"] is False
-    assert status["approved"] == 0
-    assert status["remaining"] == 390
+    assert benchmark["ranking"]["enabled"] is False
+    assert "permanently provisional" in benchmark["ranking"]["reason"].casefold()
 
 
-def test_native_pdf_builder_is_deterministic_and_preserves_review(
+def test_native_pdf_builder_is_deterministic_and_preserves_legacy_snapshot(
     tmp_path: Path,
 ) -> None:
     parent_files = [
@@ -104,41 +98,20 @@ def test_native_pdf_builder_is_deterministic_and_preserves_review(
     first = pm.build_product_monograph_native_pdf_benchmark(
         root_path=tmp_path,
     )
-    assert first["status"] == "draft"
+    assert first["status"] == "retired"
     assert first["case_count"] == 80
     assert first["review_item_count"] == 390
     assert first["approved_review_item_count"] == 0
     assert first["verification"]["valid"] is True
     first_cases = (tmp_path / pm.PM_NATIVE_PDF_CASES_PATH).read_bytes()
-
     review_path = tmp_path / pm.PM_NATIVE_PDF_REVIEW_PATH
-    review = pd.read_csv(review_path, dtype=str, keep_default_na=False)
-    review.loc[0, "human_review_status"] = "approved"
-    review.loc[0, "reviewer"] = "reviewer@example.test"
-    review.loc[0, "reviewed_at_utc"] = "2026-08-04T15:00:00Z"
-    review.loc[0, "notes"] = "Confirmed against the locked source page."
-    review.to_csv(review_path, index=False, lineterminator="\n")
+    first_review = review_path.read_bytes()
 
-    second = pm.build_product_monograph_native_pdf_benchmark(
-        root_path=tmp_path,
-    )
-    rebuilt_review = pd.read_csv(
-        review_path,
-        dtype=str,
-        keep_default_na=False,
-    )
-    approved = rebuilt_review.loc[rebuilt_review["human_review_status"] == "approved"]
-    assert len(approved) == 1
-    assert approved.iloc[0]["reviewer"] == "reviewer@example.test"
-    assert second["approved_review_item_count"] == 1
+    pm.build_product_monograph_native_pdf_benchmark(root_path=tmp_path)
     assert (tmp_path / pm.PM_NATIVE_PDF_CASES_PATH).read_bytes() == first_cases
+    assert review_path.read_bytes() == first_review
 
-    status = check_product_monograph_label_review(root_path=tmp_path)
-    assert status["valid"] is True
-    assert status["reviewed"] == 1
-    assert status["approved"] == 1
-    assert status["remaining"] == 389
-
+    review = pd.read_csv(review_path, dtype=str, keep_default_na=False)
     review.loc[0, "source_page"] = "999"
     review.to_csv(review_path, index=False, lineterminator="\n")
     with pytest.raises(ValueError, match="immutable source or label"):
@@ -239,7 +212,10 @@ def test_product_monograph_build_report_is_explicit() -> None:
         "product_status",
         "company",
     ]
-    assert report["software"]["evalanche_version"] == __version__
+    assert (
+        report["software"]["evalanche_version"]
+        == EVALUATOR_COMPATIBILITY_VERSION
+    )
 
 
 def test_product_monograph_normalization_and_overrides() -> None:

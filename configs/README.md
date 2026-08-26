@@ -11,7 +11,7 @@ examples.
 | --- | --- |
 | `models/*.yaml` | Independently reusable registered model manifests |
 | `access_sets/*.yaml` | Dated user confirmation of available deployment routes |
-| `benchmarks/*.yaml` | Dataset, prompt, scoring, capabilities, input API, slices, runtime, and optional tier contracts |
+| `benchmarks/*.yaml` | Dataset, prompt, scoring, ranking, capabilities, input API, slices, runtime, and optional tier contracts |
 | `product_monograph/<version>/*.yaml` | Source-locked Product Monograph cohort and label-construction overrides |
 | `candidate_models.yaml` | Small generic multi-model example |
 | `candidate_gpt_*.yaml` | One pinned candidate profile per deployed model |
@@ -54,6 +54,20 @@ Do not add a new model to `candidate_models.yaml` or create a new combined
 analysis configuration merely to make the registry workflow see it. Those
 flat files are retained for historical provenance and the small generic
 example.
+
+## Ranking policy
+
+Ranking defaults to enabled. Disable it when complete measurements are useful
+but the benchmark cannot support an official ordered claim:
+
+```yaml
+ranking:
+  enabled: false
+  reason: Reference labels are permanently provisional.
+```
+
+The reason is required. Complete results remain visible as provisional data
+with no numeric rank. Failed or incomplete runs remain ineligible.
 
 ## Adding benchmark tiers
 

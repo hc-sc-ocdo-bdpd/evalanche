@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Health Canada Product Monograph native-PDF pilot</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4f7fb;
+      --card: #fff;
+      --ink: #12233f;
+      --muted: #5b6b82;
+      --line: #dce4ef;
+      --accent: #1768ac;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0e1726;
+        --card: #172338;
+        --ink: #eef5ff;
+        --muted: #aebcd0;
+        --line: #33445e;
+        --accent: #77bdf2;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.5 system-ui, sans-serif;
+    }
+    main { max-width: 1240px; margin: 0 auto; padding: 48px 24px; }
+    h1 { margin: 0 0 8px; font-size: clamp(30px, 5vw, 50px); }
+    .kicker { color: var(--accent); font-weight: 700; }
+    .intro { color: var(--muted); max-width: 850px; }
+    .card {
+      background: var(--card); border: 1px solid var(--line);
+      border-radius: 16px; margin-top: 28px; padding: 20px;
+      box-shadow: 0 12px 30px rgb(20 50 80 / 7%);
+    }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 850px; }
+    th, td {
+      padding: 12px 10px; border-bottom: 1px solid var(--line);
+      text-align: right; white-space: nowrap;
+    }
+    th { cursor: pointer; color: var(--muted); font-size: 12px; }
+    th:nth-child(2), td:nth-child(2) { text-align: left; }
+    tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+    .empty { color: var(--muted); padding: 24px 0; }
+    .notice {
+      margin-top: 20px; padding: 14px 16px; border: 1px solid var(--accent);
+      border-radius: 10px; background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+    footer { color: var(--muted); margin-top: 24px; }
+    code { font-size: 0.95em; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="kicker">Evalanche benchmark leaderboard</div>
+  <h1>Health Canada Product Monograph native-PDF pilot</h1>
+  <p class="intro">Retired local-only bilingual pilot using 80 complete official English and French Product Monograph PDFs representing 40 marketed human-drug product families. It is retained for reproducibility, not official model ranking.</p>
+  <p><code>hc_product_monograph_native_pdf_extraction@0.1.0</code></p>
+  <div class="notice"><strong>Ranking is disabled.</strong> Reference labels were not independently human validated. This local-only pilot is retained as permanently provisional development evidence. Complete results are provisional and descriptive.</div>
+  <section class="card">
+    <h2>Results</h2>
+    <div class="scroll"><div class="empty">No compatible result bundles are registered yet.</div></div>
+  </section>
+  <section class="card">
+    <h2>How to read this</h2>
+    <p class="intro">
+      No official rank is assigned. Complete results are marked provisional; incomplete runs remain ineligible. Field score, language slices, cost, and
+      latency remain separate.
+    </p>
+  </section>
+  <footer>Generated from compatible, versioned result bundles.</footer>
+</main>
+<script id="leaderboard-data" type="application/json">{"leaderboard": [], "slices": [], "pairwise": [], "ranking_policy": {"enabled": false, "reason": "Reference labels were not independently human validated. This local-only pilot is retained as permanently provisional development evidence.", "method": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."}}</script>
+<script>
+  const table = document.querySelector("#leaderboard");
+  if (table) {
+    table.querySelectorAll("th").forEach((header, index) => {
+      let ascending = true;
+      header.addEventListener("click", () => {
+        const body = table.tBodies[0];
+        const rows = Array.from(body.rows);
+        rows.sort((a, b) => {
+          const av = a.cells[index].dataset.value || "";
+          const bv = b.cells[index].dataset.value || "";
+          const an = Number(av), bn = Number(bv);
+          const numeric = av !== "" && bv !== "" &&
+            Number.isFinite(an) && Number.isFinite(bn);
+          const result = numeric ? an - bn :
+            av.localeCompare(bv, undefined, {numeric: true});
+          return ascending ? result : -result;
+        });
+        rows.forEach(row => body.appendChild(row));
+        ascending = !ascending;
+      });
+    });
+  }
+</script>
+</body>
+</html>
