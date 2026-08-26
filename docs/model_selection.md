@@ -136,7 +136,7 @@ An enabled evaluation writes:
 - metadata schema `1.0` with `decision`, `selection_policy`, access declarations,
   artifact paths, and hashes.
 
-When the policy is disabled, the comparison report presents observed evidence
+When no policy is enabled, the comparison report presents observed evidence
 without a selected model.
 
 The CSV field name `recommended` remains an internal compatibility field for

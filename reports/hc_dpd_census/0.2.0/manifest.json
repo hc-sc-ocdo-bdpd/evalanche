@@ -32,13 +32,13 @@
     "output_path": "reports/hc_dpd_census/0.2.0/analysis",
     "primary_model": "gpt_5_6_sol",
     "comparison_model": "gpt_5_6_terra",
-    "review_seed": 20260730,
-    "review_case_count": 105,
     "diagnostic_repairs_change_primary_score": false,
     "evidence_audit_method_version": "hc_dpd_evidence_audit/1.0",
     "automated_evidence_audit_complete": true,
     "leaderboard_scores_changed_by_audit": false,
-    "human_signoff_status": "not_claimed"
+    "human_signoff_status": "not_claimed",
+    "audit_case_count": 105,
+    "audit_seed": 20260730
   },
   "published_files": [
     {
@@ -57,7 +57,7 @@
       "path": "reports/hc_dpd_census/0.2.0/evaluation_report.md",
       "role": "generated_evaluation_report",
       "size_bytes": 8001,
-      "sha256": "17cf17ac35b4ba989ffedebd9ce0dde061b36520578267bf71f2a1573d5d0ea1"
+      "sha256": "9d9bf574471650075cedc9e1a7055ac2b87b1a690b3295ae806f2b451a6017c4"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/evaluation_metadata.json",
@@ -92,14 +92,14 @@
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/README.md",
       "role": "analysis_report",
-      "size_bytes": 9033,
-      "sha256": "d089f988f00a0279f6a89029b2986f0b5fc524e51d65e15ca74098ce7eba77c4"
+      "size_bytes": 9052,
+      "sha256": "9b5e77a2d5855af4e7ce5c4dbab675f55bd278e580497acfe1fad117510acb71"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/analysis_manifest.json",
       "role": "analysis_integrity_manifest",
-      "size_bytes": 4508,
-      "sha256": "595ef4ec5c7c8236001b1ff3b214f593fded5b7e6598f510d6465b735602d699"
+      "size_bytes": 4464,
+      "sha256": "f290f91444f23a24433ab065a7e074c4c45f44d5d342a2b8a63036a3ad750588"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/model_overview.csv",
@@ -134,32 +134,32 @@
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/frontier_cases.csv",
       "role": "analysis_frontier_cases",
-      "size_bytes": 279943,
-      "sha256": "197520f883c389521eb53ffddb8438ac347063bab2faa25e466292e001308ed0"
+      "size_bytes": 280129,
+      "sha256": "dab717a06bd24ccb70405f0ae88d86d77a74e90ecd7d73574de99fde31317f4d"
     },
     {
-      "path": "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv",
-      "role": "manual_review_worksheet",
-      "size_bytes": 526642,
-      "sha256": "fe423db1dc19e8486688671e5643efbb24ab161af76273a85ffd701e0b7d773e"
+      "path": "reports/hc_dpd_census/0.2.0/analysis/selected_cases.csv",
+      "role": "selected_audit_cases",
+      "size_bytes": 525087,
+      "sha256": "6edebc2ded038403ffe6d9982712c9e9a84541f48067c3a148aef16e8d197828"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit.csv",
       "role": "automated_evidence_audit",
-      "size_bytes": 38760,
-      "sha256": "63679ba04ed471470e5f240a96b7429f12af8ee8a71d9673935ad840dafcf07a"
+      "size_bytes": 36023,
+      "sha256": "5af91bdc75fab0f98197d6607eb2e5d3d4f507c775298c17c40ddc28809fa26a"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit_summary.json",
       "role": "evidence_audit_summary",
-      "size_bytes": 1470,
-      "sha256": "aac07a4a0266c0e567a18272e42cc796bdbb78feb3512dd9d31480e1be341bb6"
+      "size_bytes": 1485,
+      "sha256": "5b1f44a5f093a1d7771fc0b349e221ec4ec8617c4bf04da4bde39f957411bbed"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/EVIDENCE_AUDIT.md",
       "role": "evidence_audit_report",
-      "size_bytes": 2664,
-      "sha256": "1e3de25acbf9699192e5f004fe41e4dd78dc97ec1f34bca8c73dc769a16b172a"
+      "size_bytes": 2672,
+      "sha256": "866d12de60b7c2099130af7fb4d346a21ce4244e75c49191ff8e4e3d1860196c"
     }
   ],
   "retained_raw_artifacts": [
@@ -206,10 +206,9 @@
     "deterministic_evaluation_complete": true,
     "automated_error_analysis": "complete",
     "grouped_product_family_analysis": "complete",
-    "manual_review_package": "ready",
     "automated_evidence_audit": "complete",
-    "manual_label_review": "not_performed",
     "human_signoff": "not_claimed",
-    "error_adjudication": "complete_automated"
+    "error_adjudication": "complete_automated",
+    "selected_case_audit": "complete"
   }
 }

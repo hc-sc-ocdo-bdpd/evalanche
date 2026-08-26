@@ -80,7 +80,7 @@ def test_repository_catalog_is_complete_and_snapshot_is_reproducible() -> None:
     catalog, report = build_evidence_status(
         root_path=ROOT,
         catalog_path=CATALOG_PATH,
-        as_of=date(2026, 8, 10),
+        as_of=date(2026, 8, 26),
     )
 
     assert len(catalog.entries) == 35

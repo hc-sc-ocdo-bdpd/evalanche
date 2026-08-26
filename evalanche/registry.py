@@ -330,16 +330,20 @@ class BenchmarkTier(RegistryModel):
         return _identifier(value, "inherits")
 
 
-class BenchmarkRanking(RegistryModel):
-    """Whether complete results may be ordered as an official ranking."""
+class BenchmarkReporting(RegistryModel):
+    """How complete benchmark results are presented."""
 
-    enabled: bool = True
+    mode: Literal["ranked", "descriptive"] = "ranked"
     reason: str | None = None
 
     @model_validator(mode="after")
-    def validate_reason(self) -> "BenchmarkRanking":
-        if not self.enabled and not (self.reason and self.reason.strip()):
-            raise ValueError("disabled benchmark ranking requires a reason")
+    def validate_reason(self) -> "BenchmarkReporting":
+        if self.mode == "descriptive" and not (
+            self.reason and self.reason.strip()
+        ):
+            raise ValueError(
+                "descriptive benchmark reporting requires a reason"
+            )
         if self.reason is not None:
             self.reason = self.reason.strip()
         return self
@@ -352,7 +356,7 @@ class BenchmarkManifest(RegistryModel):
     title: str
     description: str
     status: Literal["draft", "ready", "frozen", "retired"]
-    ranking: BenchmarkRanking = Field(default_factory=BenchmarkRanking)
+    reporting: BenchmarkReporting = Field(default_factory=BenchmarkReporting)
     dataset: BenchmarkDataset
     prompt: BenchmarkPrompt
     scoring: BenchmarkScoring

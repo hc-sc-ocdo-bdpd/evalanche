@@ -1,17 +1,564 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "benchmark": {
     "benchmark_id": "hc_product_monograph_native_pdf_extraction",
     "version": "0.1.0",
-    "title": "Health Canada Product Monograph native-PDF pilot",
-    "status": "retired"
+    "title": "Health Canada Product Monograph full-PDF extraction",
+    "status": "frozen"
   },
-  "models": [],
-  "slices": [],
-  "pairwise": [],
-  "ranking_policy": {
-    "enabled": false,
-    "reason": "Reference labels were not independently human validated. This local-only pilot is retained as permanently provisional development evidence.",
-    "method": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."
+  "models": [
+    {
+      "rank": null,
+      "result_status": "descriptive",
+      "model_id": "gpt_5_4_mini",
+      "model": "GPT-5.4 Mini",
+      "run_id": "3cf7a456fd66d4af",
+      "cases": 80,
+      "passed_cases": 42,
+      "failed_cases": 38,
+      "pass_rate": 0.525,
+      "average_field_score": 0.859375,
+      "generation_failure_rate": 0.0,
+      "total_cost_usd": 2.35890975,
+      "average_cost_usd": 0.0294863719,
+      "median_latency_seconds": 5.928959602,
+      "p95_latency_seconds": 10.2943781756,
+      "en_cases": 40,
+      "en_pass_rate": 0.525,
+      "fr_cases": 40,
+      "fr_pass_rate": 0.525
+    },
+    {
+      "rank": null,
+      "result_status": "descriptive",
+      "model_id": "gpt_5_6_luna",
+      "model": "GPT-5.6 Luna",
+      "run_id": "ea64b35311e02af6",
+      "cases": 80,
+      "passed_cases": 52,
+      "failed_cases": 28,
+      "pass_rate": 0.65,
+      "average_field_score": 0.884375,
+      "generation_failure_rate": 0.0,
+      "total_cost_usd": 3.143971,
+      "average_cost_usd": 0.0392996375,
+      "median_latency_seconds": 6.260539117,
+      "p95_latency_seconds": 10.0387909746,
+      "en_cases": 40,
+      "en_pass_rate": 0.725,
+      "fr_cases": 40,
+      "fr_pass_rate": 0.575
+    },
+    {
+      "rank": null,
+      "result_status": "descriptive",
+      "model_id": "gpt_5_6_sol",
+      "model": "GPT-5.6 Sol",
+      "run_id": "e47f4e7cac66d34b",
+      "cases": 80,
+      "passed_cases": 55,
+      "failed_cases": 25,
+      "pass_rate": 0.6875,
+      "average_field_score": 0.90625,
+      "generation_failure_rate": 0.0,
+      "total_cost_usd": 15.734405,
+      "average_cost_usd": 0.1966800625,
+      "median_latency_seconds": 6.657921456,
+      "p95_latency_seconds": 10.5306797459,
+      "en_cases": 40,
+      "en_pass_rate": 0.675,
+      "fr_cases": 40,
+      "fr_pass_rate": 0.7
+    },
+    {
+      "rank": null,
+      "result_status": "descriptive",
+      "model_id": "gpt_5_6_terra",
+      "model": "GPT-5.6 Terra",
+      "run_id": "89b2c5c20a53a63a",
+      "cases": 80,
+      "passed_cases": 56,
+      "failed_cases": 24,
+      "pass_rate": 0.7,
+      "average_field_score": 0.9125,
+      "generation_failure_rate": 0.0,
+      "total_cost_usd": 7.8578725,
+      "average_cost_usd": 0.0982234063,
+      "median_latency_seconds": 5.858252422,
+      "p95_latency_seconds": 9.8952872672,
+      "en_cases": 40,
+      "en_pass_rate": 0.75,
+      "fr_cases": 40,
+      "fr_pass_rate": 0.65
+    }
+  ],
+  "slices": [
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "document_complexity",
+      "value": "long",
+      "cases": 16,
+      "scored_cases": 16,
+      "passed_cases": 11,
+      "pass_rate": 0.6875,
+      "average_score": 0.90625
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "document_complexity",
+      "value": "long",
+      "cases": 16,
+      "scored_cases": 16,
+      "passed_cases": 14,
+      "pass_rate": 0.875,
+      "average_score": 0.96875
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "document_complexity",
+      "value": "long",
+      "cases": 16,
+      "scored_cases": 16,
+      "passed_cases": 13,
+      "pass_rate": 0.8125,
+      "average_score": 0.953125
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "document_complexity",
+      "value": "long",
+      "cases": 16,
+      "scored_cases": 16,
+      "passed_cases": 14,
+      "pass_rate": 0.875,
+      "average_score": 0.96875
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "document_complexity",
+      "value": "medium",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 21,
+      "pass_rate": 0.525,
+      "average_score": 0.86875
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "document_complexity",
+      "value": "medium",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 24,
+      "pass_rate": 0.6,
+      "average_score": 0.875
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "document_complexity",
+      "value": "medium",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 28,
+      "pass_rate": 0.7,
+      "average_score": 0.9125
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "document_complexity",
+      "value": "medium",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 27,
+      "pass_rate": 0.675,
+      "average_score": 0.9
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "document_complexity",
+      "value": "short",
+      "cases": 24,
+      "scored_cases": 24,
+      "passed_cases": 10,
+      "pass_rate": 0.4166666666666667,
+      "average_score": 0.8125
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "document_complexity",
+      "value": "short",
+      "cases": 24,
+      "scored_cases": 24,
+      "passed_cases": 14,
+      "pass_rate": 0.5833333333333334,
+      "average_score": 0.84375
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "document_complexity",
+      "value": "short",
+      "cases": 24,
+      "scored_cases": 24,
+      "passed_cases": 14,
+      "pass_rate": 0.5833333333333334,
+      "average_score": 0.8645833333333334
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "document_complexity",
+      "value": "short",
+      "cases": 24,
+      "scored_cases": 24,
+      "passed_cases": 15,
+      "pass_rate": 0.625,
+      "average_score": 0.8958333333333334
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "language",
+      "value": "en",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 21,
+      "pass_rate": 0.525,
+      "average_score": 0.8625
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "language",
+      "value": "en",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 29,
+      "pass_rate": 0.725,
+      "average_score": 0.9125
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "language",
+      "value": "en",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 27,
+      "pass_rate": 0.675,
+      "average_score": 0.90625
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "language",
+      "value": "en",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 30,
+      "pass_rate": 0.75,
+      "average_score": 0.9375
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "language",
+      "value": "fr",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 21,
+      "pass_rate": 0.525,
+      "average_score": 0.85625
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "language",
+      "value": "fr",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 23,
+      "pass_rate": 0.575,
+      "average_score": 0.85625
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "language",
+      "value": "fr",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 28,
+      "pass_rate": 0.7,
+      "average_score": 0.90625
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "language",
+      "value": "fr",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 26,
+      "pass_rate": 0.65,
+      "average_score": 0.8875
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "split",
+      "value": "development",
+      "cases": 60,
+      "scored_cases": 60,
+      "passed_cases": 29,
+      "pass_rate": 0.48333333333333334,
+      "average_score": 0.85
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "split",
+      "value": "development",
+      "cases": 60,
+      "scored_cases": 60,
+      "passed_cases": 37,
+      "pass_rate": 0.6166666666666667,
+      "average_score": 0.8791666666666667
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "split",
+      "value": "development",
+      "cases": 60,
+      "scored_cases": 60,
+      "passed_cases": 39,
+      "pass_rate": 0.65,
+      "average_score": 0.8958333333333334
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "split",
+      "value": "development",
+      "cases": 60,
+      "scored_cases": 60,
+      "passed_cases": 41,
+      "pass_rate": 0.6833333333333333,
+      "average_score": 0.9083333333333333
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "split",
+      "value": "heldout",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 13,
+      "pass_rate": 0.65,
+      "average_score": 0.8875
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "split",
+      "value": "heldout",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 15,
+      "pass_rate": 0.75,
+      "average_score": 0.9
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "split",
+      "value": "heldout",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 16,
+      "pass_rate": 0.8,
+      "average_score": 0.9375
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "split",
+      "value": "heldout",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 15,
+      "pass_rate": 0.75,
+      "average_score": 0.925
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "stratum",
+      "value": "multi_ingredient",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 11,
+      "pass_rate": 0.55,
+      "average_score": 0.875
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "stratum",
+      "value": "multi_ingredient",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 12,
+      "pass_rate": 0.6,
+      "average_score": 0.8875
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "stratum",
+      "value": "multi_ingredient",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 12,
+      "pass_rate": 0.6,
+      "average_score": 0.8875
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "stratum",
+      "value": "multi_ingredient",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 12,
+      "pass_rate": 0.6,
+      "average_score": 0.875
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "stratum",
+      "value": "multi_variant",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 14,
+      "pass_rate": 0.7,
+      "average_score": 0.925
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "stratum",
+      "value": "multi_variant",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 18,
+      "pass_rate": 0.9,
+      "average_score": 0.975
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "stratum",
+      "value": "multi_variant",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 18,
+      "pass_rate": 0.9,
+      "average_score": 0.975
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "stratum",
+      "value": "multi_variant",
+      "cases": 20,
+      "scored_cases": 20,
+      "passed_cases": 20,
+      "pass_rate": 1.0,
+      "average_score": 1.0
+    },
+    {
+      "model_id": "gpt_5_4_mini",
+      "slice": "stratum",
+      "value": "single_ingredient",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 17,
+      "pass_rate": 0.425,
+      "average_score": 0.81875
+    },
+    {
+      "model_id": "gpt_5_6_luna",
+      "slice": "stratum",
+      "value": "single_ingredient",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 22,
+      "pass_rate": 0.55,
+      "average_score": 0.8375
+    },
+    {
+      "model_id": "gpt_5_6_sol",
+      "slice": "stratum",
+      "value": "single_ingredient",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 25,
+      "pass_rate": 0.625,
+      "average_score": 0.88125
+    },
+    {
+      "model_id": "gpt_5_6_terra",
+      "slice": "stratum",
+      "value": "single_ingredient",
+      "cases": 40,
+      "scored_cases": 40,
+      "passed_cases": 24,
+      "pass_rate": 0.6,
+      "average_score": 0.8875
+    }
+  ],
+  "pairwise": [
+    {
+      "model_a": "gpt_5_4_mini",
+      "model_b": "gpt_5_6_luna",
+      "cases": 80,
+      "a_only_passed": 3,
+      "b_only_passed": 13,
+      "both_passed": 39,
+      "both_failed": 25,
+      "paired_net_wins_a": -10
+    },
+    {
+      "model_a": "gpt_5_4_mini",
+      "model_b": "gpt_5_6_sol",
+      "cases": 80,
+      "a_only_passed": 3,
+      "b_only_passed": 16,
+      "both_passed": 39,
+      "both_failed": 22,
+      "paired_net_wins_a": -13
+    },
+    {
+      "model_a": "gpt_5_4_mini",
+      "model_b": "gpt_5_6_terra",
+      "cases": 80,
+      "a_only_passed": 1,
+      "b_only_passed": 15,
+      "both_passed": 41,
+      "both_failed": 23,
+      "paired_net_wins_a": -14
+    },
+    {
+      "model_a": "gpt_5_6_luna",
+      "model_b": "gpt_5_6_sol",
+      "cases": 80,
+      "a_only_passed": 5,
+      "b_only_passed": 8,
+      "both_passed": 47,
+      "both_failed": 20,
+      "paired_net_wins_a": -3
+    },
+    {
+      "model_a": "gpt_5_6_luna",
+      "model_b": "gpt_5_6_terra",
+      "cases": 80,
+      "a_only_passed": 2,
+      "b_only_passed": 6,
+      "both_passed": 50,
+      "both_failed": 22,
+      "paired_net_wins_a": -4
+    },
+    {
+      "model_a": "gpt_5_6_sol",
+      "model_b": "gpt_5_6_terra",
+      "cases": 80,
+      "a_only_passed": 3,
+      "b_only_passed": 4,
+      "both_passed": 52,
+      "both_failed": 21,
+      "paired_net_wins_a": -1
+    }
+  ],
+  "reporting_policy": {
+    "mode": "descriptive",
+    "reason": "Reference labels have complete automated source-page evidence but no independent human sign-off. Results are useful for comparing the full-PDF input contract, but Evalanche does not assign an official rank.",
+    "method": "Strict case pass rate among complete runs. Cost, latency, reliability, and slice metrics remain separate. Descriptive benchmarks show observed results without assigning an official rank."
   }
 }

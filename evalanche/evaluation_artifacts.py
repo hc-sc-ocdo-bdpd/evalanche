@@ -342,7 +342,7 @@ def _selection_policy_markdown(config: EvaluationConfig) -> str:
     selection = config.selection
     if not selection.enabled:
         return (
-            "_The optional decision policy is disabled. The report presents "
+            "_The optional decision policy was not applied. The report presents "
             "comparison evidence without selecting a model._"
         )
 

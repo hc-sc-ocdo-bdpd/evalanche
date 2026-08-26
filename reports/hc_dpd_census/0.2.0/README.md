@@ -56,7 +56,7 @@ therefore remains unchanged, with Sol ahead by 35 complete records.
 
 The [`analysis package`](analysis/README.md) contains the complete automated
 findings, every Sol and Terra frontier case, and a deterministic 105-case
-review worksheet. The
+selected-case evidence set. The
 [`evidence audit`](analysis/EVIDENCE_AUDIT.md) records the completed
 source, expected-answer, and scoring checks.
 
@@ -84,5 +84,5 @@ outputs. It retained all results with no corrections, exclusions, or
 scoring-rule changes.
 
 This release is a benchmark leaderboard, not a formal Health Canada model
-recommendation. It must not be described as independently human-validated
-unless a person later reviews and signs off on the evidence.
+recommendation. Independent human validation is not claimed; the stated validation is the
+completed automated source, expected-answer, and rescoring audit.

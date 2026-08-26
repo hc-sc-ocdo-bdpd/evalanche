@@ -37,7 +37,7 @@ DPD_ANALYSIS_LOWER_TIER_MODELS = (
     "gpt_5_4_mini",
     "gpt_5_6_luna",
 )
-DPD_ANALYSIS_REVIEW_SEED = 20260730
+DPD_ANALYSIS_AUDIT_SEED = 20260730
 DPD_ANALYSIS_SHARED_FAILURE_SAMPLE = 25
 DPD_ANALYSIS_ALL_PASS_SAMPLE = 25
 
@@ -87,7 +87,7 @@ DPD_REVIEW_OUTPUT_FILES = (
     "error_taxonomy.csv",
     "pairwise_tradeoffs.csv",
     "frontier_cases.csv",
-    "manual_review.csv",
+    "selected_cases.csv",
     "README.md",
 )
 STRUCTURAL_ERROR_TYPES = {
@@ -927,7 +927,7 @@ def _stratified_case_sample(
     return selected
 
 
-def _review_focus(error_types: Iterable[str]) -> str:
+def _audit_focus(error_types: Iterable[str]) -> str:
     observed = set(error_types)
     if "compound_label_split_only" in observed:
         return "Adjudicate whether the rendered compound DPD label is unambiguous."
@@ -992,14 +992,14 @@ def _wide_case_records(
                 "_mismatched_fields"
             ]
             record[f"{prefix}_model_output"] = row["model_output"]
-        record["preliminary_review_focus"] = _review_focus(
+        record["diagnostic_focus"] = _audit_focus(
             error_types
         )
         records.append(record)
     return pd.DataFrame(records)
 
 
-def _build_review_tables(
+def _build_audit_tables(
     diagnostics: pd.DataFrame,
     *,
     model_order: Sequence[str],
@@ -1008,7 +1008,7 @@ def _build_review_tables(
     lower_tier_models: Sequence[str],
     shared_failure_sample: int,
     all_pass_sample: int,
-    review_seed: int,
+    audit_seed: int,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     passes = diagnostics.pivot(
         index="case_id",
@@ -1073,7 +1073,7 @@ def _build_review_tables(
         lower_sample_ids = _stratified_case_sample(
             lower_candidates,
             count=shared_failure_sample,
-            seed=review_seed,
+            seed=audit_seed,
             purpose="lower_tier_shared_failure",
             excluded_case_ids=selected,
         )
@@ -1087,7 +1087,7 @@ def _build_review_tables(
     all_pass_ids = _stratified_case_sample(
         all_pass_candidates,
         count=all_pass_sample,
-        seed=review_seed,
+        seed=audit_seed,
         purpose="all_model_pass",
         excluded_case_ids=selected,
     )
@@ -1145,29 +1145,19 @@ def _build_review_tables(
             focus_models=focus_models,
         )
         frame.insert(0, "selection_reason", reason)
-        frame.insert(0, "review_priority", priority)
-        frame.insert(0, "review_group", group_name)
+        frame.insert(0, "selection_priority", priority)
+        frame.insert(0, "selection_group", group_name)
         review_frames.append(frame)
 
     review = pd.concat(review_frames, ignore_index=True)
     review.insert(
         0,
-        "review_id",
+        "audit_case_id",
         [
-            f"hc-dpd-review-{index:04d}"
+            f"hc-dpd-audit-{index:04d}"
             for index in range(1, len(review) + 1)
         ],
     )
-    review["review_status"] = "pending"
-    review["source_record_correct"] = ""
-    review["expected_answer_correct"] = ""
-    review["strict_score_correct"] = ""
-    review["error_owner"] = ""
-    review["operational_severity"] = ""
-    review["adjudication"] = ""
-    review["reviewer"] = ""
-    review["review_date"] = ""
-    review["review_notes"] = ""
     return frontier, review
 
 
@@ -1458,7 +1448,7 @@ independent human sign-off.
 
 ## Selected-case evidence set
 
-The tracked `manual_review.csv` contains {len(review)} unique cases:
+The tracked `selected_cases.csv` contains {len(review)} unique cases:
 
 - all {primary_failures} `{primary_model}` failures;
 - all {primary_only} cases passed only by `{primary_model}` within the
@@ -1468,9 +1458,9 @@ The tracked `manual_review.csv` contains {len(review)} unique cases:
 - a deterministic, language-and-complexity-stratified sample of all-model
   passes.
 
-`manual_review.csv` preserves the immutable selection and model evidence.
-`evidence_audit.csv` records the completed automated decisions separately, so
-the source worksheet does not need to be edited or attributed to a person.
+`selected_cases.csv` preserves the deterministic selection and model evidence.
+`evidence_audit.csv` records the completed automated verification for those
+cases. Neither artifact represents an unfinished human-review queue.
 
 ## Leaderboard interpretation
 
@@ -1486,8 +1476,8 @@ The published evidence supports these conclusions:
 - Mini and Luna should not be dismissed solely from this condition. Their
   large schema-shape component justifies a separate structured-output
   experiment if a low-cost production route matters.
-- this benchmark is now saturated for frontier models and should be followed
-  by the harder Product Monograph extraction benchmark.
+- this benchmark is saturated for frontier models; the Product Monograph
+  case studies provide the harder unstructured-document conditions.
 
 ## Files
 
@@ -1499,8 +1489,8 @@ The published evidence supports these conclusions:
 | `error_taxonomy.csv` | Diagnostic failure mechanisms overall and by language |
 | `pairwise_tradeoffs.csv` | Paired outcomes with cost increments |
 | `frontier_cases.csv` | Every case failed by either frontier model |
-| `manual_review.csv` | Immutable selected-case evidence worksheet |
-| `evidence_audit.csv` | Completed automated decisions for all selected cases |
+| `selected_cases.csv` | Deterministically selected cases and model evidence |
+| `evidence_audit.csv` | Completed automated verification for all selected cases |
 | `evidence_audit_summary.json` | Audit inputs, hashes, checks, and outcomes |
 | `EVIDENCE_AUDIT.md` | Human-readable audit result and interpretation |
 | `analysis_manifest.json` | Input and output hashes, methods, and review-set counts |
@@ -1532,7 +1522,7 @@ def build_dpd_census_analysis(
     ] = DPD_ANALYSIS_LOWER_TIER_MODELS,
     shared_failure_sample: int = DPD_ANALYSIS_SHARED_FAILURE_SAMPLE,
     all_pass_sample: int = DPD_ANALYSIS_ALL_PASS_SAMPLE,
-    review_seed: int = DPD_ANALYSIS_REVIEW_SEED,
+    audit_seed: int = DPD_ANALYSIS_AUDIT_SEED,
 ) -> dict[str, Any]:
     root = Path(root_path).resolve()
     results_file = Path(results_path)
@@ -1604,7 +1594,7 @@ def build_dpd_census_analysis(
         diagnostics,
         model_overview,
     )
-    frontier, review = _build_review_tables(
+    frontier, review = _build_audit_tables(
         diagnostics,
         model_order=model_order,
         primary_model=primary_model,
@@ -1612,7 +1602,7 @@ def build_dpd_census_analysis(
         lower_tier_models=lower_tier_models,
         shared_failure_sample=shared_failure_sample,
         all_pass_sample=all_pass_sample,
-        review_seed=review_seed,
+        audit_seed=audit_seed,
     )
 
     output_directory.mkdir(parents=True, exist_ok=True)
@@ -1623,7 +1613,7 @@ def build_dpd_census_analysis(
         "error_taxonomy.csv": error_taxonomy,
         "pairwise_tradeoffs.csv": pairwise_tradeoffs,
         "frontier_cases.csv": frontier,
-        "manual_review.csv": review,
+        "selected_cases.csv": review,
     }
     for filename, frame in outputs.items():
         _write_csv(output_directory / filename, frame)
@@ -1691,10 +1681,10 @@ def build_dpd_census_analysis(
             "comparison_model": comparison_model,
             "lower_tier_models": list(lower_tier_models),
             "diagnostic_repairs_change_primary_score": False,
-            "manual_adjudication_complete": False,
+            "human_signoff_status": "not_claimed",
         },
-        "review_set": {
-            "seed": review_seed,
+        "audit_set": {
+            "seed": audit_seed,
             "primary_model_failures": int(
                 (~passes[primary_model]).sum()
             ),
@@ -1709,7 +1699,7 @@ def build_dpd_census_analysis(
             ),
             "all_model_pass_sample": all_pass_sample,
             "total_unique_cases": len(review),
-            "status": "pending_human_review",
+            "status": "selected_for_automated_audit",
         },
         "published_files": published_files,
     }

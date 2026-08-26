@@ -2,7 +2,7 @@
   "report_schema_version": "1.0",
   "dataset_id": "hc_product_monograph_native_pdf_extraction",
   "dataset_version": "0.1.0",
-  "status": "retired",
+  "status": "frozen",
   "population": {
     "products": 40,
     "cases": 80,
@@ -23,26 +23,16 @@
     "pdfs_required": 80,
     "hash_verification_required_at_request_time": true
   },
-  "label_review": {
+  "reference_evidence": {
     "items": 390,
-    "approved": 0,
-    "status_counts": {
-      "pending": 390
-    },
-    "all_items_approved": false,
-    "disposition": "historical_snapshot",
-    "action_required": false
+    "validation": "automated_source_page_evidence",
+    "independent_human_signoff": false
   },
   "artifacts": {
     "cases": {
       "path": "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/cases.csv.gz",
-      "sha256": "f1859ec86e26eef4e7bd58dc5f952abff181315a77ffad7e177429d6931d5e74",
-      "bytes": 15496
-    },
-    "label_review": {
-      "path": "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0/label_review.csv",
-      "sha256": "ab09a26bbc5c204abc6ba228c6d6f4a68d8b12633f70b43cdca472b43d94e9a0",
-      "bytes": 123374
+      "sha256": "773f0c3dcd9e72c1db42c30b079a85bfa3cd4012356114cac86d984c33172b83",
+      "bytes": 15502
     },
     "source_documents": {
       "path": "data/hc/benchmarks/product_monograph_structured_extraction/0.1.0/source_documents.csv",

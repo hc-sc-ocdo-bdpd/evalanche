@@ -41,49 +41,49 @@ def test_product_monograph_release_verifies() -> None:
     assert verification["files_checked"] == 6
 
 
-def test_native_pdf_release_is_hash_locked_and_retired() -> None:
+def test_native_pdf_release_is_hash_locked_and_descriptive() -> None:
     verification = verify_dataset_manifest_file(
         NATIVE_PDF_MANIFEST,
         root_path=ROOT,
     )
     assert verification["valid"] is True
-    assert verification["files_passed"] == 6
+    assert verification["files_passed"] == 5
 
     cases = pd.read_csv(NATIVE_PDF_DATA_DIR / "cases.csv.gz", dtype=str)
-    review = pd.read_csv(NATIVE_PDF_DATA_DIR / "label_review.csv", dtype=str)
     assert len(cases) == 80
-    assert len(review) == 390
     assert set(cases["input_mode"]) == {"native_pdf"}
     assert not cases["input"].str.contains("[PDF PAGE", regex=False).any()
-    assert set(review["human_review_status"]) == {"pending"}
+    metadata = cases["source_metadata"].map(json.loads)
+    assert {item["reference_validation"] for item in metadata} == {
+        "automated_source_page_evidence"
+    }
 
     for descriptor_list in cases["input_files"].map(json.loads):
         assert len(descriptor_list) == 1
         descriptor = descriptor_list[0]
         assert descriptor["media_type"] == "application/pdf"
-        assert descriptor["path"].startswith("data/hc/product_monographs/0.1.0/raw/")
+        assert descriptor["path"].startswith(
+            "data/hc/product_monographs/0.1.0/raw/"
+        )
         assert len(descriptor["sha256"]) == 64
         assert "detail" not in descriptor
 
     manifest = yaml.safe_load(NATIVE_PDF_MANIFEST.read_text(encoding="utf-8"))
     benchmark = yaml.safe_load(NATIVE_PDF_BENCHMARK.read_text(encoding="utf-8"))
-    assert manifest["release"]["status"] == "retired"
+    assert manifest["release"]["status"] == "frozen"
     assert manifest["release"]["immutable"] is True
-    assert benchmark["status"] == "retired"
+    assert benchmark["status"] == "frozen"
     assert benchmark["runtime"]["request_api"] == "responses"
     assert set(benchmark["required_capabilities"]) == {
         "pdf_input",
         "responses_api",
         "vision",
     }
+    assert benchmark["reporting"]["mode"] == "descriptive"
+    assert "independent human sign-off" in benchmark["reporting"]["reason"]
 
-    assert benchmark["ranking"]["enabled"] is False
-    assert "permanently provisional" in benchmark["ranking"]["reason"].casefold()
 
-
-def test_native_pdf_builder_is_deterministic_and_preserves_legacy_snapshot(
-    tmp_path: Path,
-) -> None:
+def test_native_pdf_builder_is_deterministic(tmp_path: Path) -> None:
     parent_files = [
         pm.PM_OUTPUT_DIR / "cases.csv.gz",
         pm.PM_OUTPUT_DIR / "products.csv",
@@ -98,26 +98,25 @@ def test_native_pdf_builder_is_deterministic_and_preserves_legacy_snapshot(
     first = pm.build_product_monograph_native_pdf_benchmark(
         root_path=tmp_path,
     )
-    assert first["status"] == "retired"
+    assert first["status"] == "frozen"
     assert first["case_count"] == 80
-    assert first["review_item_count"] == 390
-    assert first["approved_review_item_count"] == 0
+    assert first["evidence_item_count"] == 390
     assert first["verification"]["valid"] is True
     first_cases = (tmp_path / pm.PM_NATIVE_PDF_CASES_PATH).read_bytes()
-    review_path = tmp_path / pm.PM_NATIVE_PDF_REVIEW_PATH
-    first_review = review_path.read_bytes()
+    first_report = (tmp_path / pm.PM_NATIVE_PDF_REPORT_PATH).read_bytes()
 
-    pm.build_product_monograph_native_pdf_benchmark(root_path=tmp_path)
+    second = pm.build_product_monograph_native_pdf_benchmark(root_path=tmp_path)
+    assert second["verification"]["valid"] is True
     assert (tmp_path / pm.PM_NATIVE_PDF_CASES_PATH).read_bytes() == first_cases
-    assert review_path.read_bytes() == first_review
+    assert (tmp_path / pm.PM_NATIVE_PDF_REPORT_PATH).read_bytes() == first_report
 
-    review = pd.read_csv(review_path, dtype=str, keep_default_na=False)
-    review.loc[0, "source_page"] = "999"
-    review.to_csv(review_path, index=False, lineterminator="\n")
-    with pytest.raises(ValueError, match="immutable source or label"):
-        pm.build_product_monograph_native_pdf_benchmark(
-            root_path=tmp_path,
-        )
+    report = json.loads(first_report)
+    assert report["reference_evidence"] == {
+        "items": 390,
+        "validation": "automated_source_page_evidence",
+        "independent_human_signoff": False,
+    }
+
 
 
 def test_product_monograph_cohort_contract() -> None:

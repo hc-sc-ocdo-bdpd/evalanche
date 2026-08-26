@@ -35,12 +35,9 @@ def test_published_result_release_integrity() -> None:
     assert manifest["validation"][
         "grouped_product_family_analysis"
     ] == "complete"
-    assert manifest["validation"]["manual_review_package"] == "ready"
+    assert manifest["validation"]["selected_case_audit"] == "complete"
     assert manifest["validation"]["automated_evidence_audit"] == (
         "complete"
-    )
-    assert manifest["validation"]["manual_label_review"] == (
-        "not_performed"
     )
     assert manifest["validation"]["human_signoff"] == "not_claimed"
     assert manifest["validation"]["error_adjudication"] == (
@@ -79,7 +76,7 @@ def test_published_analysis_release_integrity() -> None:
         retained_results["sha256"]
     )
     assert analysis_manifest["source"]["rows"] == 56_136
-    assert analysis_manifest["review_set"] == {
+    assert analysis_manifest["audit_set"] == {
         "seed": 20260730,
         "primary_model_failures": 13,
         "comparison_only_failures": 42,
@@ -92,9 +89,6 @@ def test_published_analysis_release_integrity() -> None:
         "diagnostic_repairs_change_primary_score"
     ] is False
     assert analysis_manifest["analysis"][
-        "manual_adjudication_complete"
-    ] is False
-    assert analysis_manifest["analysis"][
         "automated_evidence_audit_complete"
     ] is True
     assert analysis_manifest["analysis"][
@@ -104,7 +98,7 @@ def test_published_analysis_release_integrity() -> None:
         "not_claimed"
     )
     assert analysis_manifest["evidence_audit"]["verification"] == {
-        "review_cases": 105,
+        "audit_cases": 105,
         "source_rebuild_matches": 105,
         "independent_expected_parses_match": 105,
         "model_outputs_rescored": 420,
@@ -200,35 +194,26 @@ def test_published_analysis_headline_and_review_values() -> None:
         "both_failed": 6,
     }
 
-    with (ANALYSIS_RELEASE / "manual_review.csv").open(
+    with (ANALYSIS_RELEASE / "selected_cases.csv").open(
         encoding="utf-8",
         newline="",
     ) as file:
-        review_reader = csv.DictReader(file)
-        review = list(review_reader)
-        columns = review_reader.fieldnames or []
-    assert len(review) == 105
-    assert len({row["case_id"] for row in review}) == 105
-    assert Counter(row["review_group"] for row in review) == {
+        selected_reader = csv.DictReader(file)
+        selected = list(selected_reader)
+        columns = selected_reader.fieldnames or []
+    assert len(selected) == 105
+    assert len({row["case_id"] for row in selected}) == 105
+    assert Counter(row["selection_group"] for row in selected) == {
         "primary_model_failure": 13,
         "comparison_only_failure": 42,
         "lower_tier_shared_failure_sample": 25,
         "all_model_pass_sample": 25,
     }
-    assert all(row["review_status"] == "pending" for row in review)
-    for column in (
-        "source_record_correct",
-        "expected_answer_correct",
-        "strict_score_correct",
-        "error_owner",
-        "operational_severity",
-        "adjudication",
-        "reviewer",
-        "review_date",
-        "review_notes",
-    ):
-        assert column in columns
-        assert all(row[column] == "" for row in review)
+    assert "audit_case_id" in columns
+    assert "selection_group" in columns
+    assert "selection_priority" in columns
+    assert "review_status" not in columns
+    assert "reviewer" not in columns
 
     with (ANALYSIS_RELEASE / "evidence_audit.csv").open(
         encoding="utf-8",
@@ -237,10 +222,10 @@ def test_published_analysis_headline_and_review_values() -> None:
         audit_reader = csv.DictReader(file)
         audit = list(audit_reader)
     assert len(audit) == 105
-    assert {row["review_id"] for row in audit} == {
-        row["review_id"] for row in review
+    assert {row["audit_case_id"] for row in audit} == {
+        row["audit_case_id"] for row in selected
     }
-    assert all(row["review_status"] == "complete" for row in audit)
+    assert all(row["audit_status"] == "complete" for row in audit)
     assert all(
         row["source_rebuild_verified"] == "yes" for row in audit
     )
@@ -286,7 +271,7 @@ def test_analysis_notebook_is_clean_and_reproducible() -> None:
     source = "\n".join(cell["source"] for cell in code_cells)
     assert "AUTO_REFRESH_LOCAL_ANALYSIS = False" in source
     assert "analysis_manifest.json" in source
-    assert "manual_review.csv" in source
+    assert "selected_cases.csv" in source
     assert "evidence_audit.csv" in source
 
 

@@ -155,9 +155,9 @@ Keep credentials and resource-specific base URLs in `.env`, never in a model
 manifest. Use a separate model ID for materially different deployments,
 versions, quantization, or serving configurations.
 
-The four model manifests already present in the repository preserve prior
-Health Canada work. They are historical examples, not your default candidate
-list.
+The four model manifests already present in the repository are recorded
+example configurations. They are not your default candidate list and do not
+prove current access.
 
 ### Create a dated access set
 
@@ -422,7 +422,7 @@ Before using the generic configuration:
 
 - replace its candidate list with routes you have confirmed;
 - replace its judge route and rubric;
-- keep automatic selection disabled unless every candidate has an explicit
+- leave automatic selection off unless every candidate has an explicit
   availability profile and the policy was approved;
 - create and evaluate a human calibration set;
 - label results exploratory until the judge protocol is validated.

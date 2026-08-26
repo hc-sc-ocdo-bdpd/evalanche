@@ -1,17 +1,18 @@
 schema_version: "1.0"
 benchmark_id: hc_product_monograph_native_pdf_extraction
 version: 0.1.0
-title: Health Canada Product Monograph native-PDF pilot
+title: Health Canada Product Monograph full-PDF extraction
 description: >-
-  Retired local-only bilingual pilot using 80 complete official English and
-  French Product Monograph PDFs representing 40 marketed human-drug product
-  families. It is retained for reproducibility, not official model ranking.
-status: retired
-ranking:
-  enabled: false
+  Bilingual structured extraction from 80 complete official English and French
+  Product Monograph PDFs representing 40 marketed human-drug product families.
+  This input contract tests full-document retrieval, layout, and extraction.
+status: frozen
+reporting:
+  mode: descriptive
   reason: >-
-    Reference labels were not independently human validated. This local-only
-    pilot is retained as permanently provisional development evidence.
+    Reference labels have complete automated source-page evidence but no
+    independent human sign-off. Results are useful for comparing the full-PDF
+    input contract, but Evalanche does not assign an official rank.
 dataset:
   dataset_id: hc_product_monograph_native_pdf_extraction
   version: 0.1.0
@@ -256,7 +257,7 @@ tiers:
       request_ceiling_multiplier: 2.0
   standard:
     description: >-
-      The complete 80-case pilot. Execution adds only cases not already run in
+      The complete 80-case condition. Execution adds only cases not already run in
       smoke and screen, so a promoted model uses exactly 80 calls in total.
     inherits: screen
     sampling:
@@ -275,9 +276,9 @@ tiers:
       safety_multiplier: 1.50
       request_ceiling_multiplier: 1.75
 limitations:
-  - This retired pilot is permanently provisional and must not produce an official model ranking.
-  - Provisional labels come from DPD alignment plus automated source-page evidence, not independent human review.
-  - The historical label-review snapshot is retained only to reproduce the original pilot; no review campaign is planned.
+  - Results are descriptive because the reference labels do not have independent human sign-off.
+  - Reference labels come from DPD alignment plus automated source-page evidence, not independent human review.
+  - Automated source-page checks establish traceability, not independent human validation.
   - Native PDF rendering and tokenization may differ between providers, so input-contract differences must remain explicit.
   - DIN, schedule, product status, and sponsor are alignment metadata and are not scored.
   - Results from 40 products do not represent every drug or document format.

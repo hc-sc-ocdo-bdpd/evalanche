@@ -4,20 +4,22 @@ release:
   version: 0.2.0
   release_type: benchmark
   title: Health Canada DPD bilingual structured extraction census
-  description: A reproducible full-population benchmark containing every marketed human-drug
-    product family that satisfies the version 1.0 bilingual JSON case contract.
+  description: A reproducible full-population benchmark containing every marketed
+    human-drug product family that satisfies the version 1.0 bilingual JSON case contract.
   created_at_utc: '2026-07-27T00:00:00Z'
   status: frozen
   immutable: true
-  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug Product
-    Database; https://open.canada.ca/en/open-government-licence-canada
+  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug
+    Product Database; https://open.canada.ca/en/open-government-licence-canada
   intended_use: Measure DPD structured-extraction coverage, model reliability, operational
-    performance, and subgroup behavior across the complete eligible frozen population. Use
-    the bounded demo view for live demonstrations.
+    performance, and subgroup behavior across the complete eligible frozen population.
+    Use the bounded demo view for live demonstrations.
   limitations:
   - Inputs render DPD relational records and are not Product Monograph documents.
-  - Thirteen source-ambiguous French-brand families require manual adjudication and are excluded.
-  - Reference labels have not yet been manually audited against Product Monographs.
+  - Thirteen source-ambiguous French-brand families are excluded because the scalar
+    brand_name contract cannot represent them unambiguously.
+  - Reference values come directly from the frozen DPD source. They are not Product
+    Monograph labels and were not cross-validated against monographs.
   - This release alone cannot support a general Health Canada model recommendation.
   languages:
   - en
@@ -32,18 +34,18 @@ sources:
   source_url: https://www.canada.ca/content/dam/hc-sc/documents/services/drug-product-database/allfiles.zip
   retrieved_at_utc: 2026-07-22 14:36:16+00:00
   source_modified_date: 2026-07-02
-  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug Product
-    Database; https://open.canada.ca/en/open-government-licence-canada
-  snapshot_notes: Inherited from frozen source dataset hc_dpd_source_snapshot 2026.7.2; only
-    the marketed archive contributes rows.
+  license_or_terms: Open Government Licence - Canada; attribute Health Canada, Drug
+    Product Database; https://open.canada.ca/en/open-government-licence-canada
+  snapshot_notes: Inherited from frozen source dataset hc_dpd_source_snapshot 2026.7.2;
+    only the marketed archive contributes rows.
 - source_id: evalanche_dpd_census_builder
   name: Evalanche DPD census builder
   source_url: https://github.com/hc-sc-ocdo-bdpd/evalanche
   retrieved_at_utc: '2026-07-27T00:00:00Z'
   source_modified_date: null
   license_or_terms: Evalanche repository terms.
-  snapshot_notes: Generated the compressed census cases, membership file, bounded demo view,
-    and build report deterministically from the frozen marketed DPD archive.
+  snapshot_notes: Generated the compressed census cases, membership file, bounded
+    demo view, and build report deterministically from the frozen marketed DPD archive.
 files:
 - file_id: dpd_census_cases
   source_id: evalanche_dpd_census_builder
@@ -90,8 +92,8 @@ files:
   relative_path: data/hc/benchmarks/dpd_structured_extraction_census/0.2.0/build_report.json
   media_type: application/json
   language: null
-  byte_size: 4826
-  sha256: df04561b15df6a4c7de67da2af1050b730c6e67f7bbf4ec77df8b83ff0445dff
+  byte_size: 4830
+  sha256: 862e74fb37817796c6a8d2e38348d6e0502cacbda59d08460d8666c1fa0660cf
   record_count: 1
   record_count_method: declared
   parser_schema_version: hc_dpd_census/1.0
@@ -101,8 +103,8 @@ sampling:
   method: full_population
   unit: product_family
   population_description: Every marketed human-drug product family in the frozen 2026-07-02
-    DPD archive that can produce paired English and French cases under the version 1.0 JSON
-    contract.
+    DPD archive that can produce paired English and French cases under the version
+    1.0 JSON contract.
   target_count: 7017
   membership_file_id: dpd_census_products
   member_id_column: product_id
@@ -111,17 +113,18 @@ sampling:
   - DPD class is Human.
   - Exactly one current status row is MARKETED.
   - DIN is an eight-digit numeric identifier.
-  - Exactly one DIN_OWNER and complete English and French ingredient, form, route, schedule,
-    and status labels are available.
-  - Strength values are numeric and the product family can produce paired English and French
-    JSON cases.
+  - Exactly one DIN_OWNER and complete English and French ingredient, form, route,
+    schedule, and status labels are available.
+  - Strength values are numeric and the product family can produce paired English
+    and French JSON cases.
   - Single-ingredient, multi-ingredient, multi-variant, and multi-ingredient multi-variant
     families are all included.
   exclusion_criteria:
   - Veterinary, disinfectant, and radiopharmaceutical DPD classes.
   - Cancelled, dormant, approved-only, missing, or ambiguous current status.
   - Invalid DIN, missing reference fields, ambiguous DIN owner, or nonnumeric strength.
-  - Product families with conflicting French brand names across variants, pending manual adjudication.
+  - Product families with conflicting French brand names across variants that cannot
+    be represented unambiguously by the scalar brand_name contract.
   strata:
   - single_ingredient
   - multi_ingredient
@@ -129,13 +132,13 @@ sampling:
   - multi_ingredient_multi_variant
 splits:
 - name: census
-  purpose: Full eligible-population coverage and stress evaluation. This is not a prompt-development
-    or hidden-test split.
+  purpose: Full eligible-population coverage and stress evaluation. This is not a
+    prompt-development or hidden-test split.
   unit: product_family
   target_count: 7017
   group_key: product_id
-  selection_policy: All eligible product-family IDs are included; no sampling or split assignment
-    is applied.
+  selection_policy: All eligible product-family IDs are included; no sampling or split
+    assignment is applied.
   member_ids:
   - hc_dpd_0006d5791c722f1a
   - hc_dpd_000e73af39dd1ae5
@@ -7158,14 +7161,15 @@ lineage:
   parent_dataset_version: 2026.7.2
   code_version: evalanche 0.1.0; hc_dpd_census/1.0
   transformations:
-  - Verified the frozen parent manifest and every parent file hash before reading source rows.
-  - Validated the marketed ZIP member schema and parsed relational tables with explicit columns
-    and no headers.
+  - Verified the frozen parent manifest and every parent file hash before reading
+    source rows.
+  - Validated the marketed ZIP member schema and parsed relational tables with explicit
+    columns and no headers.
   - Joined DPD tables by DRUG_CODE and retained complete marketed human-drug records.
   - Grouped product families by DIN owner, normalized English brand, and active-ingredient
     code set.
-  - Included every representable family across all four complexity strata without population
-    sampling.
+  - Included every representable family across all four complexity strata without
+    population sampling.
   - Generated paired English and French JSON cases with exact archive-member row traceability.
-  - Compressed full-population CSV artifacts with deterministic gzip metadata and generated
-    a fixed 24-case live-demo view.
+  - Compressed full-population CSV artifacts with deterministic gzip metadata and
+    generated a fixed 24-case live-demo view.

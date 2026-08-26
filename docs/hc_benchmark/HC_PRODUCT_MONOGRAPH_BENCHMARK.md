@@ -1,119 +1,115 @@
-# Health Canada Product Monograph evidence-window pilot 0.1.0
+# Health Canada Product Monograph benchmark
 
-- **Status:** Frozen historical pilot
-- **Dataset:** `hc_product_monograph_structured_extraction@0.1.0`
-- **Cases:** 80 label-selected text-window instances
-- **Model input:** Extracted text, not PDF files
-- **Scoring:** Deterministic canonical JSON
-- **Ranking:** Disabled, permanently provisional
-- **Human audit:** Not planned
+Evalanche contains two frozen 0.1.0 input conditions built from the same 40
+marketed product families and 80 official English and French Product
+Monographs. They share the same four-field structured reference contract and
+are reported descriptively.
 
-## Purpose and boundary
+## What is scored
 
-This release measures bilingual structured extraction after relevant Product
-Monograph pages have already been selected. It is a useful diagnostic for
-extraction and JSON fidelity, not an end-to-end document-understanding test.
+Each case returns JSON containing:
 
-The builder uses expected labels to locate evidence pages. That design is
-valid for an oracle-window diagnostic but cannot support claims about finding
-facts in a complete monograph. Scores must not be compared directly with a
-native-PDF task.
+- `brand_name`;
+- `active_ingredients`, including strength and unit;
+- `dosage_forms`;
+- `routes`.
 
-The labels have automated source-page evidence but no independent human
-validation. The benchmark is frozen for reproducibility, permanently
-provisional, and unranked. No audit or promotion campaign is planned.
+DIN, regulatory schedule, product status, and sponsor are retained as alignment
+metadata where available but are not scored.
 
-## Cohort
+Strict pass requires the complete record to match after the benchmark's
+versioned canonicalization. Field score is retained as a diagnostic for partial
+matches.
 
-| Property | Count |
-| --- | ---: |
-| Product families | 40 |
-| English PDFs | 40 |
-| French PDFs | 40 |
-| Development products | 30 |
-| Held-out products | 10 |
-| Single-ingredient products | 20 |
-| Multi-ingredient products | 10 |
-| Multi-variant products | 10 |
+## Reference evidence
 
-Related active-ingredient groups do not cross the development and held-out
-boundary. Screening recorded 23 exclusions: 10 missing bilingual pairs, 12
-unresolved product-scope mismatches, and one French URL containing an English
-document.
+The cohort contains 390 scored facts. Each fact is tied to exact official
+Product Monograph source-page evidence through deterministic or declared-alias
+checks. Source descriptors preserve the official URL, SHA-256 hash, byte size,
+page count, language, and monograph identifier.
 
-## Source evidence
+This establishes traceability and reproducibility. It is not independent human
+label sign-off. For that reason both Product Monograph conditions use
+`reporting.mode: descriptive`, which preserves all measurements without
+assigning an official model rank.
 
-`source_documents.csv` records the official URL, Product Monograph identifier,
-retrieval time, SHA-256, byte size, page count, language check, and scope check
-for every document. All 80 hashes are distinct. PDF bytes are not committed
-because individual sponsor copyright may apply.
+## Condition 1, evidence-window extraction
 
-The release has 390 scored reference items. Every item has a recorded source
-page in `field_evidence.csv.gz`. The evidence windows include page 1 and the
-minimum ordered page set needed for the expected fields.
+Benchmark:
+`hc_product_monograph_structured_extraction@0.1.0`
 
-Acquire and verify the source lock:
+The model receives only official source text from pages selected to contain the
+required evidence, with page 1 included. This condition isolates extraction,
+normalization, bilingual reading, and JSON fidelity after relevant evidence has
+already been located.
 
-```bash
-python -m evalanche.cli acquire-product-monographs
-python -m evalanche.cli verify-product-monograph-sources
-```
+It does not measure full-document retrieval, PDF transport, page layout, or
+provider file processing.
 
-## Task and scorer
+## Condition 2, full-PDF extraction
 
-Each case requests exactly four fields:
+Benchmark:
+`hc_product_monograph_native_pdf_extraction@0.1.0`
 
-```json
-{
-  "brand_name": "EXAMPLE",
-  "active_ingredients": [
-    {"name": "EXAMPLE INGREDIENT", "strength": 10, "unit": "MG"}
-  ],
-  "dosage_forms": ["TABLET"],
-  "routes": ["ORAL"]
-}
-```
+The model receives one complete hash-locked official PDF through the Responses
+file-input route. The prompt contains no evidence-window text. The request path
+verifies the file hash before use.
 
-Lists are compared as sets. Strengths use path-scoped numeric equivalence.
-Text comparison is case-insensitive, whitespace-normalized,
-punctuation-insensitive, and diacritic-insensitive. Versioned aliases cover
-defensible unit and dosage-form equivalents. DIN, schedule, status, and
-sponsor remain alignment metadata and are not scored.
+This condition adds:
+
+- locating relevant facts anywhere in the document;
+- PDF layout and page interpretation;
+- long-document context management;
+- provider file transport and PDF processing;
+- the same extraction and JSON contract used by the evidence-window condition.
+
+The raw PDFs are not committed because copyright may remain with individual
+sponsors. The repository preserves the source locks needed to reacquire and
+verify them.
+
+## Results
+
+The generated reports are authoritative for the compact recorded results:
+
+- [evidence-window results](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.md)
+- [full-PDF results](../../reports/benchmarks/hc_product_monograph_native_pdf_extraction/0.1.0/leaderboard.md)
+
+Both conditions preserve pass rate, field score, bilingual slices, failure
+status, cost, latency, and paired comparisons where compatible evidence is
+available.
+
+Do not merge the two conditions into one score. The difference between them is
+itself useful evidence about the added difficulty and operational behavior of
+full-document input.
 
 ## Rebuild and verify
 
-After acquiring the source PDFs:
+The evidence-window release can be rebuilt from the frozen cohort, source lock,
+and locally acquired PDFs:
 
 ```bash
-python -m evalanche.cli build-product-monograph-benchmark
-python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_product_monograph_structured_extraction_0.1.0_manifest.yaml --root .
+docker compose run --rm evalanche python -m evalanche.cli build-product-monograph
 ```
 
-The expected build has 40 products, 80 cases, 390 evidence items, and six
-verified release files.
+Build the full-PDF descriptors from the same source lock:
 
-## Retained descriptive measurements
+```bash
+docker compose run --rm evalanche python -m evalanche.cli build-product-monograph-native-pdf
+```
 
-| Model | Strict passes | Field score | Generation failures | Status |
-| --- | ---: | ---: | ---: | --- |
-| GPT-5.4 Mini | 0/80 | 0.00% | 80 | Ineligible, request configuration failed |
-| GPT-5.6 Luna | 56/80 | 91.25% | 0 | Provisional |
-| GPT-5.6 Sol | 64/80 | 93.75% | 0 | Provisional |
-| GPT-5.6 Terra | 56/80 | 90.00% | 0 | Provisional |
+Verify either dataset manifest without model calls:
 
-GPT-5.4 Mini received an unsupported `temperature` parameter in the retained
-run. Its manifest is corrected, but the failed run remains visible as
-infrastructure evidence and must not be interpreted as model quality.
+```bash
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset \
+  --manifest configs/datasets/hc_product_monograph_structured_extraction_0.1.0_manifest.yaml \
+  --root .
 
-No row receives an official rank. Pass rate, field score, cost, latency,
-language slices, and pairwise diagnostics remain visible as descriptive data.
+docker compose run --rm evalanche python -m evalanche.cli verify-dataset \
+  --manifest configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml \
+  --root .
+```
 
-## Interpretation
-
-This purposive pilot does not represent all marketed products, full-document
-retrieval, clinical reasoning, or general model quality. Any label correction
-would require a new dataset version because the release is frozen. The
-supported resource does not include a revised version of this pilot.
-
-For the retired complete-document pilot, see
-[`HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md`](HC_PRODUCT_MONOGRAPH_NATIVE_PDF_BENCHMARK.md).
+A new model comparison should still begin from confirmed current access,
+current provider behavior, and current pricing. Use the ordinary
+[local comparison workflow](../local_comparison.md) rather than treating these
+recorded configurations as a current model inventory.

@@ -431,7 +431,7 @@ def _build_report(
             "demo_has_all_required_route_groups": all(
                 demo_route_coverage.values()
             ),
-            "manual_product_monograph_audit_status": "not_started",
+            "reference_source_validation": "frozen_dpd_records",
         },
         "limitations": [
             (
@@ -445,8 +445,9 @@ def _build_report(
                 "current scalar brand_name field without adjudication."
             ),
             (
-                "Reference values have not yet been manually audited "
-                "against English and French Product Monographs."
+                "Reference values come directly from the frozen DPD source. "
+                "They are not Product Monograph labels and were not "
+                "cross-validated against monographs."
             ),
             (
                 "The census is a DPD extraction coverage and stress "
@@ -510,12 +511,14 @@ def _build_manifest(
                     "Product Monograph documents."
                 ),
                 (
-                    "Thirteen source-ambiguous French-brand families "
-                    "require manual adjudication and are excluded."
+                    "Thirteen source-ambiguous French-brand families are "
+                    "excluded because the scalar brand_name contract "
+                    "cannot represent them unambiguously."
                 ),
                 (
-                    "Reference labels have not yet been manually audited "
-                    "against Product Monographs."
+                    "Reference values come directly from the frozen DPD source. "
+                    "They are not Product Monograph labels and were not "
+                    "cross-validated against monographs."
                 ),
                 (
                     "This release alone cannot support a general Health "
@@ -617,7 +620,8 @@ def _build_manifest(
                 ),
                 (
                     "Product families with conflicting French brand "
-                    "names across variants, pending manual adjudication."
+                    "names across variants that cannot be represented "
+                    "unambiguously by the scalar brand_name contract."
                 ),
             ],
             "strata": list(ALL_STRATUM_ORDER),

@@ -50,7 +50,7 @@ Holm correction limits false positives when several model pairs are tested.
 
 ## Model Selection Policy
 
-_Constraint-aware selection is disabled. The result uses the quality-only statistical recommendation._
+_Constraint-aware selection was not applied. The result uses the quality-only statistical comparison._
 
 ### Eligibility and Decision Scores
 

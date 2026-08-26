@@ -25,8 +25,8 @@ from integrations.inspect_ai import (
     DPD_REPLAY_MODEL_IDS,
 )
 
-DEFAULT_REVIEW_PATH = Path(
-    "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv"
+DEFAULT_AUDIT_CASES_PATH = Path(
+    "reports/hc_dpd_census/0.2.0/analysis/selected_cases.csv"
 )
 DEFAULT_HISTORICAL_RELEASE_MANIFEST_PATH = Path(
     "reports/hc_dpd_census/0.2.0/manifest.json"
@@ -190,16 +190,16 @@ def load_dpd_cases(context: DpdContext, scope: str) -> pd.DataFrame:
     if normalized_scope == "full":
         return full
 
-    review_path = context.root / DEFAULT_REVIEW_PATH
-    review = pd.read_csv(review_path, usecols=["case_id"])
-    audit_ids = review["case_id"].astype(str).tolist()
+    audit_cases_path = context.root / DEFAULT_AUDIT_CASES_PATH
+    audit_cases = pd.read_csv(audit_cases_path, usecols=["case_id"])
+    audit_ids = audit_cases["case_id"].astype(str).tolist()
     if len(audit_ids) != len(set(audit_ids)):
-        raise ValueError(f"{review_path} contains duplicate case_id values.")
+        raise ValueError(f"{audit_cases_path} contains duplicate case_id values.")
     indexed = full.set_index(full["case_id"].astype(str), drop=False)
     missing = sorted(set(audit_ids) - set(indexed.index))
     if missing:
         raise ValueError(
-            f"{review_path} references cases absent from the frozen census: "
+            f"{audit_cases_path} references cases absent from the frozen census: "
             f"{missing[:5]}"
         )
     return pd.DataFrame(
@@ -253,15 +253,15 @@ def load_dpd_replay_records(
     *,
     model_ids: Iterable[str] = DPD_REPLAY_MODEL_IDS,
 ) -> list[dict[str, Any]]:
-    review_path = context.root / DEFAULT_REVIEW_PATH
-    review = pd.read_csv(review_path, keep_default_na=False)
+    audit_cases_path = context.root / DEFAULT_AUDIT_CASES_PATH
+    audit_cases = pd.read_csv(audit_cases_path, keep_default_na=False)
     records: list[dict[str, Any]] = []
-    for row in review.to_dict(orient="records"):
+    for row in audit_cases.to_dict(orient="records"):
         for model_id in model_ids:
             output_column = f"{model_id}_model_output"
-            if output_column not in review.columns:
+            if output_column not in audit_cases.columns:
                 raise ValueError(
-                    f"{review_path} has no saved output for {model_id}."
+                    f"{audit_cases_path} has no saved output for {model_id}."
                 )
             records.append(
                 {
@@ -718,7 +718,7 @@ def build_parity_report(context: DpdContext) -> dict[str, Any]:
             f"{context.benchmark.benchmark_id}@{context.benchmark.version}"
         ),
         "benchmark_fingerprint": context.fingerprint,
-        "review_case_count": len(records) // len(DPD_REPLAY_MODEL_IDS),
+        "audit_case_count": len(records) // len(DPD_REPLAY_MODEL_IDS),
         "saved_output_count": len(records),
         "strict_disagreements": strict_disagreements,
         "field_score_disagreements": field_score_disagreements,

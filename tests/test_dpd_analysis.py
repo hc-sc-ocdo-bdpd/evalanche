@@ -194,7 +194,7 @@ def test_classify_dpd_json_error_diagnostic_categories() -> None:
     ) == "generation_error"
 
 
-def test_build_dpd_census_analysis_outputs_review_package(
+def test_build_dpd_census_analysis_outputs_selected_audit_cases(
     tmp_path: Path,
 ) -> None:
     results = _fixture_results()
@@ -209,19 +209,19 @@ def test_build_dpd_census_analysis_outputs_review_package(
         output_dir=output_dir,
         shared_failure_sample=1,
         all_pass_sample=1,
-        review_seed=17,
+        audit_seed=17,
     )
 
     assert result["benchmark"]["case_count"] == 8
     assert result["benchmark"]["product_family_count"] == 4
-    assert result["review_set"] == {
+    assert result["audit_set"] == {
         "seed": 17,
         "primary_model_failures": 1,
         "comparison_only_failures": 1,
         "shared_lower_tier_failure_sample": 1,
         "all_model_pass_sample": 1,
         "total_unique_cases": 4,
-        "status": "pending_human_review",
+        "status": "selected_for_automated_audit",
     }
 
     overview = pd.read_csv(output_dir / "model_overview.csv")
@@ -252,21 +252,20 @@ def test_build_dpd_census_analysis_outputs_review_package(
         "product_2_fr",
     }
 
-    review = pd.read_csv(output_dir / "manual_review.csv")
-    assert len(review) == 4
-    assert review["case_id"].nunique() == 4
-    assert set(review["review_group"]) == {
+    selected = pd.read_csv(output_dir / "selected_cases.csv")
+    assert len(selected) == 4
+    assert selected["case_id"].nunique() == 4
+    assert set(selected["selection_group"]) == {
         "primary_model_failure",
         "comparison_only_failure",
         "lower_tier_shared_failure_sample",
         "all_model_pass_sample",
     }
-    assert set(review["review_status"]) == {"pending"}
 
     first_manifest = (
         output_dir / "analysis_manifest.json"
     ).read_bytes()
-    first_review = (output_dir / "manual_review.csv").read_bytes()
+    first_selected = (output_dir / "selected_cases.csv").read_bytes()
     build_dpd_census_analysis(
         root_path=tmp_path,
         results_path=results_path,
@@ -274,14 +273,14 @@ def test_build_dpd_census_analysis_outputs_review_package(
         output_dir=output_dir,
         shared_failure_sample=1,
         all_pass_sample=1,
-        review_seed=17,
+        audit_seed=17,
     )
     assert (
         output_dir / "analysis_manifest.json"
     ).read_bytes() == first_manifest
     assert (
-        output_dir / "manual_review.csv"
-    ).read_bytes() == first_review
+        output_dir / "selected_cases.csv"
+    ).read_bytes() == first_selected
 
 
 def test_validate_results_rejects_invalid_contracts() -> None:
@@ -341,7 +340,7 @@ def test_analysis_cli_defaults() -> None:
     assert args.shared_failure_sample == 25
     assert args.all_pass_sample == 25
 
-    audit_args = build_parser().parse_args(["audit-dpd-review"])
-    assert audit_args.command == "audit-dpd-review"
+    audit_args = build_parser().parse_args(["audit-dpd-evidence"])
+    assert audit_args.command == "audit-dpd-evidence"
     assert audit_args.output.endswith("evidence_audit.csv")
     assert audit_args.summary.endswith("evidence_audit_summary.json")

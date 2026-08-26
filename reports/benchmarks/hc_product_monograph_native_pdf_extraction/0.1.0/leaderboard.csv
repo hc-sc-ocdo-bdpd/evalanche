@@ -1,1 +1,5 @@
-rank,ranking_status,model_id,model,run_id,cases,passed_cases,failed_cases,pass_rate,average_field_score,generation_failure_rate,total_cost_usd,average_cost_usd,median_latency_seconds,p95_latency_seconds
+rank,result_status,model_id,model,run_id,cases,passed_cases,failed_cases,pass_rate,average_field_score,generation_failure_rate,total_cost_usd,average_cost_usd,median_latency_seconds,p95_latency_seconds,en_cases,en_pass_rate,fr_cases,fr_pass_rate
+,descriptive,gpt_5_4_mini,GPT-5.4 Mini,3cf7a456fd66d4af,80,42,38,0.525,0.859375,0.0,2.3589097500000005,0.029486371875000007,5.928959602000077,10.294378175599716,40,0.525,40,0.525
+,descriptive,gpt_5_6_luna,GPT-5.6 Luna,ea64b35311e02af6,80,52,28,0.65,0.884375,0.0,3.143971,0.0392996375,6.2605391170000075,10.038790974649942,40,0.725,40,0.575
+,descriptive,gpt_5_6_sol,GPT-5.6 Sol,e47f4e7cac66d34b,80,55,25,0.6875,0.90625,0.0,15.734405000000002,0.19668006250000003,6.65792145599994,10.530679745899844,40,0.675,40,0.7
+,descriptive,gpt_5_6_terra,GPT-5.6 Terra,89b2c5c20a53a63a,80,56,24,0.7,0.9125,0.0,7.8578725,0.09822340625,5.858252422000078,9.895287267249907,40,0.75,40,0.65

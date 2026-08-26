@@ -1,7 +1,7 @@
 # Health Canada DPD census analysis and validation
 
 This workflow turns the retained four-model case results into a compact,
-source-controlled analysis release, a structured review set, and a
+source-controlled analysis release, a deterministic selected-case set, and a
 reproducible evidence audit. It makes no model calls and does not alter the
 deterministic benchmark score.
 
@@ -41,8 +41,8 @@ docker compose run --rm evalanche \
 
 The command reads saved results, writes the compact release under
 `reports/hc_dpd_census/0.2.0/analysis/`, and prints
-`READY FOR HUMAN ADJUDICATION`. Repeating it with unchanged inputs produces
-the same review selection and output hashes.
+`ANALYSIS COMPLETE`. Repeating it with unchanged inputs produces the same
+selected cases and output hashes.
 
 Useful optional controls are:
 
@@ -54,7 +54,7 @@ Useful optional controls are:
 --comparison-model
 --shared-failure-sample
 --all-pass-sample
---review-seed
+--audit-seed
 ```
 
 Changing models or sample settings creates a different analysis protocol and
@@ -62,24 +62,24 @@ must be recorded with its output release.
 
 ## Audit the selected evidence
 
-Run the independent deterministic audit after generating the review set:
+Run the independent deterministic audit after generating the selected-case set:
 
 ```bash
-python -m evalanche.cli audit-dpd-review
+python -m evalanche.cli audit-dpd-evidence
 ```
 
 In Docker:
 
 ```bash
 docker compose run --rm evalanche \
-  python -m evalanche.cli audit-dpd-review
+  python -m evalanche.cli audit-dpd-evidence
 ```
 
 The audit rebuilds the selected cases from the frozen marketed DPD archive,
 parses each expected answer independently from the rendered source, and
 rescores all 420 selected model outputs with the configured canonical JSON
-contract. It records decisions separately from the immutable evidence
-worksheet and refreshes the analysis and release integrity manifests. No model
+contract. It records the completed verification separately from the selected-case
+evidence and refreshes the analysis and release integrity manifests. No model
 calls are made.
 
 ## Outputs
@@ -92,8 +92,8 @@ calls are made.
 | `error_taxonomy.csv` | Strict failures grouped by diagnostic mechanism |
 | `pairwise_tradeoffs.csv` | Paired outcomes and observed incremental cost |
 | `frontier_cases.csv` | Every case failed by Sol, Terra, or both |
-| `manual_review.csv` | Immutable selected-case evidence worksheet |
-| `evidence_audit.csv` | Completed automated decisions for all selected review cases |
+| `selected_cases.csv` | Deterministically selected cases and model evidence |
+| `evidence_audit.csv` | Completed automated verification for all selected cases |
 | `evidence_audit_summary.json` | Audit inputs, hashes, verification counts, and outcomes |
 | `EVIDENCE_AUDIT.md` | Human-readable audit result and interpretation |
 | `analysis_manifest.json` | Input, configuration, method, sampling, and output integrity evidence |
@@ -128,9 +128,9 @@ The resulting sensitivity rates are upper bounds under hypothetical repair.
 They do not change the strict result and do not predict what an
 API-enforced structured-output run would produce.
 
-## Review and validation protocol
+## Selected-case validation protocol
 
-The default 105-case worksheet includes:
+The default 105-case audit set includes:
 
 1. all 13 Sol strict failures;
 2. all 42 cases passed by Sol and failed by Terra;
@@ -138,9 +138,9 @@ The default 105-case worksheet includes:
    lower-cost models;
 4. 25 deterministic, language-and-complexity-stratified all-model passes.
 
-Model evidence columns in `manual_review.csv` are immutable review evidence.
-The automated audit writes its decisions to `evidence_audit.csv`, keyed by
-`review_id` and `case_id`, rather than overwriting the worksheet.
+Model evidence in `selected_cases.csv` records the deterministic selection.
+The automated audit writes verification results to `evidence_audit.csv`, keyed
+by `audit_case_id` and `case_id`.
 
 The audit checks:
 
@@ -153,8 +153,8 @@ The audit checks:
 
 The completed audit retained all 105 selected results. It found no expected
 answer corrections, case exclusions, scoring-rule changes, or strict-score
-disagreements. Independent human sign-off is not claimed. A reviewer can add
-that layer later without changing or disguising the automated provenance.
+disagreements. Independent human sign-off is not claimed. The stated
+validation claim is limited to the completed automated checks above.
 
 ## Current interpretation
 
@@ -165,10 +165,9 @@ of the official DPD label. The strict leaderboard is therefore unchanged.
 
 Mini and Luna have similar strict accuracy but different language,
 complexity, and field patterns. Most of their failures are structural JSON
-shape errors. A controlled API-enforced structured-output experiment is the
-appropriate follow-up if a lower-cost production option remains important.
+shape errors. The structural-error pattern shows why strict and field-level results should
+remain visible together.
 
-This structured DPD benchmark is saturated for the frontier models. After
-the versioned leaderboard, the next benchmark should test bilingual
-extraction from unstructured Product Monographs. Evalanche does not need to
-turn the leaderboard into a formal model recommendation.
+This structured DPD benchmark is saturated for the frontier models. The
+Product Monograph case studies provide the repository's harder unstructured-document conditions. Evalanche reports these task-specific
+measurements without turning them into a universal model recommendation.

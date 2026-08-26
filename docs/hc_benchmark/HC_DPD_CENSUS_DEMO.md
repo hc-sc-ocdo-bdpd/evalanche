@@ -47,7 +47,7 @@ The 7,017 included families cover:
 The 13 excluded families contain different French brand-name values across
 their DPD variants. The current output contract has one scalar `brand_name`.
 Choosing one source value automatically would hide a real source ambiguity, so
-those families are recorded for manual adjudication instead.
+those families are excluded from this benchmark contract.
 
 ## Files
 
@@ -110,10 +110,10 @@ The candidate model or models are declared in
 `configs/candidate_models.yaml`. With the current default, set the Azure
 deployment through `CANDIDATE_MODEL` if needed.
 
-This flat demo configuration predates access-set files. It calls every route
-listed in `configs/candidate_models.yaml`, so remove every route you have not
-explicitly confirmed before running it. For a new comparison, prefer the
-[access-confirmed registry workflow](../local_comparison.md).
+This bounded demo calls every route listed in `configs/candidate_models.yaml`.
+Keep only routes you have explicitly confirmed before running it. For an
+access-scoped task comparison, use the
+[local comparison workflow](../local_comparison.md).
 
 Generate outputs:
 
@@ -240,7 +240,7 @@ does not measure long-document Product Monograph extraction, and it is not a
 general recommendation about which model Health Canada should use.
 
 The DPD census remains useful as a complete extraction coverage and
-operational stress suite. Completed analysis and the later Product Monograph
+operational stress suite. Completed analysis and the Product Monograph
 benchmarks are summarized on the [Health Canada case-study landing
 page](../case_studies/health_canada.md). They support the repository's main
 model-selection guide rather than defining its primary user journey.

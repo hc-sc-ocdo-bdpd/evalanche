@@ -3,7 +3,7 @@
   "benchmark_id": "hc_product_monograph_structured_extraction",
   "benchmark_version": "0.1.0",
   "model_id": "gpt_5_6_luna",
-  "run_id": "f56ab48e8a6eb6a7",
-  "run_metadata_path": "reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/runs/gpt_5_6_luna/f56ab48e8a6eb6a7/run.json",
-  "run_metadata_sha256": "487483ad1f79682de6f245498d345edf9a28d281242ec437e807b99c0e02fdf3"
+  "run_id": "74a5ebd4178eb2a7",
+  "run_metadata_path": "reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/runs/gpt_5_6_luna/74a5ebd4178eb2a7/run.json",
+  "run_metadata_sha256": "a2f2e64b6c09fd380b4431c95fe219dcd61bd8951050f25eb53a8ff967b22f55"
 }

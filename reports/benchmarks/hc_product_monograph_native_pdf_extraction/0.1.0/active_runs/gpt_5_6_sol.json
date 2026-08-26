@@ -1,0 +1,9 @@
+{
+  "bundle_schema_version": "1.0",
+  "benchmark_id": "hc_product_monograph_native_pdf_extraction",
+  "benchmark_version": "0.1.0",
+  "model_id": "gpt_5_6_sol",
+  "run_id": "e47f4e7cac66d34b",
+  "run_metadata_path": "reports/benchmarks/hc_product_monograph_native_pdf_extraction/0.1.0/runs/gpt_5_6_sol/e47f4e7cac66d34b/run.json",
+  "run_metadata_sha256": "03af655e5a5626651f28e46f9df5596e257f1f648f69322e6ab0f9b8b2d97786"
+}

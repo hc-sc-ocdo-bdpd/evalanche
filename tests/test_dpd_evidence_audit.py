@@ -55,7 +55,7 @@ def test_published_dpd_evidence_audit_is_reproducible(
     )
 
     assert result["verification"] == {
-        "review_cases": 105,
+        "audit_cases": 105,
         "source_rebuild_matches": 105,
         "independent_expected_parses_match": 105,
         "model_outputs_rescored": 420,
@@ -72,7 +72,7 @@ def test_published_dpd_evidence_audit_is_reproducible(
 
     audit = pd.read_csv(output_path, keep_default_na=False)
     assert len(audit) == 105
-    assert set(audit["review_status"]) == {"complete"}
+    assert set(audit["audit_status"]) == {"complete"}
     assert set(audit["human_signoff_status"]) == {"not_claimed"}
     assert set(audit["adjudication"]) == {"retain_result"}
 
@@ -96,7 +96,7 @@ def test_default_audit_outputs_refresh_release_manifests(
         "error_taxonomy.csv",
         "pairwise_tradeoffs.csv",
         "frontier_cases.csv",
-        "manual_review.csv",
+        "selected_cases.csv",
     ]
     audit_files = [
         "evidence_audit.csv",
@@ -118,7 +118,7 @@ def test_default_audit_outputs_refresh_release_manifests(
                 "analysis": {
                     "diagnostic_repairs_change_primary_score": False,
                 },
-                "review_set": {"status": "pending_human_review"},
+                "audit_set": {"status": "selected_for_automated_audit"},
                 "published_files": [
                     {
                         "path": (
@@ -158,7 +158,7 @@ def test_default_audit_outputs_refresh_release_manifests(
     summary = {
         "status": "automated_evidence_audit_complete",
         "human_signoff_status": "not_claimed",
-        "verification": {"review_cases": 105},
+        "verification": {"audit_cases": 105},
         "outcomes": {"leaderboard_scores_changed": False},
     }
 
@@ -175,7 +175,7 @@ def test_default_audit_outputs_refresh_release_manifests(
     analysis_manifest = json.loads(
         analysis_manifest_path.read_text(encoding="utf-8")
     )
-    assert analysis_manifest["review_set"]["status"] == (
+    assert analysis_manifest["audit_set"]["status"] == (
         "automated_evidence_audit_complete"
     )
     assert len(analysis_manifest["published_files"]) == 11

@@ -23,8 +23,8 @@ from evalanche.dpd_benchmark import (
 DPD_EVIDENCE_AUDIT_SCHEMA_VERSION = "1.0"
 DPD_EVIDENCE_AUDIT_METHOD_VERSION = "hc_dpd_evidence_audit/1.0"
 DPD_EVIDENCE_AUDIT_DATE = "2026-07-30"
-DPD_EVIDENCE_AUDIT_REVIEW_PATH = Path(
-    "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv"
+DPD_EVIDENCE_AUDIT_CASES_PATH = Path(
+    "reports/hc_dpd_census/0.2.0/analysis/selected_cases.csv"
 )
 DPD_EVIDENCE_AUDIT_CONFIG_PATH = Path(
     "configs/evaluate_hc_dpd_census_all_models.yaml"
@@ -58,7 +58,7 @@ _ANALYSIS_RELEASE_ROLES = {
     "error_taxonomy.csv": "analysis_error_taxonomy",
     "pairwise_tradeoffs.csv": "analysis_pairwise_tradeoffs",
     "frontier_cases.csv": "analysis_frontier_cases",
-    "manual_review.csv": "manual_review_worksheet",
+    "selected_cases.csv": "selected_audit_cases",
     "evidence_audit.csv": "automated_evidence_audit",
     "evidence_audit_summary.json": "evidence_audit_summary",
     "EVIDENCE_AUDIT.md": "evidence_audit_report",
@@ -72,7 +72,7 @@ _ANALYSIS_RELEASE_ORDER = (
     "error_taxonomy.csv",
     "pairwise_tradeoffs.csv",
     "frontier_cases.csv",
-    "manual_review.csv",
+    "selected_cases.csv",
     "evidence_audit.csv",
     "evidence_audit_summary.json",
     "EVIDENCE_AUDIT.md",
@@ -246,11 +246,10 @@ def _refresh_release_manifests(
                 DPD_EVIDENCE_AUDIT_METHOD_VERSION
             ),
             "leaderboard_scores_changed_by_audit": False,
-            "manual_adjudication_complete": False,
             "human_signoff_status": "not_claimed",
         }
     )
-    analysis_manifest.setdefault("review_set", {}).update(
+    analysis_manifest.setdefault("audit_set", {}).update(
         {"status": "automated_evidence_audit_complete"}
     )
     analysis_manifest["evidence_audit"] = {
@@ -292,11 +291,11 @@ def _refresh_release_manifests(
             "human_signoff_status": "not_claimed",
         }
     )
-    release_manifest.setdefault("validation", {}).update(
+    validation = release_manifest.setdefault("validation", {})
+    validation.update(
         {
-            "manual_review_package": "ready",
+            "selected_case_audit": "complete",
             "automated_evidence_audit": "complete",
-            "manual_label_review": "not_performed",
             "human_signoff": "not_claimed",
             "error_adjudication": "complete_automated",
         }
@@ -373,7 +372,7 @@ def parse_rendered_dpd_record(
     """
 
     if language not in _VARIANT_PATTERNS:
-        raise ValueError(f"unsupported DPD review language: {language}")
+        raise ValueError(f"unsupported DPD audit language: {language}")
 
     variants: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
@@ -494,7 +493,7 @@ def _model_order(columns: Sequence[str]) -> list[str]:
         if column.endswith(_MODEL_SUFFIX)
     ]
     if not models:
-        raise ValueError("review worksheet contains no model pass columns")
+        raise ValueError("selected audit cases contain no model pass columns")
     return models
 
 
@@ -506,7 +505,7 @@ def _as_bool(value: Any) -> bool:
         return True
     if normalized in {"false", "0", "no"}:
         return False
-    raise ValueError(f"review pass flag is not boolean: {value!r}")
+    raise ValueError(f"recorded pass flag is not boolean: {value!r}")
 
 
 def _json_list(value: Any) -> list[str]:
@@ -689,17 +688,17 @@ def _rebuild_cases_from_source(
     }
     if len(archive_hashes) != 1 or len(manifest_hashes) != 1:
         raise ValueError(
-            "review rows do not share one frozen source release"
+            "selected audit rows do not share one frozen source release"
         )
     if versions != {"2026.7.2"}:
         raise ValueError(
-            f"unexpected DPD source versions in review: {sorted(versions)}"
+            f"unexpected DPD source versions in selected audit cases: {sorted(versions)}"
         )
     expected_archive_hash = next(iter(archive_hashes))
     actual_archive_hash = sha256_file(archive_path)
     if actual_archive_hash != expected_archive_hash:
         raise ValueError(
-            "frozen marketed DPD archive hash does not match review "
+            "frozen marketed DPD archive hash does not match selected-case "
             "provenance"
         )
 
@@ -726,7 +725,7 @@ def _rebuild_cases_from_source(
     missing = set(review["case_id"]) - set(rebuilt.index)
     if missing:
         raise ValueError(
-            f"source rebuild is missing review cases: {sorted(missing)}"
+            f"source rebuild is missing selected audit cases: {sorted(missing)}"
         )
     return rebuilt
 
@@ -792,13 +791,13 @@ def _case_decision(
     models: Sequence[str],
 ) -> dict[str, str]:
     focus_models = _REVIEW_GROUP_FOCUS.get(
-        str(row["review_group"]),
+        str(row["selection_group"]),
         tuple(models),
     )
     missing_focus = set(focus_models) - set(models)
     if missing_focus:
         raise ValueError(
-            "review worksheet is missing focus models: "
+            "selected audit cases are missing focus models: "
             f"{sorted(missing_focus)}"
         )
     failed_models = [
@@ -810,7 +809,7 @@ def _case_decision(
         return {
             "error_owner": "none",
             "operational_severity": "none",
-            "review_notes": (
+            "audit_notes": (
                 "The frozen-source rebuild, independent expected-answer "
                 "parse, and fresh strict scoring all agree. This "
                 "all-model pass remains a valid control result."
@@ -871,57 +870,57 @@ def _case_decision(
     return {
         "error_owner": "model",
         "operational_severity": severity,
-        "review_notes": notes,
+        "audit_notes": notes,
     }
 
 
 def build_dpd_evidence_audit(
     *,
     root_path: str | Path,
-    review_path: str | Path = DPD_EVIDENCE_AUDIT_REVIEW_PATH,
+    cases_path: str | Path = DPD_EVIDENCE_AUDIT_CASES_PATH,
     config_path: str | Path = DPD_EVIDENCE_AUDIT_CONFIG_PATH,
     archive_path: str | Path = DPD_EVIDENCE_AUDIT_ARCHIVE_PATH,
     output_path: str | Path = DPD_EVIDENCE_AUDIT_OUTPUT_PATH,
     summary_path: str | Path = DPD_EVIDENCE_AUDIT_SUMMARY_PATH,
 ) -> dict[str, Any]:
     root = Path(root_path).resolve()
-    review_file = _resolve(root, review_path)
+    cases_file = _resolve(root, cases_path)
     config_file = _resolve(root, config_path)
     archive_file = _resolve(root, archive_path)
     output_file = _resolve(root, output_path)
     summary_file = _resolve(root, summary_path)
 
-    for path in (review_file, config_file, archive_file):
+    for path in (cases_file, config_file, archive_file):
         if not path.is_file():
             raise FileNotFoundError(f"evidence audit input not found: {path}")
 
-    review = pd.read_csv(review_file, keep_default_na=False)
-    if review.empty or review["case_id"].duplicated().any():
+    selected = pd.read_csv(cases_file, keep_default_na=False)
+    if selected.empty or selected["case_id"].duplicated().any():
         raise ValueError(
-            "review worksheet must contain unique, non-empty cases"
+            "selected audit cases must contain unique, non-empty cases"
         )
-    models = _model_order(review.columns)
+    models = _model_order(selected.columns)
     rebuilt = _rebuild_cases_from_source(
         root,
-        review,
+        selected,
         archive_file,
     )
-    _validate_source_and_expected(review, rebuilt)
+    _validate_source_and_expected(selected, rebuilt)
     _validate_scores(
-        review,
+        selected,
         models=models,
         config_path=config_file,
     )
 
     records: list[dict[str, str]] = []
-    for _, row in review.iterrows():
+    for _, row in selected.iterrows():
         decision = _case_decision(row, models=models)
         records.append(
             {
-                "review_id": str(row["review_id"]),
+                "audit_case_id": str(row["audit_case_id"]),
                 "case_id": str(row["case_id"]),
-                "review_status": "complete",
-                "review_mode": "automated_evidence_audit",
+                "audit_status": "complete",
+                "audit_method": DPD_EVIDENCE_AUDIT_METHOD_VERSION,
                 "source_rebuild_verified": "yes",
                 "source_record_correct": "yes",
                 "expected_independent_parse_verified": "yes",
@@ -933,10 +932,9 @@ def build_dpd_evidence_audit(
                     "operational_severity"
                 ],
                 "adjudication": "retain_result",
-                "reviewer": DPD_EVIDENCE_AUDIT_METHOD_VERSION,
-                "review_date": DPD_EVIDENCE_AUDIT_DATE,
+                "audit_date": DPD_EVIDENCE_AUDIT_DATE,
                 "human_signoff_status": "not_claimed",
-                "review_notes": decision["review_notes"],
+                "audit_notes": decision["audit_notes"],
             }
         )
     audit = pd.DataFrame(records)
@@ -950,17 +948,17 @@ def build_dpd_evidence_audit(
         "method_version": DPD_EVIDENCE_AUDIT_METHOD_VERSION,
         "status": "automated_evidence_audit_complete",
         "human_signoff_status": "not_claimed",
-        "review_date": DPD_EVIDENCE_AUDIT_DATE,
+        "audit_date": DPD_EVIDENCE_AUDIT_DATE,
         "inputs": {
-            "review_path": _relative_path(review_file, root),
-            "review_sha256": sha256_file(review_file),
+            "selected_cases_path": _relative_path(cases_file, root),
+            "selected_cases_sha256": sha256_file(cases_file),
             "config_path": _relative_path(config_file, root),
             "config_sha256": sha256_file(config_file),
             "archive_path": _relative_path(archive_file, root),
             "archive_sha256": sha256_file(archive_file),
         },
         "verification": {
-            "review_cases": len(audit),
+            "audit_cases": len(audit),
             "source_rebuild_matches": len(audit),
             "independent_expected_parses_match": len(audit),
             "model_outputs_rescored": len(audit) * len(models),

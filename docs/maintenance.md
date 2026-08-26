@@ -1,125 +1,93 @@
 # Technical maintenance
 
 Evalanche is a versioned model-selection resource and optional evaluation
-toolkit. This guide covers the technical work needed to keep its evidence,
-benchmarks, software, and generated reports reproducible.
+toolkit. Maintenance should preserve current guidance, reproducible evidence,
+and safe execution without turning the repository into a project log.
 
-## Routine offline checks
+## Routine checks
 
-Run these checks before relying on the repository after an update:
+Use the supported Docker environment from `docs/setup.md`:
 
 ```bash
-python -m evalanche.cli --version
-python -m evalanche.cli registry-validate --root .
-python -m evalanche.cli evidence-status --root . --check
-ruff check .
-coverage run -m pytest
-coverage report --fail-under=80
+docker compose run --rm evalanche python -m evalanche.cli --version
+docker compose run --rm evalanche python -m evalanche.cli registry-validate --root .
+docker compose run --rm evalanche python -m evalanche.cli evidence-status --root . --check
+docker compose run --rm evalanche sh -lc "python -m pip install --no-cache-dir -r requirements-dev.txt && ruff check . && coverage run -m pytest && coverage report --fail-under=80"
 ```
 
-Use the Docker commands in `docs/setup.md` for the supported clean
-environment. Immediately before a new comparison, confirm the model route,
-provider interface, exact model version, price, quota, and required modality.
+Before a new comparison, separately confirm the current model route, provider
+interface, model version, capability support, price, quota, and access.
 
 ## Update triggers
 
-Review the affected artifacts when any of these changes:
+Review affected material when:
 
-- an evidence source reaches its `review_by` date or publishes a new version;
-- a model, deployment, provider interface, or price changes;
+- a curated evidence source reaches its review date or changes materially;
+- a model, deployment, provider interface, capability, or price changes;
 - a source dataset, parser, or schema changes;
-- a benchmark prompt, input representation, scorer, rubric, or judge contract
-  changes;
+- a benchmark prompt, input contract, scorer, rubric, or judge contract changes;
 - a dependency or container change affects execution or generated output;
-- a result claim no longer matches the evidence available.
+- a published claim no longer matches its evidence.
 
-## Versioning rules
+## Versioning and immutability
 
-Create a new benchmark or dataset version when any of these changes
-materially:
+Create a new dataset or benchmark version when a material part of the measured
+contract changes, including case membership, reference outputs, prompt, input
+representation, scorer, rubric, judge contract, or intended construct.
 
-- case membership or source snapshot;
-- expected output or label;
-- prompt or input representation;
-- scorer, normalization, rubric, or judge contract;
-- measured construct or intended interpretation;
-- serving setup when it affects comparability.
+Do not mix incompatible result fingerprints. A documentation or reporting-only
+software change can preserve evaluator compatibility when evaluation semantics
+are unchanged.
 
-Do not edit a frozen benchmark release in place. Do not merge results with
-different compatibility fingerprints. A software-only release may keep the
-evaluator compatibility version stable when dataset, prompt, scorer, and
-evaluation semantics are unchanged.
-
-Use `ranking.enabled: false` with a clear reason when a benchmark supports
-descriptive measurements but not an ordered claim. `frozen` means
-reproducible, not automatically validated.
+`frozen` means the release contract is reproducible. It does not by itself say
+whether results should be ranked. Use `reporting.mode: descriptive` when the
+measurement is useful but the evidence does not justify an official ordering.
 
 ## Evidence catalog
 
-After reviewing a source, update `docs/evidence/catalog.yaml` with the review
-date, next review date, version scope, trigger, and status. Mark replaced
-sources `superseded` instead of deleting their history. Regenerate the status
-page with:
+After reviewing a public source, update `docs/evidence/catalog.yaml` with its
+review date, next review date, version scope, trigger, and current status.
+Supersession is appropriate for an external source that has genuinely been
+replaced, because the catalog records evidence lineage rather than project
+history.
 
 ```bash
-python -m evalanche.cli evidence-status --root . --as-of YYYY-MM-DD --write
-python -m evalanche.cli evidence-status --root . --check
+docker compose run --rm evalanche python -m evalanche.cli evidence-status --root . --as-of YYYY-MM-DD --write
+docker compose run --rm evalanche python -m evalanche.cli evidence-status --root . --check
 ```
 
-These commands validate committed metadata and links. They do not browse the
-web or make provider calls, so the source itself must still be reviewed.
+These commands validate local metadata and links. They do not substitute for
+reviewing the external source itself.
 
-## Adding a model or task
+## Models and tasks
 
 A normal model route is one manifest under `configs/models/`. Confirm actual
-access separately through explicit model selection or a dated access set.
-Never add a model to generic Python logic.
+access separately, never encode current model IDs into generic analysis code.
 
-Start a task with `init-task`, replace all placeholders, confirm the task
-review fields, validate it, preflight the smallest tier, and review projected
-cost before any provider call. Add a sanitized reusable task to the main
-registry only after its data, prompt, scorer, and intended interpretation are
-documented.
+For a new task, use `init-task`, replace placeholders, validate the bundle,
+preflight the smallest tier, and inspect projected cost before provider calls.
+Only move a reusable task into the main registry after its data, prompt,
+scorer, limitations, and intended interpretation are documented.
 
 ## Release checks
 
-1. Review the diff for credentials, endpoint URLs, local paths, raw provider
-   outputs, restricted data, or unintended generated files.
-2. Run lint, tests, coverage, registry validation, evidence validation,
-   relevant dataset verification, and repository-relative link checks.
-3. Build the Docker image from a clean tracked-file export and repeat the
-   offline gates inside it.
-4. Rebuild leaderboards and inspect their HTML, Markdown, CSV, and JSON
-   surfaces.
-5. Confirm that eligible, provisional, incomplete, failed, and retired results
-   have the intended rank behavior.
-6. Update `CHANGELOG.md`, the package version, affected benchmark
-   documentation, and the compatibility version only when evaluation
-   semantics changed.
-7. Tag or otherwise identify the exact source revision used for the release.
+1. Review the diff for credentials, private endpoints, local paths, raw provider
+   outputs, restricted data, and accidental generated files.
+2. Run lint, tests, coverage, registry validation, evidence validation, and
+   relevant dataset verification.
+3. Check repository-relative Markdown links.
+4. Build benchmark result surfaces and inspect HTML, Markdown, CSV, and JSON.
+5. Confirm ranked, descriptive, and incomplete results display as intended.
+6. Verify copy-and-paste commands from a clean checkout.
+7. Record the exact source revision used for any externally shared release.
 
 ## Security and failure handling
 
-- Stop a run if credentials, restricted data, unexpected provider routing,
-  excessive cost, or unexplained source drift is observed.
-- Preserve sanitized logs and hashes needed to diagnose the failure, but do
-  not commit secrets or restricted content.
-- Rotate exposed credentials through the platform that issued them.
-- Treat dependency, container, and provider-interface changes as versioned
-  maintenance, not silent updates.
+Stop a run if credentials, restricted data, unexpected provider routing,
+excessive cost, or unexplained source drift is observed. Preserve only the
+sanitized logs and hashes needed for diagnosis. Rotate exposed credentials
+through the issuing platform.
 
-The repository does not currently assert a public open-source license. Confirm
-appropriate terms before external distribution or accepting outside
+The repository does not assert a public open-source licence. Confirm the
+appropriate distribution terms before external release or outside
 contributions.
-
-## Retiring artifacts
-
-Retire a benchmark when its evidence is no longer maintained, its source or
-route cannot be reproduced, or its claim is no longer appropriate. Preserve
-the minimal manifests, fingerprints, summaries, and limitation notes needed
-to interpret historical results. Remove unfinished data and active work queues
-that are not part of the supported resource.
-
-If the repository itself is archived, preserve a tagged source release, the
-container definition, dependency files, evidence catalog, compact result
-bundles, generated reports, and changelog.

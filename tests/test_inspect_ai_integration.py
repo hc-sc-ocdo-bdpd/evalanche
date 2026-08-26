@@ -36,7 +36,7 @@ def test_saved_output_parity_is_exact() -> None:
     report = build_parity_report(load_dpd_context(ROOT))
 
     assert report["status"] == "passed"
-    assert report["review_case_count"] == 105
+    assert report["audit_case_count"] == 105
     assert report["saved_output_count"] == 420
     assert report["strict_disagreements"] == 0
     assert report["field_score_disagreements"] == 0
@@ -155,10 +155,10 @@ def test_historical_source_membership_and_frozen_inputs_are_strict() -> None:
 def test_published_score_bundles_are_hash_checked() -> None:
     context = load_dpd_context(ROOT)
     expected_runs = {
-        "gpt_5_4_mini": "21a2133d90f17f63",
-        "gpt_5_6_luna": "28add3264b58f7e7",
-        "gpt_5_6_terra": "4262a9bcd13c8ecd",
-        "gpt_5_6_sol": "b127e027b3f34940",
+        "gpt_5_4_mini": "04fa764a984f83cb",
+        "gpt_5_6_luna": "767aefab5a619b9d",
+        "gpt_5_6_terra": "d4ebac8c5dbab38f",
+        "gpt_5_6_sol": "c865eb5dd3b49dff",
     }
 
     for model_id, run_id in expected_runs.items():

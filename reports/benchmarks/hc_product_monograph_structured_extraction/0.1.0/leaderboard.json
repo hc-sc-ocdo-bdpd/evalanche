@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.2",
+  "schema_version": "1.3",
   "benchmark": {
     "benchmark_id": "hc_product_monograph_structured_extraction",
     "version": "0.1.0",
@@ -9,10 +9,10 @@
   "models": [
     {
       "rank": null,
-      "ranking_status": "provisional",
+      "result_status": "descriptive",
       "model_id": "gpt_5_6_luna",
       "model": "GPT-5.6 Luna",
-      "run_id": "f56ab48e8a6eb6a7",
+      "run_id": "74a5ebd4178eb2a7",
       "cases": 80,
       "passed_cases": 56,
       "failed_cases": 24,
@@ -30,10 +30,10 @@
     },
     {
       "rank": null,
-      "ranking_status": "provisional",
+      "result_status": "descriptive",
       "model_id": "gpt_5_6_sol",
       "model": "GPT-5.6 Sol",
-      "run_id": "513c0c9463fa167b",
+      "run_id": "2c260db283ea9659",
       "cases": 80,
       "passed_cases": 64,
       "failed_cases": 16,
@@ -51,10 +51,10 @@
     },
     {
       "rank": null,
-      "ranking_status": "provisional",
+      "result_status": "descriptive",
       "model_id": "gpt_5_6_terra",
       "model": "GPT-5.6 Terra",
-      "run_id": "be315a65dafa8106",
+      "run_id": "88d09dd67a14dde5",
       "cases": 80,
       "passed_cases": 56,
       "failed_cases": 24,
@@ -72,10 +72,10 @@
     },
     {
       "rank": null,
-      "ranking_status": "ineligible",
+      "result_status": "ineligible",
       "model_id": "gpt_5_4_mini",
       "model": "GPT-5.4 Mini",
-      "run_id": "a1777bac4840b9fe",
+      "run_id": "fc1146650965e501",
       "cases": 80,
       "passed_cases": 0,
       "failed_cases": 80,
@@ -426,9 +426,9 @@
       "paired_net_wins_a": 8
     }
   ],
-  "ranking_policy": {
-    "enabled": false,
-    "reason": "Reference labels were not independently human validated. This frozen pilot is retained as permanently provisional development evidence.",
-    "method": "Strict case pass rate among complete runs only. Runs with any generation failures or unscored cases are ineligible. Cost, latency, reliability, and slice metrics are descriptive."
+  "reporting_policy": {
+    "mode": "descriptive",
+    "reason": "Reference labels have complete automated source-page evidence but no independent human sign-off. Results are useful for method and tradeoff analysis, but Evalanche does not assign an official rank.",
+    "method": "Strict case pass rate among complete runs. Cost, latency, reliability, and slice metrics remain separate. Descriptive benchmarks show observed results without assigning an official rank."
   }
 }

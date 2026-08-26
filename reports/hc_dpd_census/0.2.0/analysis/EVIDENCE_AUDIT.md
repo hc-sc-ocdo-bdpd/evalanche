@@ -3,7 +3,7 @@
 **Status:** Automated evidence audit complete. Independent human sign-off is
 not claimed.
 
-The 105 selected review cases were audited without model calls. The audit:
+The 105 selected cases were audited without model calls. The audit:
 
 - rebuilt every selected input, expected answer, and provenance record from
   the frozen marketed DPD archive;
@@ -12,7 +12,7 @@ The 105 selected review cases were audited without model calls. The audit:
 - rescored all 420 selected model outputs using an independent implementation
   of the configured canonical comparison rules; and
 - assigned error ownership, operational severity, and an adjudication while
-  preserving the original review evidence.
+  preserving the original selected-case evidence.
 
 ## Result
 
@@ -50,17 +50,16 @@ remains ahead of Terra by 35 complete records, not 10.
 ## Administrative source text
 
 The case containing the ingredient label prefix `(FR)` was also retained. This
-benchmark measures fidelity to frozen source labels. A future production task
-may intentionally normalize administrative markers, but that would be a
-different task contract and should not retroactively change this leaderboard.
+benchmark measures fidelity to frozen source labels. A task that intentionally normalizes administrative markers would use a
+different scoring contract; this leaderboard preserves the frozen source labels.
 
 ## Provenance
 
 Detailed case decisions are in `evidence_audit.csv`. Machine-readable hashes,
 verification counts, and aggregate outcomes are in
-`evidence_audit_summary.json`. Running `audit-dpd-review` with the default
+`evidence_audit_summary.json`. Running `audit-dpd-evidence` with the default
 paths refreshes both the analysis manifest and the enclosing release manifest.
 
 The audit is sufficient to support the versioned benchmark leaderboard as an
-automatically validated artifact. It must not be described as independent
-human validation unless a person later reviews and signs off on the evidence.
+automatically validated artifact. Independent human validation is not claimed; the completed claim is automated
+evidence validation against the frozen source and scoring contract.

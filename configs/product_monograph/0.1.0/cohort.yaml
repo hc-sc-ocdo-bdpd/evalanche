@@ -9,7 +9,7 @@ source_dpd_dataset:
 selection:
   seed: "20260730"
   method: >-
-    Begin with the frozen 40-product DPD pilot, require distinct official
+    Begin with the frozen 40-product DPD sample, require distinct official
     English and French PDFs, exclude monographs whose product scope does not
     align with the selected DPD family, then fill each split and stratum quota
     using SHA-256(seed|product_id) order.

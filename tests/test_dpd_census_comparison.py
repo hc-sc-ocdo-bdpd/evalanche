@@ -137,7 +137,7 @@ def test_full_census_configs_are_separate_resumable_and_guarded(
             generation.generation.cost_preflight_sample_path
             == Path(
                 "data/generated/"
-                f"hc_dpd_comparison_500_gpt_5_6_{tier}_outputs.csv"
+                f"hc_dpd_census_demo_gpt_5_6_{tier}_outputs.csv"
             )
         )
         assert (

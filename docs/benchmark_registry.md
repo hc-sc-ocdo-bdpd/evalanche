@@ -1,4 +1,4 @@
-# Benchmark registry and generated leaderboards
+# Benchmark registry and generated results
 
 The registry is the normal Evalanche software workflow for adding models,
 datasets, benchmarks, and completed runs. It replaces benchmark-specific
@@ -14,12 +14,12 @@ The registry composes independent artifacts:
 | Model manifest | Provider route, request settings, version metadata, capabilities, and pricing reference |
 | Access set | Dated confirmation of deployment routes available to the user |
 | Dataset manifest | Source provenance, immutable files, membership, sampling, and splits |
-| Benchmark manifest | Dataset binding, prompt, scoring rules, ranking policy, slices, grouping, runtime settings, and optional run tiers |
+| Benchmark manifest | Dataset binding, prompt, scoring rules, reporting mode, slices, grouping, runtime settings, and optional run tiers |
 | Result bundle | Compatibility fingerprint, compact case scores, operational evidence, and source-result hash |
 
 A model can be added without editing a benchmark. A benchmark can be added
-without editing a model. Generic leaderboard code discovers compatible active
-result bundles and never contains model names or dataset-specific branches.
+without editing a model. Generic reporting code discovers compatible active result bundles and never
+contains model names or dataset-specific branches.
 
 ## Registry locations
 
@@ -68,22 +68,23 @@ The package release version is recorded separately for traceability. A package
 release can improve documentation or reporting without invalidating frozen
 result bundles when the evaluator compatibility contract has not changed.
 
-## Ranking policy
+## Reporting mode
 
-A benchmark may disable official ranking while keeping complete measurements
-visible:
+A benchmark declares whether complete compatible results receive an official
+rank or remain descriptive:
 
 ```yaml
-ranking:
-  enabled: false
-  reason: Reference labels are permanently provisional.
+reporting:
+  mode: descriptive
+  reason: Reference labels lack independent human sign-off.
 ```
 
-A disabled policy requires a nonblank reason. Complete runs are labelled
-`provisional`, receive no numeric rank, and retain their pass rate, field
-score, slices, cost, latency, reliability, and pairwise diagnostics. Incomplete
-or failed runs remain `ineligible`. Freezing inputs preserves reproducibility;
-it does not, by itself, establish label validity or permission to rank.
+`descriptive` requires a reason. Complete runs receive no numeric rank but keep
+their pass rate, field score, slices, cost, latency, reliability, and pairwise
+diagnostics. Incomplete or failed runs remain `ineligible`. Freezing inputs
+preserves reproducibility, it does not by itself establish that ranking is an
+appropriate claim.
+
 
 ## Plan models without calls
 
@@ -116,11 +117,12 @@ required by the benchmark.
 compatible route is not proof that the user can access it. Repeated `--model`
 arguments explicitly confirm access for that command.
 
-## Run a publishable benchmark
+## Run a registered benchmark
 
-Only `ready` and `frozen` benchmarks can register results and publish report
-surfaces. Official rank is assigned only when the benchmark's ranking policy
-is also enabled. After reviewing the plan, run selected models:
+Only `ready` and `frozen` benchmarks can register results. Ranked benchmarks
+assign ranks to complete compatible runs, while descriptive benchmarks publish
+the same measurement surfaces without ranks. After reviewing the plan, run
+selected models:
 
 ```bash
 python -m evalanche.cli run-benchmark \
@@ -370,8 +372,9 @@ Python edit to the engine.
 4. Add a benchmark manifest that binds the dataset to its prompt and scorer.
 5. Validate, plan, and run.
 
-The Product Monograph work proves both text and native-file paths. The frozen
-evidence-window diagnostic uses label-selected page text. The separate draft
-native-PDF benchmark uses hash-verified complete files through the Responses
-API and declares `pdf_input`, `responses_api`, and `vision` as required model
-capabilities. Their input contracts and leaderboards remain separate.
+The Product Monograph case study exercises both text and native-file paths.
+The frozen evidence-window condition uses label-selected page text. The frozen
+full-PDF condition uses hash-verified complete files through the Responses API
+and declares `pdf_input`, `responses_api`, and `vision` as required model
+capabilities. Both use descriptive reporting, and their input contracts and
+result surfaces remain separate.

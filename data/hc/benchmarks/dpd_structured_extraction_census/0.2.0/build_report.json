@@ -134,12 +134,12 @@
     "complex_families_included": true,
     "demo_has_all_strata": true,
     "demo_has_all_required_route_groups": true,
-    "manual_product_monograph_audit_status": "not_started"
+    "reference_source_validation": "frozen_dpd_records"
   },
   "limitations": [
     "Inputs are deterministic renderings of DPD relational records, not Product Monograph documents.",
-    "Thirteen otherwise eligible product families are excluded because their variants contain conflicting French brand names that cannot be represented by the current scalar brand_name field without adjudication.",
-    "Reference values have not yet been manually audited against English and French Product Monographs.",
+    "Thirteen otherwise eligible product families are excluded because conflicting French brand names cannot be represented unambiguously by the scalar brand_name contract.",
+    "Reference values come directly from the frozen DPD source. They are not Product Monograph labels and were not cross-validated against monographs.",
     "The census is a DPD extraction coverage and stress benchmark, not evidence of production Product Monograph extraction performance.",
     "Running every case against a hosted model requires 14,034 calls per model; the 24-case demo view is provided for bounded live demonstrations."
   ]

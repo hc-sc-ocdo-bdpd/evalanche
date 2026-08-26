@@ -10,22 +10,22 @@ import pandas as pd
 from evalanche.registry import BenchmarkManifest, LoadedRegistry
 from evalanche.result_bundle import load_active_bundles
 
-LEADERBOARD_SCHEMA_VERSION = "1.2"
+LEADERBOARD_SCHEMA_VERSION = "1.3"
 
 
-def _ranking_policy(benchmark: BenchmarkManifest) -> dict[str, Any]:
+def _reporting_policy(benchmark: BenchmarkManifest) -> dict[str, Any]:
     return {
-        "enabled": benchmark.ranking.enabled,
-        "reason": benchmark.ranking.reason,
+        "mode": benchmark.reporting.mode,
+        "reason": benchmark.reporting.reason,
         "method": (
-            "Strict case pass rate among complete runs only. Runs with any "
-            "generation failures or unscored cases are ineligible. Cost, "
-            "latency, reliability, and slice metrics are descriptive."
+            "Strict case pass rate among complete runs. Cost, latency, "
+            "reliability, and slice metrics remain separate. Descriptive "
+            "benchmarks show observed results without assigning an official rank."
         ),
     }
 
 
-def _ranking_eligible(bundle: dict[str, Any]) -> bool:
+def _complete_result(bundle: dict[str, Any]) -> bool:
     summary = bundle["metadata"]["summary"]
     return (
         summary.get("generation_failure_rate") == 0
@@ -58,14 +58,14 @@ def _bundle_rows(
     for bundle in bundles:
         metadata = bundle["metadata"]
         summary = metadata["summary"]
-        if not _ranking_eligible(bundle):
-            ranking_status = "ineligible"
-        elif benchmark.ranking.enabled:
-            ranking_status = "eligible"
+        if not _complete_result(bundle):
+            result_status = "ineligible"
+        elif benchmark.reporting.mode == "ranked":
+            result_status = "ranked"
         else:
-            ranking_status = "provisional"
+            result_status = "descriptive"
         row: dict[str, Any] = {
-            "ranking_status": ranking_status,
+            "result_status": result_status,
             "model_id": metadata["model"]["model_id"],
             "model": metadata["model"]["display_name"],
             "run_id": metadata["run_id"],
@@ -98,7 +98,7 @@ def _bundle_rows(
         return pd.DataFrame(
             columns=[
                 "rank",
-                "ranking_status",
+                "result_status",
                 "model_id",
                 "model",
                 "run_id",
@@ -116,20 +116,20 @@ def _bundle_rows(
         )
 
     leaderboard = pd.DataFrame(rows)
-    eligible = leaderboard["ranking_status"] == "eligible"
+    ranked = leaderboard["result_status"] == "ranked"
     leaderboard["rank"] = pd.Series(
         pd.NA,
         index=leaderboard.index,
         dtype="Int64",
     )
-    leaderboard.loc[eligible, "rank"] = (
-        leaderboard.loc[eligible, "pass_rate"]
+    leaderboard.loc[ranked, "rank"] = (
+        leaderboard.loc[ranked, "pass_rate"]
         .rank(method="min", ascending=False)
         .astype("Int64")
     )
     ordered = [
         "rank",
-        "ranking_status",
+        "result_status",
         "model_id",
         "model",
         "run_id",
@@ -145,8 +145,8 @@ def _bundle_rows(
         "p95_latency_seconds",
     ]
     extra = [column for column in leaderboard if column not in ordered]
-    leaderboard["_status_order"] = leaderboard["ranking_status"].map(
-        {"eligible": 0, "provisional": 0, "ineligible": 1}
+    leaderboard["_status_order"] = leaderboard["result_status"].map(
+        {"ranked": 0, "descriptive": 0, "ineligible": 1}
     )
     ordered_frame = leaderboard.sort_values(
         ["_status_order", "rank", "model_id"],
@@ -252,13 +252,13 @@ def _markdown(
         f"Benchmark: `{benchmark.benchmark_id}@{benchmark.version}`",
         "",
     ]
-    if not benchmark.ranking.enabled:
+    if benchmark.reporting.mode == "descriptive":
         lines.extend(
             [
-                "**Ranking is disabled.** Complete results are shown as "
-                "provisional descriptive evidence.",
+                "**Descriptive comparison.** Complete results are shown without "
+                "an official rank.",
                 "",
-                f"Reason: {benchmark.ranking.reason}",
+                f"Reason: {benchmark.reporting.reason}",
                 "",
             ]
         )
@@ -271,32 +271,41 @@ def _markdown(
         )
         return "\n".join(lines)
 
-    lines.extend(
-        [
-            "| Rank | Model | Status | Passed | Pass rate | Field score | "
-            "Generation failures | Cost (USD) | p95 latency (s) |",
-            "|---:|---|---|---:|---:|---:|---:|---:|---:|",
-        ]
-    )
-    for _, row in leaderboard.iterrows():
-        lines.append(
-            "| "
-            + " | ".join(
-                [
-                    "" if pd.isna(row["rank"]) else str(row["rank"]),
-                    str(row["model"]),
-                    str(row["ranking_status"]),
-                    f"{int(row['passed_cases'])}/{int(row['cases'])}",
-                    _format_percent(row["pass_rate"]),
-                    _format_percent(row["average_field_score"]),
-                    _format_percent(row["generation_failure_rate"]),
-                    _format_number(row["total_cost_usd"], 4),
-                    _format_number(row["p95_latency_seconds"], 3),
-                ]
-            )
-            + " |"
+    show_rank = benchmark.reporting.mode == "ranked"
+    if show_rank:
+        lines.extend(
+            [
+                "| Rank | Model | Status | Passed | Pass rate | Field score | "
+                "Generation failures | Cost (USD) | p95 latency (s) |",
+                "|---:|---|---|---:|---:|---:|---:|---:|---:|",
+            ]
         )
-    if benchmark.ranking.enabled:
+    else:
+        lines.extend(
+            [
+                "| Model | Status | Passed | Pass rate | Field score | "
+                "Generation failures | Cost (USD) | p95 latency (s) |",
+                "|---|---|---:|---:|---:|---:|---:|---:|",
+            ]
+        )
+    for _, row in leaderboard.iterrows():
+        values = [
+            str(row["model"]),
+            str(row["result_status"]),
+            f"{int(row['passed_cases'])}/{int(row['cases'])}",
+            _format_percent(row["pass_rate"]),
+            _format_percent(row["average_field_score"]),
+            _format_percent(row["generation_failure_rate"]),
+            _format_number(row["total_cost_usd"], 4),
+            _format_number(row["p95_latency_seconds"], 3),
+        ]
+        if show_rank:
+            values.insert(
+                0,
+                "" if pd.isna(row["rank"]) else str(row["rank"]),
+            )
+        lines.append("| " + " | ".join(values) + " |")
+    if benchmark.reporting.mode == "ranked":
         explanation = (
             "Ranks use strict pass rate. Cost and latency are displayed "
             "separately and are not collapsed into a recommendation score. "
@@ -312,7 +321,11 @@ def _markdown(
     return "\n".join(lines)
 
 
-def _table_html(leaderboard: pd.DataFrame) -> str:
+def _table_html(
+    leaderboard: pd.DataFrame,
+    *,
+    show_rank: bool,
+) -> str:
     if leaderboard.empty:
         return (
             '<div class="empty">No compatible result bundles are '
@@ -322,7 +335,7 @@ def _table_html(leaderboard: pd.DataFrame) -> str:
     columns = [
         ("rank", "Rank"),
         ("model", "Model"),
-        ("ranking_status", "Ranking status"),
+        ("result_status", "Result status"),
         ("passed_cases", "Passed"),
         ("pass_rate", "Strict pass"),
         ("average_field_score", "Field score"),
@@ -333,7 +346,10 @@ def _table_html(leaderboard: pd.DataFrame) -> str:
         ("p95_latency_seconds", "p95 seconds"),
     ]
     columns = [
-        item for item in columns if item[0] in leaderboard.columns
+        item
+        for item in columns
+        if item[0] in leaderboard.columns
+        and (show_rank or item[0] != "rank")
     ]
     header = "".join(
         f'<th data-key="{html.escape(key)}">{html.escape(label)}</th>'
@@ -380,30 +396,30 @@ def _html(
     slices: list[dict[str, Any]],
     pairwise: pd.DataFrame,
 ) -> str:
-    ranking_policy = _ranking_policy(benchmark)
-    if benchmark.ranking.enabled:
-        ranking_notice = ""
+    reporting_policy = _reporting_policy(benchmark)
+    if benchmark.reporting.mode == "ranked":
+        reporting_notice = ""
         reading_note = (
             "Rank uses strict case pass rate among complete runs. Runs with "
             "any generation failures or unscored cases remain visible but "
             "are ineligible for rank."
         )
     else:
-        ranking_notice = (
-            '  <div class="notice"><strong>Ranking is disabled.</strong> '
-            + html.escape(str(benchmark.ranking.reason))
-            + " Complete results are provisional and descriptive.</div>\n"
+        reporting_notice = (
+            '  <div class="notice"><strong>Descriptive comparison.</strong> '
+            + html.escape(str(benchmark.reporting.reason))
+            + " Results are shown without an official rank.</div>\n"
         )
         reading_note = (
-            "No official rank is assigned. Complete results are marked "
-            "provisional; incomplete runs remain ineligible."
+            "No official rank is assigned. Complete results remain descriptive; "
+            "incomplete runs remain ineligible."
         )
     payload = json.dumps(
         {
             "leaderboard": _json_records(leaderboard),
             "slices": slices,
             "pairwise": pairwise.to_dict(orient="records"),
-            "ranking_policy": ranking_policy,
+            "reporting_policy": reporting_policy,
         },
         ensure_ascii=False,
         allow_nan=False,
@@ -468,13 +484,13 @@ def _html(
 </head>
 <body>
 <main>
-  <div class="kicker">Evalanche benchmark leaderboard</div>
+  <div class="kicker">Evalanche benchmark results</div>
   <h1>{html.escape(benchmark.title)}</h1>
   <p class="intro">{html.escape(benchmark.description)}</p>
   <p><code>{html.escape(benchmark.benchmark_id)}@{html.escape(benchmark.version)}</code></p>
-{ranking_notice}  <section class="card">
+{reporting_notice}  <section class="card">
     <h2>Results</h2>
-    <div class="scroll">{_table_html(leaderboard)}</div>
+    <div class="scroll">{_table_html(leaderboard, show_rank=benchmark.reporting.mode == "ranked")}</div>
   </section>
   <section class="card">
     <h2>How to read this</h2>
@@ -528,7 +544,7 @@ def build_leaderboard(
     )
     leaderboard = _bundle_rows(bundles, benchmark)
     eligible_bundles = [
-        bundle for bundle in bundles if _ranking_eligible(bundle)
+        bundle for bundle in bundles if _complete_result(bundle)
     ]
     pairwise = _pairwise(eligible_bundles, benchmark)
     slices = _slice_records(eligible_bundles, benchmark)
@@ -558,7 +574,7 @@ def build_leaderboard(
         "models": _json_records(leaderboard),
         "slices": slices,
         "pairwise": pairwise.to_dict(orient="records"),
-        "ranking_policy": _ranking_policy(benchmark),
+        "reporting_policy": _reporting_policy(benchmark),
     }
     json_path.write_text(
         json.dumps(
@@ -627,8 +643,7 @@ def build_benchmark_index(
             f"<strong>{html.escape(benchmark.title)}</strong>"
             f"<span>{html.escape(key)}</span>"
             f"<span>Status: {html.escape(benchmark.status)}</span>"
-            f"<span>Ranking: "
-            f"{'enabled' if benchmark.ranking.enabled else 'disabled'}</span>"
+            f"<span>Reporting: {html.escape(benchmark.reporting.mode)}</span>"
             f"<span>{model_count} registered model"
             f"{'' if model_count == 1 else 's'}</span>"
             + closing
@@ -638,7 +653,7 @@ def build_benchmark_index(
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Evalanche benchmark leaderboards</title>
+  <title>Evalanche benchmark results</title>
   <style>
     body {{
       margin: 0; background: #f4f7fb; color: #12233f;
@@ -665,7 +680,7 @@ def build_benchmark_index(
 </head>
 <body>
 <main>
-  <h1>Benchmark leaderboards</h1>
+  <h1>Benchmark results</h1>
   <p>
     Versioned, task-specific comparisons built from compatible result
     bundles. Each benchmark keeps quality, cost, latency, and reliability

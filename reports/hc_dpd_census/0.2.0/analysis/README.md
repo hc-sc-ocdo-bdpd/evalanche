@@ -117,7 +117,7 @@ independent human sign-off.
 
 ## Selected-case evidence set
 
-The tracked `manual_review.csv` contains 105 unique cases:
+The tracked `selected_cases.csv` contains 105 unique cases:
 
 - all 13 `gpt_5_6_sol` failures;
 - all 42 cases passed only by `gpt_5_6_sol` within the
@@ -127,9 +127,9 @@ The tracked `manual_review.csv` contains 105 unique cases:
 - a deterministic, language-and-complexity-stratified sample of all-model
   passes.
 
-`manual_review.csv` preserves the immutable selection and model evidence.
-`evidence_audit.csv` records the completed automated decisions separately, so
-the source worksheet does not need to be edited or attributed to a person.
+`selected_cases.csv` preserves the deterministic selection and model evidence.
+`evidence_audit.csv` records the completed automated verification for those
+cases. Neither artifact represents an unfinished human-review queue.
 
 ## Leaderboard interpretation
 
@@ -145,8 +145,8 @@ The published evidence supports these conclusions:
 - Mini and Luna should not be dismissed solely from this condition. Their
   large schema-shape component justifies a separate structured-output
   experiment if a low-cost production route matters.
-- this benchmark is now saturated for frontier models and should be followed
-  by the harder Product Monograph extraction benchmark.
+- this benchmark is saturated for frontier models; the Product Monograph
+  case studies provide the harder unstructured-document conditions.
 
 ## Files
 
@@ -158,8 +158,8 @@ The published evidence supports these conclusions:
 | `error_taxonomy.csv` | Diagnostic failure mechanisms overall and by language |
 | `pairwise_tradeoffs.csv` | Paired outcomes with cost increments |
 | `frontier_cases.csv` | Every case failed by either frontier model |
-| `manual_review.csv` | Immutable selected-case evidence worksheet |
-| `evidence_audit.csv` | Completed automated decisions for all selected cases |
+| `selected_cases.csv` | Deterministically selected cases and model evidence |
+| `evidence_audit.csv` | Completed automated verification for all selected cases |
 | `evidence_audit_summary.json` | Audit inputs, hashes, checks, and outcomes |
 | `EVIDENCE_AUDIT.md` | Human-readable audit result and interpretation |
 | `analysis_manifest.json` | Input and output hashes, methods, and review-set counts |

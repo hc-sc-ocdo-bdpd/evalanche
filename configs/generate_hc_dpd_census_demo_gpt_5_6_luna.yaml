@@ -17,6 +17,6 @@ generation:
   continue_on_error: true
   max_completion_tokens: 900
   max_workers: 4
-  max_requests_per_minute: ${DPD_COMPARISON_RPM:-60}
+  max_requests_per_minute: ${DPD_DEMO_RPM:-60}
   checkpoint_every: 24
   resume: false

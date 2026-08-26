@@ -188,7 +188,7 @@ cells = [
             ANALYSIS_DIR / "pairwise_tradeoffs.csv"
         )
         frontier = pd.read_csv(ANALYSIS_DIR / "frontier_cases.csv")
-        review = pd.read_csv(ANALYSIS_DIR / "manual_review.csv")
+        selected = pd.read_csv(ANALYSIS_DIR / "selected_cases.csv")
         audit = pd.read_csv(ANALYSIS_DIR / "evidence_audit.csv")
 
         overview["model_label"] = overview["model_name"].map(
@@ -198,22 +198,22 @@ cells = [
             MODEL_ORDER
         ].reset_index()
 
-        expected_review_cases = (
-            manifest["review_set"]["primary_model_failures"]
-            + manifest["review_set"]["comparison_only_failures"]
-            + manifest["review_set"][
+        expected_audit_cases = (
+            manifest["audit_set"]["primary_model_failures"]
+            + manifest["audit_set"]["comparison_only_failures"]
+            + manifest["audit_set"][
                 "shared_lower_tier_failure_sample"
             ]
-            + manifest["review_set"]["all_model_pass_sample"]
+            + manifest["audit_set"]["all_model_pass_sample"]
         )
         assert manifest["benchmark"]["case_count"] == 14_034
         assert manifest["source"]["rows"] == 56_136
         assert overview["cases"].eq(14_034).all()
         assert len(frontier) == 55
-        assert len(review) == expected_review_cases == 105
-        assert len(audit) == len(review)
+        assert len(selected) == expected_audit_cases == 105
+        assert len(audit) == len(selected)
         assert audit["case_id"].is_unique
-        assert audit["review_status"].eq("complete").all()
+        assert audit["audit_status"].eq("complete").all()
         assert audit["strict_score_correct"].eq("yes").all()
         assert audit["adjudication"].eq("retain_result").all()
         assert audit["human_signoff_status"].eq("not_claimed").all()
@@ -748,7 +748,7 @@ cells = [
                 "gpt_5_6_sol_mismatched_fields",
                 "gpt_5_6_sol_error_type",
                 "gpt_5_6_terra_passed",
-                "preliminary_review_focus",
+                "diagnostic_focus",
             ]
         ].copy()
         sol_failures.columns = [
@@ -758,7 +758,7 @@ cells = [
             "Mismatched fields",
             "Diagnostic type",
             "Terra passed",
-            "Review focus",
+            "Diagnostic focus",
         ]
         sol_failures["Stratum"] = sol_failures["Stratum"].map(
             STRATUM_LABELS
@@ -808,7 +808,7 @@ cells = [
         """
         ## 6. The selected evidence audit is complete
 
-        The review set is deliberately not a random accuracy sample. It
+        The selected audit set is deliberately not a random accuracy sample. It
         contains every frontier edge case, then adds stratified checks for
         shared lower-tier failures and apparent all-model successes. The
         automated audit rebuilt the cases from the frozen DPD archive,
@@ -818,25 +818,25 @@ cells = [
     ),
     code(
         """
-        review_counts = (
-            review.groupby(
-                ["review_priority", "review_group"],
+        selection_counts = (
+            selected.groupby(
+                ["selection_priority", "selection_group"],
                 as_index=False,
             )
             .size()
-            .sort_values("review_priority")
+            .sort_values("selection_priority")
         )
-        review_counts["review_group"] = (
-            review_counts["review_group"]
+        selection_counts["selection_group"] = (
+            selection_counts["selection_group"]
             .str.replace("_", " ")
             .str.title()
         )
-        review_counts.columns = [
+        selection_counts.columns = [
             "Priority",
-            "Review group",
+            "Selection group",
             "Cases",
         ]
-        show_table(review_counts)
+        show_table(selection_counts)
 
         audit_summary = (
             audit.groupby(
@@ -857,11 +857,10 @@ cells = [
         display(
             HTML(
                 '<div class="status-ready"><b>Audit result:</b> '
-                f'{len(audit)} of {len(review)} cases retained, with '
+                f'{len(audit)} of {len(selected)} cases retained, with '
                 'no label corrections, exclusions, or scoring-rule changes. '
                 f'<code>{ANALYSIS_DIR / "evidence_audit.csv"}</code><br>'
-                'Human sign-off remains optional and is not represented as '
-                'completed.</div>'
+                'Independent human sign-off is not claimed.</div>'
             )
         )
         """

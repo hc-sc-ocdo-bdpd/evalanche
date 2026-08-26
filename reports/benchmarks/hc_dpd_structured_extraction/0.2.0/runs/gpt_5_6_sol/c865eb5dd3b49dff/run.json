@@ -1,0 +1,110 @@
+{
+  "bundle_schema_version": "1.0",
+  "run_id": "c865eb5dd3b49dff",
+  "result_created_at_utc": null,
+  "benchmark": {
+    "benchmark_id": "hc_dpd_structured_extraction",
+    "version": "0.2.0",
+    "title": "Health Canada DPD structured extraction"
+  },
+  "dataset": {
+    "dataset_id": "hc_dpd_structured_extraction_census",
+    "version": "0.2.0"
+  },
+  "model": {
+    "model_id": "gpt_5_6_sol",
+    "display_name": "GPT-5.6 Sol",
+    "provider_route": "azure/gpt-5.6-sol",
+    "provider_model_version": "2026-07-09",
+    "deployment_type": "Global Standard",
+    "resource_region": "Canada East"
+  },
+  "compatibility": {
+    "benchmark_id": "hc_dpd_structured_extraction",
+    "benchmark_version": "0.2.0",
+    "dataset_id": "hc_dpd_structured_extraction_census",
+    "dataset_version": "0.2.0",
+    "cases_sha256": "79ab483ffc12fcd81acc1d6c20cec53446b26945bd4b68ffd8f21804fe95fba1",
+    "dataset_manifest_sha256": "07720f0f7fd74a16b8abc658d80cafd1d05e567de96930a30615b784665ce7c0",
+    "prompt_sha256": "4d1a3a4c913833c2f74c4262db7aff1ccddc8cf9c19704d4d421c45e73de6836",
+    "scoring_sha256": "151b1ad2232497471f6580bdc9039b1eee5b7cc57f70003f2ee7f708d5ab8fc9",
+    "evaluator_version": "0.3.0",
+    "software_version": "0.4.0",
+    "compatibility_sha256": "e94b709718bb277ab5ad2cff776cf23ff593868f009315bcf0d4ef85b8f34517"
+  },
+  "summary": {
+    "cases": 14034,
+    "scored_cases": 14034,
+    "passed_cases": 14021,
+    "failed_cases": 13,
+    "pass_rate": 0.9990736782100613,
+    "average_score": 0.9998842097762577,
+    "generation_failures": 0,
+    "generation_failure_rate": 0.0,
+    "generation_total_cost_usd": 75.51914500000001,
+    "generation_average_cost_usd": 0.005381156120849367,
+    "generation_median_seconds": 3.514387539999916,
+    "generation_p95_seconds": 4.739011844400363,
+    "slices": {
+      "language": {
+        "en": {
+          "cases": 7017,
+          "scored_cases": 7017,
+          "passed_cases": 7009,
+          "pass_rate": 0.9988599116431524,
+          "average_score": 0.9998574889553941
+        },
+        "fr": {
+          "cases": 7017,
+          "scored_cases": 7017,
+          "passed_cases": 7012,
+          "pass_rate": 0.9992874447769702,
+          "average_score": 0.9999109305971213
+        }
+      },
+      "stratum": {
+        "multi_ingredient": {
+          "cases": 3056,
+          "scored_cases": 3056,
+          "passed_cases": 3053,
+          "pass_rate": 0.9990183246073299,
+          "average_score": 0.9998772905759162
+        },
+        "multi_ingredient_multi_variant": {
+          "cases": 338,
+          "scored_cases": 338,
+          "passed_cases": 333,
+          "pass_rate": 0.985207100591716,
+          "average_score": 0.9981508875739645
+        },
+        "multi_variant": {
+          "cases": 4394,
+          "scored_cases": 4394,
+          "passed_cases": 4393,
+          "pass_rate": 0.9997724169321802,
+          "average_score": 0.9999715521165226
+        },
+        "single_ingredient": {
+          "cases": 6246,
+          "scored_cases": 6246,
+          "passed_cases": 6242,
+          "pass_rate": 0.9993595901376882,
+          "average_score": 0.999919948767211
+        }
+      }
+    }
+  },
+  "artifacts": {
+    "case_scores": {
+      "path": "reports/benchmarks/hc_dpd_structured_extraction/0.2.0/runs/gpt_5_6_sol/c865eb5dd3b49dff/case_scores.csv.gz",
+      "sha256": "78a980d5df0a8a4c7faf9b743dddae913a0f72294f8a91c2e1525e4b92fd951e",
+      "bytes": 422467,
+      "rows": 14034
+    },
+    "source_results": {
+      "path": "results/rebundle_dpd_0_2_0/gpt_5_6_sol.csv.gz",
+      "sha256": "78a980d5df0a8a4c7faf9b743dddae913a0f72294f8a91c2e1525e4b92fd951e",
+      "bytes": 422467
+    }
+  }
+}

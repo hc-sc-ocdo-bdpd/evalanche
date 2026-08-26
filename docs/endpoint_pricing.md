@@ -140,13 +140,13 @@ stop:
 
 ```yaml
 generation:
-  cost_preflight_sample_path: data/generated/pilot_outputs.csv
+  cost_preflight_sample_path: data/generated/calibration_outputs.csv
   maximum_estimated_cost_usd: 30.00
   cost_safety_multiplier: 1.50
   request_cost_ceiling_usd: 0.25
 ```
 
-The preflight prices the pilot's observed input and output tokens with the
+The preflight prices the sample's observed input and output tokens with the
 configured endpoint rate, assumes zero cached input tokens, scales the average
 to the pending requests, and applies the safety multiplier. It aborts before
 model calls when the projection exceeds the limit.

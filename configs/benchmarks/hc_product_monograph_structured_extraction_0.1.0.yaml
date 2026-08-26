@@ -3,15 +3,16 @@ benchmark_id: hc_product_monograph_structured_extraction
 version: 0.1.0
 title: Health Canada Product Monograph evidence-window extraction
 description: >-
-  Bilingual extraction from label-selected text windows taken from 80 official
-  English and French Product Monographs representing 40 marketed human-drug
-  product families. This benchmark does not send PDFs to the model.
+  Bilingual structured extraction from source text windows selected to contain
+  the required evidence in 80 official English and French Product Monographs
+  representing 40 marketed human-drug product families.
 status: frozen
-ranking:
-  enabled: false
+reporting:
+  mode: descriptive
   reason: >-
-    Reference labels were not independently human validated. This frozen pilot
-    is retained as permanently provisional development evidence.
+    Reference labels have complete automated source-page evidence but no
+    independent human sign-off. Results are useful for method and tradeoff
+    analysis, but Evalanche does not assign an official rank.
 dataset:
   dataset_id: hc_product_monograph_structured_extraction
   version: 0.1.0
@@ -208,7 +209,7 @@ runtime:
   checkpoint_every: 20
   resume: true
 limitations:
-  - The pilot evaluates extraction from evidence-selected pages, not full-document retrieval.
+  - The evidence-window condition evaluates extraction from evidence-selected pages, not full-document retrieval.
   - DIN, schedule, product status, and sponsor are alignment metadata and are not scored.
   - Independent human label sign-off is not claimed.
   - Results from 40 products do not represent every drug or document format.

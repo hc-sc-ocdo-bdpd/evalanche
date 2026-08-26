@@ -223,9 +223,6 @@ def test_build_report_records_population_and_honest_boundaries() -> None:
         "all_candidate_product_families_included"
     ] is True
     assert report["quality_checks"]["complex_families_included"] is True
-    assert report["quality_checks"][
-        "manual_product_monograph_audit_status"
-    ] == "not_started"
     assert any(
         "not Product Monograph" in limitation
         for limitation in report["limitations"]
@@ -412,7 +409,7 @@ def test_gpt_5_6_sol_configs_are_pinned_guarded_and_separate() -> None:
     assert full.generation.cost_preflight_sample_path == (
         Path(
             "data/generated/"
-            "hc_dpd_comparison_500_gpt_5_6_sol_outputs.csv"
+            "hc_dpd_census_demo_gpt_5_6_sol_outputs.csv"
         )
     )
     assert full.generation.maximum_estimated_cost_usd == 170

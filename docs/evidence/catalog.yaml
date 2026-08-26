@@ -1,5 +1,5 @@
 schema_version: "1.0"
-status_report_as_of: 2026-08-10
+status_report_as_of: 2026-08-26
 
 # Status is a maintenance state, not an evidence-strength grade.
 # Review dates are deliberately shorter for living leaderboards and preprints.

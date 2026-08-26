@@ -33,20 +33,10 @@
       "gpt_5_6_luna"
     ],
     "diagnostic_repairs_change_primary_score": false,
-    "manual_adjudication_complete": false,
     "automated_evidence_audit_complete": true,
     "evidence_audit_method_version": "hc_dpd_evidence_audit/1.0",
     "leaderboard_scores_changed_by_audit": false,
     "human_signoff_status": "not_claimed"
-  },
-  "review_set": {
-    "seed": 20260730,
-    "primary_model_failures": 13,
-    "comparison_only_failures": 42,
-    "shared_lower_tier_failure_sample": 25,
-    "all_model_pass_sample": 25,
-    "total_unique_cases": 105,
-    "status": "automated_evidence_audit_complete"
   },
   "published_files": [
     {
@@ -76,40 +66,49 @@
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/frontier_cases.csv",
-      "size_bytes": 279943,
-      "sha256": "197520f883c389521eb53ffddb8438ac347063bab2faa25e466292e001308ed0"
+      "size_bytes": 280129,
+      "sha256": "dab717a06bd24ccb70405f0ae88d86d77a74e90ecd7d73574de99fde31317f4d"
     },
     {
-      "path": "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv",
-      "size_bytes": 526642,
-      "sha256": "fe423db1dc19e8486688671e5643efbb24ab161af76273a85ffd701e0b7d773e"
+      "path": "reports/hc_dpd_census/0.2.0/analysis/selected_cases.csv",
+      "size_bytes": 525087,
+      "sha256": "6edebc2ded038403ffe6d9982712c9e9a84541f48067c3a148aef16e8d197828"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/README.md",
-      "size_bytes": 9033,
-      "sha256": "d089f988f00a0279f6a89029b2986f0b5fc524e51d65e15ca74098ce7eba77c4"
+      "size_bytes": 9052,
+      "sha256": "9b5e77a2d5855af4e7ce5c4dbab675f55bd278e580497acfe1fad117510acb71"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit.csv",
-      "size_bytes": 38760,
-      "sha256": "63679ba04ed471470e5f240a96b7429f12af8ee8a71d9673935ad840dafcf07a"
+      "size_bytes": 36023,
+      "sha256": "5af91bdc75fab0f98197d6607eb2e5d3d4f507c775298c17c40ddc28809fa26a"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit_summary.json",
-      "size_bytes": 1470,
-      "sha256": "aac07a4a0266c0e567a18272e42cc796bdbb78feb3512dd9d31480e1be341bb6"
+      "size_bytes": 1485,
+      "sha256": "5b1f44a5f093a1d7771fc0b349e221ec4ec8617c4bf04da4bde39f957411bbed"
     },
     {
       "path": "reports/hc_dpd_census/0.2.0/analysis/EVIDENCE_AUDIT.md",
-      "size_bytes": 2664,
-      "sha256": "1e3de25acbf9699192e5f004fe41e4dd78dc97ec1f34bca8c73dc769a16b172a"
+      "size_bytes": 2672,
+      "sha256": "866d12de60b7c2099130af7fb4d346a21ce4244e75c49191ff8e4e3d1860196c"
     }
   ],
+  "audit_set": {
+    "seed": 20260730,
+    "primary_model_failures": 13,
+    "comparison_only_failures": 42,
+    "shared_lower_tier_failure_sample": 25,
+    "all_model_pass_sample": 25,
+    "total_unique_cases": 105,
+    "status": "automated_evidence_audit_complete"
+  },
   "evidence_audit": {
     "status": "automated_evidence_audit_complete",
     "human_signoff_status": "not_claimed",
     "verification": {
-      "review_cases": 105,
+      "audit_cases": 105,
       "source_rebuild_matches": 105,
       "independent_expected_parses_match": 105,
       "model_outputs_rescored": 420,

@@ -1,0 +1,142 @@
+{
+  "bundle_schema_version": "1.0",
+  "run_id": "ea64b35311e02af6",
+  "result_created_at_utc": "2026-08-04T19:28:34.147047+00:00",
+  "benchmark": {
+    "benchmark_id": "hc_product_monograph_native_pdf_extraction",
+    "version": "0.1.0",
+    "title": "Health Canada Product Monograph full-PDF extraction"
+  },
+  "dataset": {
+    "dataset_id": "hc_product_monograph_native_pdf_extraction",
+    "version": "0.1.0"
+  },
+  "model": {
+    "model_id": "gpt_5_6_luna",
+    "display_name": "GPT-5.6 Luna",
+    "provider_route": "azure/gpt-5.6-luna",
+    "provider_model_version": "2026-07-09",
+    "deployment_type": "Global Standard",
+    "resource_region": "Canada East"
+  },
+  "compatibility": {
+    "benchmark_id": "hc_product_monograph_native_pdf_extraction",
+    "benchmark_version": "0.1.0",
+    "dataset_id": "hc_product_monograph_native_pdf_extraction",
+    "dataset_version": "0.1.0",
+    "cases_sha256": "773f0c3dcd9e72c1db42c30b079a85bfa3cd4012356114cac86d984c33172b83",
+    "dataset_manifest_sha256": "ed3ded680de46b104cee3987ae89a565c817df76a0b98376525e15cabd853f69",
+    "prompt_sha256": "fae7d8b4bae86355c01cfd30167465f4a3f694a1aa2f2a416c9aeb53f982fe12",
+    "scoring_sha256": "b7382c4b85d221231c0d59e367953f41744b9aa2dd2e8ab177b84efa2f2e8026",
+    "evaluator_version": "0.3.0",
+    "software_version": "0.4.0",
+    "compatibility_sha256": "1b8986cbc17058d07cbdbe81802839b9e23c1538934d56ff20bd54bcaba20778"
+  },
+  "summary": {
+    "cases": 80,
+    "scored_cases": 80,
+    "passed_cases": 52,
+    "failed_cases": 28,
+    "pass_rate": 0.65,
+    "average_score": 0.884375,
+    "generation_failures": 0,
+    "generation_failure_rate": 0.0,
+    "generation_total_cost_usd": 3.143971,
+    "generation_average_cost_usd": 0.0392996375,
+    "generation_median_seconds": 6.2605391170000075,
+    "generation_p95_seconds": 10.038790974649942,
+    "slices": {
+      "language": {
+        "en": {
+          "cases": 40,
+          "scored_cases": 40,
+          "passed_cases": 29,
+          "pass_rate": 0.725,
+          "average_score": 0.9125
+        },
+        "fr": {
+          "cases": 40,
+          "scored_cases": 40,
+          "passed_cases": 23,
+          "pass_rate": 0.575,
+          "average_score": 0.85625
+        }
+      },
+      "split": {
+        "development": {
+          "cases": 60,
+          "scored_cases": 60,
+          "passed_cases": 37,
+          "pass_rate": 0.6166666666666667,
+          "average_score": 0.8791666666666667
+        },
+        "heldout": {
+          "cases": 20,
+          "scored_cases": 20,
+          "passed_cases": 15,
+          "pass_rate": 0.75,
+          "average_score": 0.9
+        }
+      },
+      "stratum": {
+        "multi_ingredient": {
+          "cases": 20,
+          "scored_cases": 20,
+          "passed_cases": 12,
+          "pass_rate": 0.6,
+          "average_score": 0.8875
+        },
+        "multi_variant": {
+          "cases": 20,
+          "scored_cases": 20,
+          "passed_cases": 18,
+          "pass_rate": 0.9,
+          "average_score": 0.975
+        },
+        "single_ingredient": {
+          "cases": 40,
+          "scored_cases": 40,
+          "passed_cases": 22,
+          "pass_rate": 0.55,
+          "average_score": 0.8375
+        }
+      },
+      "document_complexity": {
+        "long": {
+          "cases": 16,
+          "scored_cases": 16,
+          "passed_cases": 14,
+          "pass_rate": 0.875,
+          "average_score": 0.96875
+        },
+        "medium": {
+          "cases": 40,
+          "scored_cases": 40,
+          "passed_cases": 24,
+          "pass_rate": 0.6,
+          "average_score": 0.875
+        },
+        "short": {
+          "cases": 24,
+          "scored_cases": 24,
+          "passed_cases": 14,
+          "pass_rate": 0.5833333333333334,
+          "average_score": 0.84375
+        }
+      }
+    }
+  },
+  "artifacts": {
+    "case_scores": {
+      "path": "reports/benchmarks/hc_product_monograph_native_pdf_extraction/0.1.0/runs/gpt_5_6_luna/ea64b35311e02af6/case_scores.csv.gz",
+      "sha256": "4a1b9b2165eadd6b0dc730a82b5f7c3748866f0b707cb2b75bafff3069d105d9",
+      "bytes": 3643,
+      "rows": 80
+    },
+    "source_results": {
+      "path": "results/registry_runs/hc_product_monograph_native_pdf_extraction_0_1_0_gpt_5_6_luna/evaluation.csv",
+      "sha256": "b78abc79c8991dc50b3dbca10fba43e1d7a9473a0ed1fcf80b5e633b47cda4ce",
+      "bytes": 256983
+    }
+  }
+}

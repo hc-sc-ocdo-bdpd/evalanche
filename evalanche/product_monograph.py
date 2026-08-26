@@ -45,19 +45,11 @@ PM_NATIVE_PDF_OUTPUT_DIR = Path(
     "data/hc/benchmarks/product_monograph_native_pdf_extraction/0.1.0"
 )
 PM_NATIVE_PDF_CASES_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "cases.csv.gz"
-PM_NATIVE_PDF_REVIEW_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "label_review.csv"
 PM_NATIVE_PDF_REPORT_PATH = PM_NATIVE_PDF_OUTPUT_DIR / "build_report.json"
 PM_NATIVE_PDF_MANIFEST_PATH = Path(
     "configs/datasets/hc_product_monograph_native_pdf_extraction_0.1.0_manifest.yaml"
 )
 PM_NATIVE_PDF_RELEASE_CREATED_AT_UTC = "2026-08-04T13:30:00Z"
-PM_NATIVE_PDF_REVIEW_STATUSES = {
-    "pending",
-    "approved",
-    "rejected",
-    "needs_correction",
-}
-
 
 def _sha256(path: str | Path) -> str:
     digest = hashlib.sha256()
@@ -622,7 +614,7 @@ def _build_manifest(
             "title": ("Health Canada Product Monograph structured extraction"),
             "description": (
                 "A bilingual 40-product, 80-document evidence-grounded "
-                "structured-extraction pilot using official Product "
+                "structured-extraction benchmark using official Product "
                 "Monographs."
             ),
             "created_at_utc": PM_RELEASE_CREATED_AT_UTC,
@@ -639,7 +631,7 @@ def _build_manifest(
                 "English and French Product Monograph evidence."
             ),
             "limitations": [
-                "The pilot evaluates extraction from evidence-selected "
+                "The evidence-window condition evaluates extraction from evidence-selected "
                 "pages, not retrieval from an entire monograph.",
                 "DIN, regulatory schedule, product status, and sponsor are "
                 "alignment metadata and are not scored because they are not "
@@ -1096,168 +1088,12 @@ def _native_pdf_prompt(language: str) -> str:
     )
 
 
-def _review_item_id(
-    *,
-    source_case_id: str,
-    field: str,
-    expected_item: str,
-    source_page: str,
-) -> str:
-    payload = json.dumps(
-        [source_case_id, field, expected_item, source_page],
-        ensure_ascii=False,
-        separators=(",", ":"),
-    ).encode("utf-8")
-    return "pm_review_" + hashlib.sha256(payload).hexdigest()[:16]
-
-
-def _build_native_pdf_review_queue(
-    *,
-    root: Path,
-    native_cases: pd.DataFrame,
-    evidence: pd.DataFrame,
-    sources: pd.DataFrame,
-    review_path: str | Path = PM_NATIVE_PDF_REVIEW_PATH,
-) -> pd.DataFrame:
-    case_by_dpd_id: dict[str, dict[str, Any]] = {}
-    for case in native_cases.to_dict(orient="records"):
-        metadata = json.loads(str(case["source_metadata"]))
-        case_by_dpd_id[str(metadata["dpd_case_id"])] = case
-
-    source_by_product_language = {
-        (str(row["product_id"]), str(row["language"])): row
-        for row in sources.to_dict(orient="records")
-    }
-    records: list[dict[str, Any]] = []
-    for item in evidence.to_dict(orient="records"):
-        source_case_id = str(item["case_id"])
-        case = case_by_dpd_id.get(source_case_id)
-        if case is None:
-            raise ValueError(
-                f"Evidence item does not map to a native-PDF case: {source_case_id}"
-            )
-        source = source_by_product_language[
-            (str(case["product_id"]), str(case["language"]))
-        ]
-        expected_item = str(item["expected_item"])
-        source_page = str(item["source_page"])
-        records.append(
-            {
-                "review_item_id": _review_item_id(
-                    source_case_id=source_case_id,
-                    field=str(item["field"]),
-                    expected_item=expected_item,
-                    source_page=source_page,
-                ),
-                "native_case_id": case["case_id"],
-                "source_case_id": source_case_id,
-                "product_id": case["product_id"],
-                "language": case["language"],
-                "split": case["split"],
-                "field": item["field"],
-                "expected_item": expected_item,
-                "source_page": source_page,
-                "automated_support_method": item["support_method"],
-                "monograph_id": source["monograph_id"],
-                "monograph_sha256": source["sha256"],
-                "source_url": source["source_url"],
-            }
-        )
-
-    queue = pd.DataFrame(records).sort_values(
-        ["native_case_id", "field", "expected_item"],
-        kind="stable",
-    )
-    if queue["review_item_id"].duplicated().any():
-        raise ValueError("Native-PDF label review IDs must be unique")
-
-    mutable_columns = [
-        "human_review_status",
-        "reviewer",
-        "reviewed_at_utc",
-        "notes",
-    ]
-    resolved_review_path = root / review_path
-    if resolved_review_path.is_file():
-        previous = pd.read_csv(
-            resolved_review_path,
-            dtype=str,
-            keep_default_na=False,
-        )
-        immutable_columns = list(queue.columns)
-        required = {*immutable_columns, *mutable_columns}
-        missing = required - set(previous.columns)
-        if missing:
-            raise ValueError(
-                "Existing native-PDF label review is missing columns: "
-                f"{sorted(missing)}"
-            )
-        if previous["review_item_id"].duplicated().any():
-            raise ValueError("Existing native-PDF label review has duplicate IDs")
-        if set(previous["review_item_id"]) != set(queue["review_item_id"]):
-            raise ValueError(
-                "Existing native-PDF label review does not match the "
-                "current evidence inventory"
-            )
-        expected_immutable = (
-            queue[immutable_columns]
-            .fillna("")
-            .sort_values(
-                "review_item_id",
-                kind="stable",
-            )
-        )
-        observed_immutable = (
-            previous[immutable_columns]
-            .fillna("")
-            .sort_values(
-                "review_item_id",
-                kind="stable",
-            )
-        )
-        expected_immutable = expected_immutable.reset_index(drop=True)
-        observed_immutable = observed_immutable.reset_index(drop=True)
-        if not expected_immutable.equals(observed_immutable):
-            raise ValueError(
-                "Existing native-PDF label review changed immutable source "
-                "or label columns. Only the human review columns may be "
-                "edited."
-            )
-        queue = queue.merge(
-            previous[["review_item_id", *mutable_columns]],
-            on="review_item_id",
-            how="left",
-            validate="one_to_one",
-        )
-    else:
-        queue["human_review_status"] = "pending"
-        queue["reviewer"] = ""
-        queue["reviewed_at_utc"] = ""
-        queue["notes"] = ""
-
-    queue["human_review_status"] = (
-        queue["human_review_status"]
-        .fillna("pending")
-        .replace("", "pending")
-        .str.casefold()
-    )
-    invalid_statuses = sorted(
-        set(queue["human_review_status"]) - PM_NATIVE_PDF_REVIEW_STATUSES
-    )
-    if invalid_statuses:
-        raise ValueError(
-            f"Native-PDF label review has invalid statuses: {invalid_statuses}"
-        )
-    return queue
-
-
 def _build_native_pdf_manifest(
     *,
     root: Path,
     products: pd.DataFrame,
     native_cases: pd.DataFrame,
     evidence: pd.DataFrame,
-    review: pd.DataFrame,
 ) -> dict[str, Any]:
     development = (
         products.loc[
@@ -1310,14 +1146,6 @@ def _build_native_pdf_manifest(
         ),
         _manifest_file(
             root=root,
-            path=PM_NATIVE_PDF_REVIEW_PATH,
-            file_id="pm_native_pdf_label_review",
-            role="historical_label_review_snapshot",
-            record_count=len(review),
-            media_type="text/csv",
-        ),
-        _manifest_file(
-            root=root,
             path=PM_NATIVE_PDF_REPORT_PATH,
             file_id="pm_native_pdf_build_report",
             role="benchmark_build_report",
@@ -1331,14 +1159,13 @@ def _build_native_pdf_manifest(
             "dataset_id": PM_NATIVE_PDF_DATASET_ID,
             "version": PM_NATIVE_PDF_VERSION,
             "release_type": "benchmark",
-            "title": ("Health Canada Product Monograph native-PDF pilot"),
+            "title": "Health Canada Product Monograph full-PDF extraction",
             "description": (
-                "A retired local-only bilingual pilot that sends each complete "
-                "official Product Monograph PDF to the model through a "
-                "native file-input API."
+                "A bilingual full-document benchmark that sends each complete "
+                "official Product Monograph PDF through a native file-input API."
             ),
             "created_at_utc": PM_NATIVE_PDF_RELEASE_CREATED_AT_UTC,
-            "status": "retired",
+            "status": "frozen",
             "immutable": True,
             "license_or_terms": (
                 "Official Product Monographs are publicly posted by Health "
@@ -1347,18 +1174,15 @@ def _build_native_pdf_manifest(
                 "descriptors, not source PDF bytes."
             ),
             "intended_use": (
-                "Reproduce local experiments in end-to-end full-document "
-                "retrieval, visual reading, and structured extraction. The "
-                "pilot must not be used for official model ranking."
+                "Compare end-to-end full-document retrieval, document reading, "
+                "and structured extraction on the same bilingual cohort used "
+                "by the evidence-window condition. Results are descriptive "
+                "because the reference labels lack independent human sign-off."
             ),
             "limitations": [
-                "This retired release is permanently provisional and must "
-                "not produce an official model ranking.",
                 "Reference labels originate in the frozen DPD alignment and "
                 "have automated page-evidence checks, not independent human "
                 "sign-off.",
-                "The historical label-review snapshot is retained only to "
-                "reproduce the original pilot; no review campaign is planned.",
                 "Native PDF processing and tokenization can differ between "
                 "providers, so results are comparable only within a declared "
                 "input contract.",
@@ -1393,13 +1217,13 @@ def _build_native_pdf_manifest(
             {
                 "source_id": "evalanche_pm_builder",
                 "name": "Evalanche Product Monograph benchmark builder",
-                "source_url": ("https://github.com/hc-sc-ocdo-bdpd/evalanche"),
+                "source_url": "https://github.com/hc-sc-ocdo-bdpd/evalanche",
                 "retrieved_at_utc": PM_RETRIEVED_AT_UTC,
                 "source_modified_date": None,
                 "license_or_terms": "Evalanche repository terms.",
                 "snapshot_notes": (
-                    "Derives full-PDF case descriptors and preserves the "
-                    "original review snapshot from the evidence-window release."
+                    "Derives full-PDF case descriptors from the frozen "
+                    "evidence-window cohort and source lock."
                 ),
             },
         ],
@@ -1447,7 +1271,7 @@ def _build_native_pdf_manifest(
             },
             {
                 "name": "heldout",
-                "purpose": "Original held-out pilot partition.",
+                "purpose": "Held-out comparison partition.",
                 "unit": "product_family",
                 "target_count": len(heldout),
                 "group_key": "ingredient_group_id",
@@ -1464,10 +1288,8 @@ def _build_native_pdf_manifest(
                 "Reuse the frozen bilingual Product Monograph cohort and source lock.",
                 "Replace label-selected text windows with hash-verified "
                 "complete-PDF input descriptors.",
-                "Preserve the existing four-field reference JSON and source "
-                "evidence as provisional labels.",
-                "Preserve the original field-level review snapshot as inert "
-                "historical metadata.",
+                "Preserve the existing four-field reference JSON and automated "
+                "source-page evidence.",
             ],
         },
     }
@@ -1480,7 +1302,7 @@ def build_product_monograph_native_pdf_benchmark(
     sources_path: str | Path = PM_SOURCES_PATH,
     raw_dir: str | Path = PM_RAW_DIR,
 ) -> dict[str, Any]:
-    """Build the draft full-document benchmark without bundling PDF bytes."""
+    """Build the full-document benchmark without bundling PDF bytes."""
     root = Path(root_path).resolve()
     parent_cases = pd.read_csv(root / source_cases_path, dtype=str)
     products = pd.read_csv(root / PM_OUTPUT_DIR / "products.csv", dtype=str)
@@ -1516,7 +1338,7 @@ def build_product_monograph_native_pdf_benchmark(
                 "label_provenance": (
                     "dpd_alignment_with_automated_monograph_page_evidence"
                 ),
-                "human_label_review": "pending",
+                "reference_validation": "automated_source_page_evidence",
             }
         )
         file_path = Path(raw_dir) / _document_filename(source)
@@ -1562,24 +1384,11 @@ def build_product_monograph_native_pdf_benchmark(
         compression={"method": "gzip", "mtime": 0},
         lineterminator="\n",
     )
-    review = _build_native_pdf_review_queue(
-        root=root,
-        native_cases=native_cases,
-        evidence=evidence,
-        sources=sources,
-    )
-    review.to_csv(
-        root / PM_NATIVE_PDF_REVIEW_PATH,
-        index=False,
-        lineterminator="\n",
-    )
-    status_counts = review["human_review_status"].value_counts().to_dict()
-    approved = int(status_counts.get("approved", 0))
     report = {
         "report_schema_version": "1.0",
         "dataset_id": PM_NATIVE_PDF_DATASET_ID,
         "dataset_version": PM_NATIVE_PDF_VERSION,
-        "status": "retired",
+        "status": "frozen",
         "population": {
             "products": int(len(products)),
             "cases": int(len(native_cases)),
@@ -1594,24 +1403,16 @@ def build_product_monograph_native_pdf_benchmark(
             "pdfs_required": int(len(native_cases)),
             "hash_verification_required_at_request_time": True,
         },
-        "label_review": {
-            "items": int(len(review)),
-            "approved": approved,
-            "status_counts": status_counts,
-            "all_items_approved": approved == len(review),
-            "disposition": "historical_snapshot",
-            "action_required": False,
+        "reference_evidence": {
+            "items": int(len(evidence)),
+            "validation": "automated_source_page_evidence",
+            "independent_human_signoff": False,
         },
         "artifacts": {
             "cases": {
                 "path": PM_NATIVE_PDF_CASES_PATH.as_posix(),
                 "sha256": _sha256(root / PM_NATIVE_PDF_CASES_PATH),
                 "bytes": (root / PM_NATIVE_PDF_CASES_PATH).stat().st_size,
-            },
-            "label_review": {
-                "path": PM_NATIVE_PDF_REVIEW_PATH.as_posix(),
-                "sha256": _sha256(root / PM_NATIVE_PDF_REVIEW_PATH),
-                "bytes": (root / PM_NATIVE_PDF_REVIEW_PATH).stat().st_size,
             },
             "source_documents": {
                 "path": Path(sources_path).as_posix(),
@@ -1629,7 +1430,6 @@ def build_product_monograph_native_pdf_benchmark(
         products=products,
         native_cases=native_cases,
         evidence=evidence,
-        review=review,
     )
     DatasetManifest.model_validate(manifest)
     manifest_path = root / PM_NATIVE_PDF_MANIFEST_PATH
@@ -1650,11 +1450,10 @@ def build_product_monograph_native_pdf_benchmark(
     return {
         "dataset_id": PM_NATIVE_PDF_DATASET_ID,
         "dataset_version": PM_NATIVE_PDF_VERSION,
-        "status": "retired",
+        "status": "frozen",
         "product_count": int(len(products)),
         "case_count": int(len(native_cases)),
-        "review_item_count": int(len(review)),
-        "approved_review_item_count": approved,
+        "evidence_item_count": int(len(evidence)),
         "output_dir": output_dir,
         "manifest_path": manifest_path,
         "verification": verification,

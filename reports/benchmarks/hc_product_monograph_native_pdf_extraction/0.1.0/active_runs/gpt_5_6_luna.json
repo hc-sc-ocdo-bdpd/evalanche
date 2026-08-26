@@ -1,0 +1,9 @@
+{
+  "bundle_schema_version": "1.0",
+  "benchmark_id": "hc_product_monograph_native_pdf_extraction",
+  "benchmark_version": "0.1.0",
+  "model_id": "gpt_5_6_luna",
+  "run_id": "ea64b35311e02af6",
+  "run_metadata_path": "reports/benchmarks/hc_product_monograph_native_pdf_extraction/0.1.0/runs/gpt_5_6_luna/ea64b35311e02af6/run.json",
+  "run_metadata_sha256": "79eae8c8fe30d37a03f45224287bd8fcb736f4b815165f2ffac8088ef09512dd"
+}

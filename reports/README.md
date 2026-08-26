@@ -1,39 +1,28 @@
 # Published results
 
-This directory contains compact, versioned evaluation releases that are
-appropriate for source control and review.
+This directory contains compact, versioned evaluation evidence suitable for
+source control and review. Large provider outputs, checkpoints, and detailed
+local result tables remain ignored under `data/generated/` and `results/`.
+Compact bundles retain hashes that tie reports back to their source evidence.
 
-Large model outputs, checkpoints, and case-level result tables remain under
-the ignored `data/generated/` and `results/` directories. A published release
-records their hashes and sizes so the summarized result remains tied to the
-original evidence without placing hundreds of megabytes in Git.
+A benchmark report may be:
 
-Each release should include:
+- **ranked**, when its contract supports an official ordering among complete
+  compatible runs;
+- **descriptive**, when measurements are useful but an official ordering is not
+  justified;
+- **ineligible** for a particular run when generation or scoring is incomplete.
 
-- a concise scope and interpretation document;
-- aggregate model metrics;
-- paired comparisons for shared cases;
-- evaluation and generation metadata;
-- a manifest for both published and retained raw artifacts;
-- an explicit validation status.
-
-Publication does not imply that labels or conclusions have received human
-validation. A release must state whether manual review, grouped analysis, and
-error adjudication are complete.
-
-A benchmark can disable ranking when its reference validity supports
-descriptive analysis but not an ordered model claim. Complete runs then remain
-visible as `provisional`, with no numeric rank. Frozen means reproducible; it
-does not automatically mean independently validated.
-
-Analysis subdirectories may add compact field, slice, taxonomy, and
-case-review tables derived from retained case-level evidence. Derived files
-must record their source hash, method version, deterministic sample seed, and
-their own integrity hashes. Diagnostic transformations must remain separate
-from the primary score unless the benchmark is explicitly versioned.
+Descriptive reporting keeps pass rate, field score, slices, cost, latency,
+reliability, and paired comparisons visible. `frozen` describes reproducibility
+of the benchmark contract, not the strength of every possible claim.
 
 The generated registry surface is `reports/benchmarks/index.html`. Each
 benchmark version contains active-run pointers, immutable compact bundles,
 paired comparisons, and equivalent CSV, JSON, Markdown, and sortable HTML
-leaderboards. Compatibility hashes prevent results from a changed dataset,
-prompt, or scorer from entering the same table.
+reports. Compatibility fingerprints prevent results from a changed dataset,
+prompt, or scorer from silently entering the same comparison.
+
+Case-study analysis directories may add field, slice, taxonomy, and selected
+case evidence. Derived artifacts should record their source and method so they
+remain distinguishable from the benchmark's primary scoring contract.

@@ -323,22 +323,22 @@ def test_generation_failed_bundle_is_visible_but_unranked(
         reports_root="reports",
     )
     leaderboard = pd.read_csv(built["leaderboard_path"])
-    assert leaderboard.loc[0, "ranking_status"] == "ineligible"
+    assert leaderboard.loc[0, "result_status"] == "ineligible"
     assert pd.isna(leaderboard.loc[0, "rank"])
     document = json.loads(built["json_path"].read_text(encoding="utf-8"))
     assert document["models"][0]["rank"] is None
     assert document["pairwise"] == []
 
 
-def test_disabled_ranking_keeps_complete_results_descriptive(
+def test_descriptive_reporting_keeps_complete_results_unranked(
     tmp_path: Path,
 ) -> None:
     _synthetic_registry(tmp_path)
     benchmark_path = tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
     document = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
-    document["ranking"] = {
-        "enabled": False,
-        "reason": "Reference labels are permanently provisional.",
+    document["reporting"] = {
+        "mode": "descriptive",
+        "reason": "Reference labels do not have independent human sign-off.",
     }
     _write_yaml(benchmark_path, document)
     registry = load_registry(tmp_path)
@@ -372,23 +372,23 @@ def test_disabled_ranking_keeps_complete_results_descriptive(
         reports_root="reports",
     )
     leaderboard = pd.read_csv(built["leaderboard_path"])
-    assert set(leaderboard["ranking_status"]) == {"provisional"}
+    assert set(leaderboard["result_status"]) == {"descriptive"}
     assert leaderboard["rank"].isna().all()
     assert len(pd.read_csv(built["pairwise_path"])) == 1
     leaderboard_json = json.loads(
         built["json_path"].read_text(encoding="utf-8")
     )
-    assert leaderboard_json["ranking_policy"]["enabled"] is False
-    assert "permanently provisional" in (
+    assert leaderboard_json["reporting_policy"]["mode"] == "descriptive"
+    assert "without an official rank" in (
         built["markdown_path"].read_text(encoding="utf-8")
     )
 
 
-def test_disabled_ranking_requires_a_reason(tmp_path: Path) -> None:
+def test_descriptive_reporting_requires_a_reason(tmp_path: Path) -> None:
     _synthetic_registry(tmp_path)
     benchmark_path = tmp_path / "configs/benchmarks/synthetic_1.0.0.yaml"
     document = yaml.safe_load(benchmark_path.read_text(encoding="utf-8"))
-    document["ranking"] = {"enabled": False}
+    document["reporting"] = {"mode": "descriptive"}
     _write_yaml(benchmark_path, document)
 
     with pytest.raises(ValueError, match="requires a reason"):

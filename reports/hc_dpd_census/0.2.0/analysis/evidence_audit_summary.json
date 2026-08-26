@@ -3,17 +3,17 @@
   "method_version": "hc_dpd_evidence_audit/1.0",
   "status": "automated_evidence_audit_complete",
   "human_signoff_status": "not_claimed",
-  "review_date": "2026-07-30",
+  "audit_date": "2026-07-30",
   "inputs": {
-    "review_path": "reports/hc_dpd_census/0.2.0/analysis/manual_review.csv",
-    "review_sha256": "fe423db1dc19e8486688671e5643efbb24ab161af76273a85ffd701e0b7d773e",
+    "selected_cases_path": "reports/hc_dpd_census/0.2.0/analysis/selected_cases.csv",
+    "selected_cases_sha256": "6edebc2ded038403ffe6d9982712c9e9a84541f48067c3a148aef16e8d197828",
     "config_path": "configs/evaluate_hc_dpd_census_all_models.yaml",
     "config_sha256": "8f6418b3e0928cd3d0a20e6a2e9bd3ed15dd1072cc3e6c71bb769bb7593266c0",
     "archive_path": "data/hc/dpd/snapshots/2026-07-02/raw/allfiles.zip",
     "archive_sha256": "94c8ef8639fd07eea9c134d8ede137d77574d4ae6761955f5aa582558ec38b25"
   },
   "verification": {
-    "review_cases": 105,
+    "audit_cases": 105,
     "source_rebuild_matches": 105,
     "independent_expected_parses_match": 105,
     "model_outputs_rescored": 420,
@@ -39,7 +39,7 @@
   },
   "output": {
     "path": "reports/hc_dpd_census/0.2.0/analysis/evidence_audit.csv",
-    "sha256": "63679ba04ed471470e5f240a96b7429f12af8ee8a71d9673935ad840dafcf07a",
+    "sha256": "5af91bdc75fab0f98197d6607eb2e5d3d4f507c775298c17c40ddc28809fa26a",
     "rows": 105
   }
 }

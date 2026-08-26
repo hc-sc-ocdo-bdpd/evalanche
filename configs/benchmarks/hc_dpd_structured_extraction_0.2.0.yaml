@@ -7,6 +7,8 @@ description: >-
   eligible marketed human-drug product families in the 2026-07-02 DPD
   snapshot.
 status: frozen
+reporting:
+  mode: ranked
 dataset:
   dataset_id: hc_dpd_structured_extraction_census
   version: 0.2.0

@@ -5,7 +5,7 @@ release:
   release_type: benchmark
   title: Health Canada Product Monograph structured extraction
   description: A bilingual 40-product, 80-document evidence-grounded structured-extraction
-    pilot using official Product Monographs.
+    benchmark using official Product Monographs.
   created_at_utc: '2026-07-30T23:00:00Z'
   status: frozen
   immutable: true
@@ -15,7 +15,7 @@ release:
   intended_use: Compare model extraction quality on bounded, auditable English and
     French Product Monograph evidence.
   limitations:
-  - The pilot evaluates extraction from evidence-selected pages, not retrieval from
+  - The evidence-window condition evaluates extraction from evidence-selected pages, not retrieval from
     an entire monograph.
   - DIN, regulatory schedule, product status, and sponsor are alignment metadata and
     are not scored because they are not consistently stated in the monographs.

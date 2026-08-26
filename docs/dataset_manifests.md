@@ -28,7 +28,7 @@ Sampled benchmark releases also record their sampling and split decisions:
    development or held-out assignment. Split members cannot overlap.
 
 A `source_snapshot` cannot declare sampling or splits. A `benchmark` requires
-both. This lets the same contract freeze raw DPD inputs before a pilot sample
+both. This lets the same contract freeze raw DPD inputs before a derived benchmark
 exists, without inventing meaningless split assignments for the full source.
 
 Unknown fields are rejected. This protects the release from misspelled fields
@@ -74,23 +74,7 @@ report records every ZIP member's structure and row count.
 
 ## Materialized Health Canada benchmark example
 
-The DPD source release is the parent of the first executable Health Canada
-benchmark slice:
-
-```text
-configs/datasets/hc_dpd_structured_extraction_0.1.0_manifest.yaml
-```
-
-This `benchmark` release records a 40-product stratified sample, the
-`products.csv` membership table, exact 30-product development and 10-product
-held-out assignments, and 80 paired English and French cases. The verifier
-checks the generated files and confirms that the product IDs in the membership
-table exactly match the IDs declared across both splits.
-
-The build, scope, source-row traceability, and limitations are documented in
-[`docs/hc_benchmark/HC_DPD_BENCHMARK_SLICE.md`](hc_benchmark/HC_DPD_BENCHMARK_SLICE.md).
-
-The complete eligible-population DPD benchmark is frozen separately as:
+The complete eligible-population DPD benchmark is frozen as:
 
 ```text
 configs/datasets/hc_dpd_structured_extraction_census_0.2.0_manifest.yaml
@@ -130,19 +114,6 @@ match. For benchmarks, it also confirms that the membership file contains the
 same unique member IDs recorded across the splits.
 
 Verification is local and makes no model or provider API calls.
-
-Verify the materialized DPD benchmark slice with:
-
-```bash
-docker compose run --rm evalanche python -m evalanche.cli verify-dataset --manifest configs/datasets/hc_dpd_structured_extraction_0.1.0_manifest.yaml --root .
-```
-
-Expected final lines:
-
-```text
-Verified files: 3/3
-Status: VALID
-```
 
 Verify the full DPD census with:
 

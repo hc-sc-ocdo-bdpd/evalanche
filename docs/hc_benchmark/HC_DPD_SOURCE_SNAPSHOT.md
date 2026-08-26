@@ -15,10 +15,11 @@ It contains the official marketed and approved Drug Product Database (DPD)
 all-files archives. It does not contain cancelled, dormant, or product
 monograph files.
 
-The marketed cohort is the parent sampling population for the DPD-only
-benchmark slice and the planned Product Monograph benchmark. The approved
-cohort is frozen at the same time so later normalization can detect status
-boundaries and avoid mixing records retrieved on different dates.
+The marketed cohort is the parent population for the DPD structured-extraction
+benchmarks and also provides alignment metadata used by the supporting Product
+Monograph case studies. The approved cohort is frozen at the same time so
+normalization can detect status boundaries without mixing records retrieved on
+different dates.
 
 ## Frozen files
 
@@ -78,7 +79,7 @@ Status: VALID
 The full test suite also reparses both archives with the source-specific DPD
 validator. Verification and tests make no model calls.
 
-## Create a later release
+## Create a new snapshot release
 
 First confirm the date displayed on the official DPD extract page, then run:
 
@@ -103,11 +104,10 @@ provenance.
 - [DPD extract read-me and structure](https://www.canada.ca/en/health-canada/services/drugs-health-products/drug-products/drug-product-database/read-file-drug-product-database-data-extract.html)
 - [Open Government Licence - Canada](https://open.canada.ca/en/open-government-licence-canada)
 
-## Next boundary
+## Downstream use
 
-This release continues to freeze source evidence only. Its marketed archive is
-now consumed by the separate, immutable
-[`HC_DPD_BENCHMARK_SLICE.md`](HC_DPD_BENCHMARK_SLICE.md) release, which records
-normalization, product filtering, deterministic sampling, and benchmark
-splits. Product Monograph acquisition and DPD-to-document audit remain the next
-data boundary.
+This release freezes source evidence only. The marketed archive is consumed by
+the full DPD census benchmark described in
+[`HC_DPD_CENSUS_RUNBOOK.md`](HC_DPD_CENSUS_RUNBOOK.md) and by the supporting
+Product Monograph cohort builder. Each downstream dataset has its own immutable
+manifest and interpretation boundary.

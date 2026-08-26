@@ -47,23 +47,12 @@ from evalanche.dpd_analysis import (
     DPD_ANALYSIS_OUTPUT_DIR,
     DPD_ANALYSIS_PRIMARY_MODEL,
     DPD_ANALYSIS_RESULTS_PATH,
-    DPD_ANALYSIS_REVIEW_SEED,
+    DPD_ANALYSIS_AUDIT_SEED,
     DPD_ANALYSIS_SHARED_FAILURE_SAMPLE,
     build_dpd_census_analysis,
 )
-from evalanche.dpd_benchmark import (
-    DPD_BENCHMARK_SEED,
-    DPD_BENCHMARK_VERSION,
-    DPD_SOURCE_MANIFEST,
-    create_dpd_benchmark_slice,
-)
+from evalanche.dpd_benchmark import DPD_SOURCE_MANIFEST
 from evalanche.dpd_census import create_dpd_benchmark_census
-from evalanche.dpd_comparison import (
-    DPD_COMPARISON_PRODUCT_COUNT,
-    DPD_COMPARISON_SEED,
-    assemble_dpd_comparison_outputs,
-    build_dpd_comparison_sample,
-)
 from evalanche.dpd_census_comparison import (
     assemble_dpd_census_comparison_outputs,
 )
@@ -71,7 +60,7 @@ from evalanche.dpd_evidence_audit import (
     DPD_EVIDENCE_AUDIT_ARCHIVE_PATH,
     DPD_EVIDENCE_AUDIT_CONFIG_PATH,
     DPD_EVIDENCE_AUDIT_OUTPUT_PATH,
-    DPD_EVIDENCE_AUDIT_REVIEW_PATH,
+    DPD_EVIDENCE_AUDIT_CASES_PATH,
     DPD_EVIDENCE_AUDIT_SUMMARY_PATH,
     build_dpd_evidence_audit,
 )
@@ -89,7 +78,7 @@ from evalanche.judges import CriteriaJudge
 from evalanche.judges.calibration import validate_judge_protocol
 from evalanche.metadata import save_run_metadata
 from evalanche.metrics import run_deterministic_metrics
-from evalanche.recommendation import save_comparison_report
+from evalanche.comparison import save_comparison_report
 from evalanche.reporting import (
     print_failures,
     print_model_leaderboard,
@@ -480,40 +469,6 @@ def run_snapshot_dpd(
     return result
 
 
-def run_build_dpd_benchmark(
-    *,
-    root_path: str,
-    source_manifest_path: str,
-    benchmark_version: str,
-    seed: int,
-) -> dict[str, Any]:
-    try:
-        result = create_dpd_benchmark_slice(
-            root_path=root_path,
-            source_manifest_path=source_manifest_path,
-            benchmark_version=benchmark_version,
-            seed=seed,
-        )
-    except (OSError, ValueError) as error:
-        print(f"DPD benchmark slice build failed: {error}")
-        raise SystemExit(1) from None
-
-    print(f"\nDataset: {result['dataset_id']} {result['dataset_version']}")
-    print(f"Parent: {result['source_dataset_id']} {result['source_dataset_version']}")
-    print(f"Products: {result['product_count']}")
-    print(f"Cases: {result['case_count']}")
-    print(
-        "Product splits: "
-        f"{result['development_product_count']} development, "
-        f"{result['heldout_product_count']} heldout"
-    )
-    print(f"Output: {result['output_path']}")
-    print(f"Manifest: {result['manifest_path']}")
-    print("Verified files: 3/3")
-    print("Status: VALID")
-    return result
-
-
 def run_build_dpd_census(
     *,
     root_path: str,
@@ -553,46 +508,6 @@ def run_build_dpd_census(
     return result
 
 
-def run_build_dpd_comparison(
-    *,
-    root_path: str,
-    seed: int,
-    product_count: int,
-) -> dict[str, Any]:
-    result = build_dpd_comparison_sample(
-        root_path=root_path,
-        seed=seed,
-        product_count=product_count,
-    )
-    print("\nHealth Canada DPD model-comparison sample")
-    print(f"Products: {result['product_count']}")
-    print(f"Cases: {result['case_count']}")
-    print(f"Seed: {result['seed']}")
-    print(f"Output: {result['output_path']}")
-    print(f"Report: {result['report_path']}")
-    print("Status: VALID")
-    return result
-
-
-def run_assemble_dpd_comparison(
-    *,
-    root_path: str,
-    required_models: list[str] | None = None,
-) -> dict[str, Any]:
-    result = assemble_dpd_comparison_outputs(
-        root_path=root_path,
-        required_models=required_models,
-    )
-    print("\nHealth Canada DPD model-comparison outputs")
-    print("Models: " + ", ".join(result["available_models"]))
-    print(f"Cases per model: {result['case_count_per_model']}")
-    print(f"Combined rows: {result['combined_row_count']}")
-    print(f"Output: {result['output_path']}")
-    print(f"Metadata: {result['metadata_path']}")
-    print("Status: READY FOR EVALUATION")
-    return result
-
-
 def run_assemble_dpd_census_comparison(
     *,
     root_path: str,
@@ -622,7 +537,7 @@ def run_analyze_dpd_census(
     comparison_model: str,
     shared_failure_sample: int,
     all_pass_sample: int,
-    review_seed: int,
+    audit_seed: int,
 ) -> dict[str, Any]:
     print("Analyzing saved DPD census results. No model calls will be made.")
     try:
@@ -635,7 +550,7 @@ def run_analyze_dpd_census(
             comparison_model=comparison_model,
             shared_failure_sample=shared_failure_sample,
             all_pass_sample=all_pass_sample,
-            review_seed=review_seed,
+            audit_seed=audit_seed,
         )
     except (OSError, ValueError) as error:
         print(f"DPD census analysis failed: {error}")
@@ -645,35 +560,35 @@ def run_analyze_dpd_census(
     print("Models: " + ", ".join(result["source"]["models"]))
     print(f"Cases: {result['benchmark']['case_count']}")
     print(f"Product families: {result['benchmark']['product_family_count']}")
-    print(f"Manual review cases: {result['review_set']['total_unique_cases']}")
+    print(f"Selected audit cases: {result['audit_set']['total_unique_cases']}")
     print(f"Output: {result['output_dir']}")
     print(f"Manifest: {result['manifest_path']}")
     print("Status: ANALYSIS COMPLETE")
     print(
-        "Next: run audit-dpd-review to refresh the selected-case "
+        "Next: run audit-dpd-evidence to refresh the selected-case "
         "evidence audit and release manifests."
     )
     print("No model calls were made.")
     return result
 
 
-def run_audit_dpd_review(
+def run_audit_dpd_evidence(
     *,
     root_path: str,
-    review_path: str,
+    cases_path: str,
     config_path: str,
     archive_path: str,
     output_path: str,
     summary_path: str,
 ) -> dict[str, Any]:
     print(
-        "Auditing the DPD review set against frozen source evidence. "
+        "Auditing the selected DPD cases against frozen source evidence. "
         "No model calls will be made."
     )
     try:
         result = build_dpd_evidence_audit(
             root_path=root_path,
-            review_path=review_path,
+            cases_path=cases_path,
             config_path=config_path,
             archive_path=archive_path,
             output_path=output_path,
@@ -685,7 +600,7 @@ def run_audit_dpd_review(
 
     verification = result["verification"]
     print("\nHealth Canada DPD evidence audit")
-    print(f"Review cases: {verification['review_cases']}")
+    print(f"Audit cases: {verification['audit_cases']}")
     print(f"Frozen-source rebuild matches: {verification['source_rebuild_matches']}")
     print(
         "Independent expected-answer parses: "
@@ -1636,8 +1551,8 @@ def run_build_product_monograph_native_pdf(
         f"Verified files: {verification['files_passed']}/"
         f"{verification['files_checked']}"
     )
-    print("Status: PERMANENTLY PROVISIONAL, NOT RANKABLE")
-    print("Human audit: NOT PLANNED")
+    print("Status: VALID, DESCRIPTIVE REPORTING")
+    print("Independent human sign-off: NOT CLAIMED")
     return result
 
 
@@ -1890,28 +1805,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Per-archive HTTP timeout in seconds.",
     )
 
-    dpd_benchmark_parser = subparsers.add_parser("build-dpd-benchmark")
-    dpd_benchmark_parser.add_argument(
-        "--root",
-        default=".",
-        help="Repository root containing the frozen DPD snapshot.",
-    )
-    dpd_benchmark_parser.add_argument(
-        "--source-manifest",
-        default=DPD_SOURCE_MANIFEST.as_posix(),
-        help="Path to the frozen DPD source manifest.",
-    )
-    dpd_benchmark_parser.add_argument(
-        "--version",
-        default=DPD_BENCHMARK_VERSION,
-        help="Semantic version for the benchmark release.",
-    )
-    dpd_benchmark_parser.add_argument(
-        "--seed",
-        type=int,
-        default=DPD_BENCHMARK_SEED,
-        help="Recorded seed used for deterministic sampling.",
-    )
 
     dpd_census_parser = subparsers.add_parser("build-dpd-census")
     dpd_census_parser.add_argument(
@@ -1923,41 +1816,6 @@ def build_parser() -> argparse.ArgumentParser:
         "--source-manifest",
         default=DPD_SOURCE_MANIFEST.as_posix(),
         help="Path to the frozen DPD source manifest.",
-    )
-
-    dpd_comparison_parser = subparsers.add_parser("build-dpd-comparison")
-    dpd_comparison_parser.add_argument(
-        "--root",
-        default=".",
-        help="Repository root containing the frozen DPD census.",
-    )
-    dpd_comparison_parser.add_argument(
-        "--seed",
-        type=int,
-        default=DPD_COMPARISON_SEED,
-        help="Recorded seed used for deterministic sample selection.",
-    )
-    dpd_comparison_parser.add_argument(
-        "--products",
-        type=int,
-        default=DPD_COMPARISON_PRODUCT_COUNT,
-        help=(
-            "Number of product families to sample. Each contributes one "
-            "English and one French case."
-        ),
-    )
-
-    assemble_comparison_parser = subparsers.add_parser("assemble-dpd-comparison")
-    assemble_comparison_parser.add_argument(
-        "--root",
-        default=".",
-        help="Repository root containing completed generation outputs.",
-    )
-    assemble_comparison_parser.add_argument(
-        "--require-model",
-        action="append",
-        dest="required_models",
-        help=("Model name that must be present. Repeat to require multiple models."),
     )
 
     assemble_census_parser = subparsers.add_parser("assemble-dpd-census-comparison")
@@ -2020,22 +1878,23 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stratified all-model pass sample size.",
     )
     analyze_census_parser.add_argument(
-        "--review-seed",
+        "--audit-seed",
+        dest="audit_seed",
         type=int,
-        default=DPD_ANALYSIS_REVIEW_SEED,
-        help="Recorded seed for deterministic review samples.",
+        default=DPD_ANALYSIS_AUDIT_SEED,
+        help="Recorded seed for deterministic audit-case samples.",
     )
 
-    audit_review_parser = subparsers.add_parser("audit-dpd-review")
+    audit_review_parser = subparsers.add_parser("audit-dpd-evidence")
     audit_review_parser.add_argument(
         "--root",
         default=".",
         help="Repository root containing the frozen DPD evidence.",
     )
     audit_review_parser.add_argument(
-        "--review",
-        default=DPD_EVIDENCE_AUDIT_REVIEW_PATH.as_posix(),
-        help="Generated DPD review worksheet.",
+        "--cases",
+        default=DPD_EVIDENCE_AUDIT_CASES_PATH.as_posix(),
+        help="Deterministically selected DPD audit cases.",
     )
     audit_review_parser.add_argument(
         "--config",
@@ -2386,28 +2245,10 @@ def main() -> None:
             root_path=args.root,
             timeout=args.timeout,
         )
-    elif args.command == "build-dpd-benchmark":
-        run_build_dpd_benchmark(
-            root_path=args.root,
-            source_manifest_path=args.source_manifest,
-            benchmark_version=args.version,
-            seed=args.seed,
-        )
     elif args.command == "build-dpd-census":
         run_build_dpd_census(
             root_path=args.root,
             source_manifest_path=args.source_manifest,
-        )
-    elif args.command == "build-dpd-comparison":
-        run_build_dpd_comparison(
-            root_path=args.root,
-            seed=args.seed,
-            product_count=args.products,
-        )
-    elif args.command == "assemble-dpd-comparison":
-        run_assemble_dpd_comparison(
-            root_path=args.root,
-            required_models=args.required_models,
         )
     elif args.command == "assemble-dpd-census-comparison":
         run_assemble_dpd_census_comparison(
@@ -2424,12 +2265,12 @@ def main() -> None:
             comparison_model=args.comparison_model,
             shared_failure_sample=args.shared_failure_sample,
             all_pass_sample=args.all_pass_sample,
-            review_seed=args.review_seed,
+            audit_seed=args.audit_seed,
         )
-    elif args.command == "audit-dpd-review":
-        run_audit_dpd_review(
+    elif args.command == "audit-dpd-evidence":
+        run_audit_dpd_evidence(
             root_path=args.root,
-            review_path=args.review,
+            cases_path=args.cases,
             config_path=args.config,
             archive_path=args.archive,
             output_path=args.output,
