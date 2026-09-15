@@ -39,17 +39,13 @@ is available or approved for a user.
 
 ## 2. Start here
 
-| I want to... | Start here |
-| --- | --- |
-| Understand careful model selection | [Model-selection handbook](docs/choosing_a_model.md) |
-| Review credible research and evaluation methods | [Evidence directory](docs/evidence/README.md) |
-| Set up the local environment | [Setup and command reference](docs/setup.md) |
-| Run a local model comparison | [Local comparison guide](docs/local_comparison.md) |
-| See the method applied to public data | [Health Canada case studies](docs/case_studies/health_canada.md) |
-
-The first two paths do not require code.
-
-> If you want to run a local comparison, begin with [docs/setup.md](docs/setup.md), then continue to [docs/local_comparison.md](docs/local_comparison.md).
+| I want to... | Start here | Requires code? |
+| --- | --- | --- |
+| Understand careful model selection | [Model-selection handbook](docs/choosing_a_model.md) | No |
+| Review credible research and evaluation methods | [Evidence directory](docs/evidence/README.md) | No |
+| Set up the local environment | [Setup and command reference](docs/setup.md) | Yes |
+| Run a local model comparison | [Local comparison guide](docs/local_comparison.md) | Yes |
+| See the method applied to public data | [Health Canada case studies](docs/case_studies/health_canada.md) | No |
 
 ## 3. Core workflow
 
@@ -152,15 +148,6 @@ Open the [Health Canada case-study page](docs/case_studies/health_canada.md) for
 results and interpretation boundaries.
 
 ## 4. Further information
-
-### Setup and command reference
-
-For anyone who wants to run a local comparison, the operational entry point is
-[setup and command reference](docs/setup.md). The README keeps the high-level
-orientation; setup holds the prerequisite commands and validation steps.
-
-If you are already setup and ready to compare models, continue to the
-[local comparison guide](docs/local_comparison.md).
 
 ### Repository map
 
