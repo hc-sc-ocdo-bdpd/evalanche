@@ -1,13 +1,25 @@
-# Compare models available to you
+# Local comparison guide
 
 Use this workflow when public evidence leaves a decision-relevant question
 unanswered and you can access two or more candidate model deployments.
 
-If you only want to understand model selection or public benchmarks, no setup
-is required. Return to the [handbook](choosing_a_model.md) or the
+> Before you start, complete the setup steps in [setup.md](setup.md). This page
+> assumes Docker, `.env`, and the repository validation commands are already in
+> place.
+
+If you only want to understand model selection or public benchmarks, return to
+the [model-selection handbook](choosing_a_model.md) or the
 [evidence directory](evidence/README.md).
 
-## What the workflow produces
+## 1. Start here
+
+1. Build and validate the local environment.
+2. Confirm each candidate route and the task requirements.
+3. Register the benchmark and representative cases.
+4. Run a small smoke tier, then the screening tier.
+5. Review the report and record the tradeoff.
+
+## 2. What the workflow produces
 
 - saved model outputs that can be rescored without new provider calls;
 - deterministic case and field results where possible;
@@ -18,7 +30,7 @@ is required. Return to the [handbook](choosing_a_model.md) or the
 - a comparison report that does not select a model automatically;
 - exact run plans, configuration, versions, and hashes.
 
-## Guided task initialization, recommended
+## 3. Recommended: initialize a task bundle
 
 After building the Docker image, run one offline command from the repository
 root:
@@ -80,12 +92,11 @@ creating the replacement. When a task may contain sensitive information, use
 values and creates placeholders for completion inside the approved
 environment.
 
-The generated README is the ordinary workflow. The manual sections below
-use single-line Docker commands that can be copied in Windows Command Prompt,
-PowerShell, macOS, or Linux. The manual sections below explain the underlying
-records and remain useful for advanced maintenance.
+The generated README is the ordinary workflow. The remaining sections explain
+the underlying records and are useful when you need to create or maintain a
+custom benchmark by hand.
 
-## Before you begin
+## 4. Before you begin
 
 You need:
 
@@ -99,7 +110,7 @@ You need:
 Evalanche does not require all model providers to be the same. A new transport
 that LiteLLM does not already support may require a provider adapter.
 
-## 1. Build and validate the environment
+## 5. Build and validate the environment
 
 Create the local environment file:
 
@@ -123,10 +134,10 @@ docker compose run --rm evalanche python -m evalanche.cli --help
 See [setup.md](setup.md) for the full quality gate, rebuild guidance, and
 JupyterLab command.
 
-## 2. Confirm access to each candidate
+## 6. Confirm access to each candidate
 
-An Evalanche model manifest describes a route. It does not prove that route is
-available to you.
+**Access is not proof of availability.** An Evalanche model manifest describes a
+route. It does not prove that route is available to you.
 
 ### Add or review model manifests
 
@@ -196,10 +207,10 @@ conditions change.
 For a one-time run, repeated `--model` arguments are sufficient. They record
 that those exact IDs were explicitly selected for that command.
 
-## 3. Prepare representative cases
+## 7. Prepare representative cases
 
-Start from the synthetic templates in
-[`examples/local_comparison/`](../examples/local_comparison/):
+**The quality of the comparison depends on the quality of the cases.** Start
+from the synthetic templates in [`examples/local_comparison/`](../examples/local_comparison/):
 
 - `classification_cases.csv`;
 - `structured_extraction_cases.csv`;
@@ -230,7 +241,7 @@ For JSON, define required fields and canonicalization before running the held
 out set. For open-ended work, read [llm_judges.md](llm_judges.md). The current
 judge path is exploratory unless calibrated against human-reviewed examples.
 
-## 4. Register the local task
+## 8. Register the local task
 
 The fastest registry starting points are:
 
@@ -278,7 +289,7 @@ docker compose run --rm evalanche python -m evalanche.cli registry-validate
 
 Fix every reported issue before proceeding.
 
-## 5. Plan or preflight before spending money
+## 9. Plan or preflight before spending money
 
 ### One or more explicitly selected models
 
@@ -315,9 +326,10 @@ PDF and other large inputs use conservative token reserves and request cost
 ceilings. A local gate can prevent the next request from starting, but it
 cannot guarantee the provider's final invoice for an in-flight request.
 
-## 6. Run smoke, then screen
+## 10. Run smoke, then screen
 
-Choose a cap at or above the reviewed projection:
+**Do not continue merely because the command finished.** Choose a cap at or above
+the reviewed projection:
 
 ```bash
 docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchmark my_json_task@0.1.0 --tier smoke --all-compatible --access-set configs/access_sets/my_available_models.yaml --experiment --max-cost-usd 5.00
@@ -344,7 +356,7 @@ docker compose run --rm evalanche python -m evalanche.cli run-benchmark --benchm
 
 Promotion gates come from the benchmark manifest, not model-name logic.
 
-## 7. Build the comparison report
+## 11. Build the comparison report
 
 For access-confirmed candidates:
 
@@ -376,7 +388,7 @@ Open `model_comparison.md` first. CSV files retain model, pairwise, slice,
 field, and case-outcome detail. `model_comparison.json` records the access scope
 and artifact hashes.
 
-## 8. Read the report correctly
+## 12. Read the report correctly
 
 Check in this order:
 
@@ -396,7 +408,7 @@ the best model in general or the right choice for every stakeholder.
 
 Use the [decision record template](decision_record.md) to document the tradeoff.
 
-## 9. Add a new model later
+## 13. Add a new model later
 
 1. Add one valid model manifest.
 2. Confirm and add the route to the access set.
@@ -408,7 +420,7 @@ Use the [decision record template](decision_record.md) to document the tradeoff.
 No Python analysis code changes. Existing model outputs are not regenerated.
 Adding a model to a fixed benchmark requires only that new model's calls.
 
-## 10. Open-ended tasks
+## 14. Open-ended tasks
 
 The registry examples above focus on deterministic routes because they are the
 most defensible and simplest to operate. Evalanche's general `generate` and

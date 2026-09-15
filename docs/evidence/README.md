@@ -9,11 +9,11 @@ It is a curated guide, not a universal model database. It does not copy a
 snapshot of every leaderboard or automatically turn public scores into a
 candidate list.
 
-Public evidence may cover any relevant model. Only models whose access has
-been explicitly confirmed can enter an Evalanche local comparison or decision
-policy.
+Public evidence may cover any relevant model. Only model deployments whose
+access has been explicitly confirmed can enter an Evalanche local comparison or
+decision policy.
 
-## Start by need
+## 1. Start by need
 
 | Need | Read |
 | --- | --- |
@@ -24,7 +24,7 @@ policy.
 | Decide whether and how to use an LLM judge | [Evalanche LLM judge method](../llm_judges.md) |
 | Apply the evidence to a decision | [Model selection handbook](../choosing_a_model.md) |
 
-## Evidence map
+## 2. Evidence map
 
 No one source covers the full decision.
 
@@ -38,7 +38,7 @@ No one source covers the full decision.
 | Local representative evaluation | Fit for a specific task, route, prompt, and dataset | Universal performance outside that scope |
 | Human review | Judgment under stated criteria and reviewer population | Objective truth without a valid protocol and agreement evidence |
 
-## Source review standard
+## 3. Source review standard
 
 Every curated entry should make these fields recoverable:
 
@@ -62,10 +62,10 @@ and preserves the interpretation of its method. It does not treat one scraped
 score table as evergreen guidance.
 
 The machine-readable source of this maintenance metadata is
-[`catalog.yaml`](catalog.yaml). Its generated [status page](status.md) puts
-stale and superseded sources first.
+[`catalog.yaml`](catalog.yaml). Its generated [status page](status.md) prioritizes
+stale and superseded sources.
 
-## Publication status labels
+## 4. Publication status labels
 
 | Label | Use |
 | --- | --- |
@@ -76,12 +76,12 @@ stale and superseded sources first.
 | Provider-declared | Claim or result published by a model or service provider |
 | Local Evalanche result | Reproducible result tied to an Evalanche task and run record |
 
-Status does not determine relevance. A peer-reviewed benchmark can still be a
-poor match for the intended task. A current provider page can be the right
+**Status does not determine relevance.** A peer-reviewed benchmark can still be
+a poor match for the intended task. A current provider page can be the right
 source for route availability while remaining a weak source for independent
 quality claims.
 
-## Maintenance status labels
+## 5. Maintenance status labels
 
 | Label | Meaning |
 | --- | --- |
@@ -89,10 +89,10 @@ quality claims.
 | Stale | Its review date has passed or a known change requires reassessment |
 | Superseded | Retained for history, but replaced or withdrawn and not suitable as current guidance |
 
-Maintenance status is not an evidence-strength rating. A current source can
+**Maintenance status is not an evidence-strength rating.** A current source can
 still be weak for a particular decision.
 
-## A practical evidence stack
+## 6. A practical evidence stack
 
 For most decisions, use the smallest set that covers the important questions:
 
@@ -102,23 +102,19 @@ For most decisions, use the smallest set that covers the important questions:
 4. A small local comparison for unresolved task-specific questions.
 5. Human or expert review when the output construct or consequences require it.
 
-Adding more benchmarks does not automatically strengthen a claim. Additional
+**Adding more benchmarks does not automatically strengthen a claim.** Additional
 evidence helps only when it measures a relevant and distinct part of the
 decision.
 
-## Maintenance rules
+## 7. Maintenance rules
 
-- Prefer original papers, official benchmark sites, and maintained
-  repositories.
+- Prefer original papers, official benchmark sites, and maintained repositories.
 - Mark preprints as preprints.
-- Distinguish a base model from the full agent, retrieval system, or provider
-  product that was evaluated.
+- Distinguish a base model from the full agent, retrieval system, or provider product that was evaluated.
 - Never infer current model availability from a leaderboard entry.
-- Record the exact date when live scores, prices, or provider limits are used
-  in a decision.
+- Record the exact date when live scores, prices, or provider limits are used in a decision.
 - Preserve conflicting results and investigate setup differences.
-- Treat a model alias as unstable unless the provider guarantees a fixed
-  version.
+- Treat a model alias as unstable unless the provider guarantees a fixed version.
 - Recheck a source before a consequential decision.
 - Add a source only when it answers a question not already covered well.
 
