@@ -66,17 +66,18 @@ The first two paths do not require code.
 
 ### What the optional software does
 
-The evaluation engine supports independent model, access, dataset, benchmark,
-pricing, and result records; exact text and canonical JSON scoring; rubric-based
-LLM judging when deterministic evaluation is not appropriate; offline
-judge-validation against human annotations; agreement, stability, prompt,
-identity, order, and subgroup diagnostics; case, field, language, slice, cost,
-token, latency, retry, and failure summaries; paired comparisons and confidence
-intervals; smoke, screen, and standard tiers with aggregate cost preflight;
-budget gates, checkpoints, and safe resume; immutable compact result bundles and
-compatibility fingerprints; ranked or descriptive benchmark reporting depending
-on the evidence contract; and comparison reports that preserve tradeoffs instead
-of selecting a model by default.
+- Independent model, access, dataset, benchmark, pricing, and result records.
+- Exact text and canonical JSON scoring.
+- Rubric-based LLM judging when deterministic evaluation is not appropriate.
+- Offline judge validation against human annotations.
+- Agreement, stability, prompt, identity, order, and subgroup diagnostics.
+- Case, field, language, slice, cost, token, latency, retry, and failure summaries.
+- Paired comparisons and confidence intervals.
+- Smoke, screen, and standard tiers with aggregate cost preflight.
+- Budget gates, checkpoints, and safe resume.
+- Immutable compact result bundles and compatibility fingerprints.
+- Ranked or descriptive benchmark reporting depending on the evidence contract.
+- Comparison reports that preserve tradeoffs instead of selecting a model by default.
 
 Unvalidated judge results remain exploratory. A matching validation contract and
 report are required before judge evidence can support stronger comparative
@@ -179,7 +180,7 @@ Credentials and resource-specific endpoint URLs belong only in `.env`.
 
 ### Principles
 
-- Access first, but not absolutely: if all accessible options fail or are materially worse, consider expanding access or revisiting the decision problem.
+- Access first, unless all accessible options fail the hard requirements or are materially worse than the alternatives, in which case consider expanding access or revisiting the decision problem.
 - Task relevance over broad rank.
 - Public evidence before unnecessary local calls.
 - Deterministic or executable scoring when a defensible answer exists.

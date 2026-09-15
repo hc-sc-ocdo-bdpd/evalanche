@@ -16,13 +16,11 @@ winner is not a requirement.
 
 **Terminology:**
 
-- model: the underlying model family or checkpoint;
-- model deployment: the exact provider route, version, and config available to the user;
-- candidate: a model deployment that passes access and hard requirements;
-- benchmark: a standardized evidence source or test suite;
-- evaluation: any benchmark, rubric, or local comparison used to measure performance.
-
-Using the same term for all of them makes the decision logic harder to follow.
+- *Model:* the underlying model family or checkpoint. Example: GPT-5 or Llama 3.1.
+- *Model deployment:* the exact provider route, version, and config available to the user. Example: Azure GPT-5 in the approved production region.
+- *Candidate:* a model deployment that passes access and hard requirements. Example: a deployment that meets modality, privacy, and cost constraints for the task.
+- *Benchmark:* a standardized evidence source or test suite. Example: a public benchmark for long-document extraction or classification.
+- *Evaluation:* any benchmark, rubric, or local comparison used to measure performance. Example: a local smoke test or a judge-based scoring run.
 
 ## 1. Overview
 
