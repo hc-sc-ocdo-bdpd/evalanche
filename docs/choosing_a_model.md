@@ -6,14 +6,25 @@ the Evalanche software.
 
 The central principle is simple:
 
-> Start with the task and the models you can access. Use public benchmarks as
-> scoped evidence. Run a local comparison only when it can resolve an
-> important unknown.
+> Start with the task and the model deployments you can access. Use public
+> benchmarks as scoped evidence. Run a local comparison only when it can
+> resolve an important unknown.
 
-The result may be one model, a conditional shortlist, or a documented tradeoff
-that the decision owner resolves. Forcing a single winner is not a requirement.
+The result may be one model deployment, a conditional shortlist, or a
+well-documented tradeoff that the decision owner resolves. Forcing a single
+winner is not a requirement.
 
-## The complete process
+**Terminology:**
+
+- *Model:* the underlying model family or checkpoint. Example: GPT-5 or Llama 3.1.
+- *Model deployment:* the exact provider route, version, and config available to the user. Example: Azure GPT-5 in the approved production region.
+- *Candidate:* a model deployment that passes access and hard requirements. Example: a deployment that meets modality, privacy, and cost constraints for the task.
+- *Benchmark:* a standardized evidence source or test suite. Example: a public benchmark for long-document extraction or classification.
+- *Evaluation:* any benchmark, rubric, or local comparison used to measure performance. Example: a local smoke test or a judge-based scoring run.
+
+## 1. Overview
+
+### The complete process
 
 | Stage | Question | Output |
 | --- | --- | --- |
@@ -29,7 +40,7 @@ that the decision owner resolves. Forcing a single winner is not a requirement.
 The order matters. Starting from a leaderboard and working backward often
 creates a false sense of objectivity.
 
-## 1. Frame the actual decision
+## 2. Frame the actual decision
 
 Write one sentence that names the work and the intended environment:
 
@@ -41,50 +52,32 @@ evidence must cover.
 
 ### Describe the input
 
-Record the form, diversity, and size of representative inputs:
+Record the actual input form, variation, and constraints: plain text, PDFs,
+images, audio, repositories, or tool state; typical and maximum length; language
+and regional variation; layout, OCR, tables, or handwriting issues; and any
+privacy, residency, or policy constraints.
 
-- plain text, scanned images, native PDFs, audio, video, code repositories, or
-  tool state;
-- typical and maximum length;
-- languages and regional varieties;
-- document quality, layout, OCR, tables, or handwriting;
-- sensitive, confidential, regulated, or residency-constrained content;
-- whether the model receives retrieved evidence, tools, memory, or system
-  instructions.
-
-A result on text pasted from a PDF does not establish that a provider route
-can accept or reason over the complete PDF.
+**Important:** a result on text pasted from a PDF does not establish that the
+provider route can accept or reason over the full PDF workflow.
 
 ### Describe the required output
 
-State what a usable response looks like:
+State what a usable response looks like: a class label, valid JSON, a
+factually grounded answer with citations, a code patch that passes tests, a
+verifiable tool sequence, or another output with explicit acceptance criteria.
 
-- one class from a closed list;
-- valid JSON matching a schema;
-- a factual answer with cited evidence;
-- a code patch that passes tests;
-- a tool sequence that reaches a verifiable state;
-- a summary, rewrite, or explanation judged against named criteria.
-
-Include failures that invalidate an otherwise fluent answer. Examples include
-invented facts, omitted safety information, invalid JSON, unsupported
-citations, or an unauthorized tool action.
+Include the failures that invalidate an otherwise fluent answer: invented facts,
+invalid JSON, unsupported citations, omitted safety information, or unauthorized
+tool actions.
 
 ### Define success before seeing outputs
 
-Use criteria that connect to the real use, such as:
+Use criteria tied to the real decision: strict pass rate, per-field accuracy,
+recall for a high-cost error class, groundedness or citation accuracy,
+executable task success, failure rate, cost per completed case, and p95 latency
+or throughput.
 
-- strict pass rate;
-- per-field accuracy;
-- recall for a high-cost error class;
-- groundedness or citation accuracy;
-- executable task success;
-- human preference under a blinded protocol;
-- maximum request failure rate;
-- cost per completed case;
-- p95 latency or throughput.
-
-Do not choose a metric only because a public leaderboard already reports it.
+**Do not choose a metric only because a public leaderboard already reports it.**
 The [HELM taxonomy](https://arxiv.org/abs/2211.09110) is useful here because it
 separates scenarios, metrics, and evaluation conditions rather than reducing
 performance to one number.
@@ -105,7 +98,17 @@ Framework](https://www.nist.gov/itl/ai-risk-management-framework) treats
 measurement as part of a broader context and governance process, not a single
 benchmark event.
 
-## 2. Confirm model access first
+### Consider workflow fit
+
+A useful model does not exist in isolation. A weaker model in a well-designed
+workflow can outperform a stronger model in a poor workflow.
+
+Ask whether the bottleneck is the model or the surrounding workflow: the task
+setup, retrieval, prompts, tool use, human review, and operational controls. A
+model that looks strong on paper can still be a poor fit for a process that is
+mis-specified, brittle, or missing review gates.
+
+## 3. Confirm model access first
 
 A model is a candidate only if the user or organization can use the exact
 deployment route in the intended environment.
@@ -128,12 +131,12 @@ state of the field. Those models remain context, not candidates.
 
 These statements are different:
 
-- The deployment appears in a local registry.
-- The deployment declares PDF or tool support.
-- The route is compatible with a benchmark manifest.
-- The user can actually call it with the required permissions.
+- the deployment appears in a registry;
+- the deployment declares PDF or tool support;
+- the route is compatible with a benchmark manifest;
+- the user can actually call it with the required permissions.
 
-Only the last statement confirms access. Capability and compatibility are
+**Only the last statement confirms access.** Capability and compatibility are
 still checked afterward.
 
 ### Access changes over time
@@ -151,7 +154,12 @@ The software workflow uses a dated [access-set file](local_comparison.md#2-confi
 for reusable comparisons. Repeated `--model` arguments are a one-run access
 confirmation.
 
-## 3. Apply hard requirements before preferences
+**Access is the right starting place, not an absolute rule.** If every currently
+accessible option fails the hard requirements or is materially worse than the
+non-accessible alternatives, consider expanding access, changing the workflow,
+or revisiting whether a local model comparison is the right tool.
+
+## 4. Apply hard requirements before preferences
 
 Hard requirements are pass or fail. Preferences are tradeoffs. Mixing them can
 make an unavailable or noncompliant model look attractive because of a high
@@ -159,32 +167,22 @@ quality score.
 
 ### Common hard requirements
 
-- available through an approved route;
-- permitted data location and retention terms;
-- required text, image, PDF, audio, or tool interface;
-- minimum context size for the complete workflow;
-- valid structured output or function-calling support;
-- required language behavior;
-- a maximum unacceptable-error rate;
-- a mandatory throughput, latency, or reliability threshold;
-- a fixed budget ceiling;
-- required audit, versioning, or reproducibility controls.
+A hard requirement is a pass/fail gate: approved route, legal and data-location
+constraints, required modality and context length, structured-output or tool
+support, mandated language behavior, budget ceiling, or required reliability or
+latency thresholds.
 
 ### Common preferences
 
-- higher quality after the minimum quality bar is met;
-- lower cost;
-- lower latency;
-- simpler operations;
-- better observability;
-- more stable versioning;
-- stronger evidence for a specialized language or domain.
+Preferences are tradeoffs: lower cost, lower latency, simpler operations,
+better observability, more stable versioning, or stronger evidence for a
+specialized language or domain.
 
-Keep the exclusion reason for every removed candidate. "Unknown" is not the
+**Keep the exclusion reason for every removed candidate.** "Unknown" is not the
 same as "fails." An unknown capability may require provider verification or a
 small test.
 
-## 4. Find public evidence that matches the task
+## 5. Find public evidence that matches the task
 
 Public evidence is useful when it helps answer a specific question. It is weak
 when the evaluated construct, inputs, outputs, model version, or harness differ
@@ -251,7 +249,7 @@ input support, pricing, region, and service limits. Provider benchmark claims
 should still be labelled as provider-declared until the evaluation can be
 independently checked.
 
-## 5. Judge the strength of the evidence
+## 6. Judge the strength of the evidence
 
 Use four labels consistently:
 
@@ -275,7 +273,27 @@ constructs. See the 2025 preprint [Construct Validity in AI Benchmarks](https://
 for a systematic treatment. Because it is a preprint, use it as methodological
 guidance rather than a settled standard.
 
-## 6. Decide whether public evidence is enough
+## 7. Decide whether public evidence is enough
+
+### Decision confidence
+
+Use a five-point decision-confidence label to summarize how strongly the
+available evidence supports the choice.
+
+| Confidence | Meaning |
+| --- | --- |
+| 5 - Very high | Strong, current, task-relevant evidence with a clear margin and limited uncertainty |
+| 4 - High | Good evidence with minor gaps or a small margin between candidates |
+| 3 - Moderate | Relevant evidence exists, but some important questions remain or the gap is narrow |
+| 2 - Low | Evidence is weak, mixed, or only loosely matched to the actual task |
+| 1 - Very low | The evidence is thin, conflicting, or not informative enough to justify a confident choice |
+
+This label should reflect not just benchmark scores, but also evidence quality,
+model fit, task relevance, operational risk, and the cost of being wrong.
+
+A close result with weak evidence should not be treated as confident. A model
+with moderate evidence and a large operational advantage can still be a sensible
+choice if the decision owner documents the uncertainty.
 
 Public evidence may be sufficient when:
 
@@ -297,17 +315,19 @@ Run a local comparison when:
 - the choice has material consequences;
 - public evidence is missing or conflicting.
 
-Do not run a local test merely to produce another leaderboard. State which
-decision-relevant unknown it is intended to resolve.
+**Do not run a local comparison solely to produce another leaderboard.** State
+which decision-relevant unknown it is intended to resolve.
 
-## 7. Design representative local cases
+## 8. Design representative local cases
 
 The quality of a local evaluation depends more on the cases and scoring than
-on the number of models.
+on the number of model deployments being compared.
 
 ### Required case contract
 
-Evalanche's universal case format begins with:
+Evalanche's universal case format begins with a case ID, input, expected output,
+and evaluation type. Additional columns can describe language, domain, risk,
+difficulty, source, or document family.
 
 ```text
 case_id
@@ -316,23 +336,20 @@ expected_output
 evaluation_type
 ```
 
-Additional columns can describe language, domain, risk, difficulty, source,
-document family, or another grouping variable.
-
 ### Expected inputs and outputs by task
 
-| Task | Supply | Prefer |
-| --- | --- | --- |
-| Classification | Representative input and correct label | Exact deterministic scoring, plus per-class analysis |
-| Structured extraction | Source, expected JSON, schema, and required fields | Parsed JSON and field-level deterministic scoring |
-| Short factual answer | Question, evidence where applicable, and accepted answer | Normalized exact or reference-based scoring |
-| Retrieval-augmented answer | Query, retrieved context, reference answer or supported claims | Separate context relevance, groundedness, and answer quality |
-| Coding | Repository state, task, environment, and tests | Executable tests and state checks |
-| Tool workflow | Tool definitions, permissions, starting state, and valid end state | Executable or state-based evaluation |
-| Summary or rewrite | Source, audience, rubric, unacceptable errors, and human-reviewed examples | Human review, optionally supported by a calibrated LLM judge |
-
-The expected output should encode the real contract, not an idealized answer
+The expected output should reflect the real contract, not an idealized answer
 that is unrelated to how the output will be used.
+
+| Task | What to supply | Preferred scoring |
+| --- | --- | --- |
+| Classification | Representative inputs and labels | Deterministic scoring with class-level analysis |
+| Structured extraction | Source, schema, and expected JSON | Parsed JSON and field-level scoring |
+| Short factual answer | Question, evidence, and accepted answer | Normalized exact or reference-based scoring |
+| RAG answer | Query, context, and supported claims | Separate groundedness and answer quality |
+| Coding | Repo state, task, environment, and tests | Executable tests |
+| Tool workflow | Tool definitions and valid end state | Executable or state-based evaluation |
+| Summary or rewrite | Source, rubric, and unacceptable errors | Human review, optionally supported by a calibrated LLM judge |
 
 ### Sample from real variation
 
@@ -355,12 +372,15 @@ If prompts, labels, canonicalization, or scoring rules change after inspecting
 test failures, those cases have become development evidence. A publishable or
 high-consequence claim should use a fresh unseen test cohort.
 
+**A benchmark or local comparison is only as strong as its frozen
+case set and scoring protocol.**
+
 Dynamic and human-in-the-loop benchmark work, such as
 [Dynabench](https://aclanthology.org/2021.naacl-main.324/), illustrates why
 static datasets can saturate and why new failure-driven data should be managed
 carefully rather than silently mixed into the original test claim.
 
-## 8. Choose the least subjective valid scorer
+## 9. Choose the least subjective valid scorer
 
 Use this order of preference when it matches the construct:
 
@@ -382,7 +402,7 @@ The current Evalanche LLM-judge path is exploratory unless it has been
 calibrated for the task. Read the [LLM judge method](llm_judges.md) before
 using it for an important decision.
 
-## 9. Test in stages
+## 10. Test in stages
 
 Start with the least expensive run that can reveal a blocker.
 
@@ -401,7 +421,7 @@ A candidate that fails a local screen does not need a full run for an internal
 decision. A published leaderboard is different: every listed model must
 complete the same frozen benchmark release.
 
-## 10. Interpret results without hiding tradeoffs
+## 11. Interpret results without hiding tradeoffs
 
 Review more than average score:
 
