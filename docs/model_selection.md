@@ -73,8 +73,8 @@ selection:
 ```
 
 Profile names must match `model_name` values in the evaluation data.
-Availability must be written explicitly. An omitted availability value remains
-unknown and cannot silently become eligible.
+**Availability must be written explicitly. An omitted availability value
+remains unknown and cannot silently become eligible.**
 
 The profile is a decision record, not independent proof. The owner should
 verify availability, hosting, region, approval, and capabilities through the
@@ -94,7 +94,7 @@ actual account and official provider documentation.
 | `model_profiles[].available` | Explicit availability for the intended deployment |
 
 A failed requirement produces `ineligible`. Missing evidence produces
-`unknown`. Missing cost is never treated as zero.
+`unknown`. **Missing cost is never treated as zero.**
 
 ## Weighted score
 
@@ -119,8 +119,8 @@ The highest policy score is selected only when its lead reaches
 test.
 
 When quality is the only positive weight, the observed leader must also clearly
-outperform every other eligible candidate in corrected paired tests. A rank
-alone is not enough.
+outperform every other eligible candidate in corrected paired tests. **A rank
+alone is not enough.**
 
 Run a sensitivity check when modest changes to weights or thresholds could
 reverse the selected model. An unstable policy result should be reported as a

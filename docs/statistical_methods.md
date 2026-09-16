@@ -15,7 +15,7 @@ pass rate precisely.
 
 ## Paired comparisons
 
-All candidate models must be evaluated on the same case IDs. Evalanche uses
+**All candidate models must be evaluated on the same case IDs.** Evalanche uses
 the two-sided exact McNemar test to compare each pair's pass/fail outcomes. The
 test focuses on the useful disagreements: cases passed by one model and failed
 by the other.
@@ -33,14 +33,15 @@ paired test distinguishes it from every other evaluated model. Even then, the
 comparison report does not choose a model automatically.
 
 An explicitly enabled policy can make a separate task-specific decision
-using explicit requirements and operational weights. That policy decision is
-not a statistical significance claim. See
+using explicit requirements and operational weights. **That policy decision is
+not a statistical significance claim.** See
 [`model_selection.md`](model_selection.md) for its safeguards and limitations.
 
 ## What these calculations do not cover
 
 The current calculations assume that benchmark cases are representative and
-independent. They quantify case-sampling uncertainty only. They do not include:
+independent. They quantify case-sampling uncertainty only. **They do not
+include:**
 
 - variation from repeated candidate-model generations;
 - variation from repeated LLM-judge calls;

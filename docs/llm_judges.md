@@ -19,8 +19,8 @@ is part of the real construct.
 7. Test run-to-run and prompt stability.
 8. Preserve the exact judge model, prompt, version, settings, and outputs.
 9. Use human or expert review when consequences justify it.
-10. Treat current Evalanche judge results as exploratory unless this protocol
-    has been completed for the task.
+10. **Treat current Evalanche judge results as exploratory unless this
+    protocol has been completed for the task.**
 
 ## First ask whether a judge is needed
 
@@ -258,7 +258,7 @@ For each example, preserve:
 - adjudicated outcome;
 - rationale and ambiguity notes.
 
-Do not tune the judge on the final held-out test examples.
+**Do not tune the judge on the final held-out test examples.**
 
 ## Human reference protocol
 
@@ -500,8 +500,8 @@ case_id,criterion,judge_variant_id,trial_id,prompt_variant_id,identity_condition
 ## How evidence levels are enforced
 
 The protocol declares a target level and stakeholder-approved gates. The
-software computes the highest level actually achieved. A user cannot promote
-evidence merely by writing `decision_grade` in a result file.
+software computes the highest level actually achieved. **A user cannot promote
+evidence merely by writing `decision_grade` in a result file.**
 
 The calibrated gates cover held-out cases, human reference quality,
 judge-human kappa, failure detection, false approval, baseline failures, and
@@ -517,7 +517,7 @@ defaults. The protocol owner must choose and justify them based on error cost,
 prevalence, task stakes, and intended use. Evalanche reports both the declared
 threshold and observed value.
 
-Synthetic fixtures can never exceed `exploratory`. `publishable` means the
+**Synthetic fixtures can never exceed `exploratory`.** `publishable` means the
 evidence package passed its declared software-verifiable and documented
 governance gates. Those gates also require either multiple saved judge variants
 or a documented rationale for the frozen judge-selection protocol. It is not
@@ -551,10 +551,10 @@ range, threshold, and criteria must also match. Any prompt, rubric, model,
 version, temperature, task, or criterion drift changes the contract hash and
 is rejected before judge calls begin.
 
-Without a matching report, judge rows remain `exploratory`. They can be
+**Without a matching report, judge rows remain `exploratory`. They can be
 inspected and compared descriptively, but they cannot produce an
 evidence-supported leader or an opt-in policy selection when the configured
-minimum is `calibrated`.
+minimum is `calibrated`.**
 
 Therefore:
 

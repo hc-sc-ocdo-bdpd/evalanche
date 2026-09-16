@@ -2,7 +2,7 @@
 
 > Snapshot generated for 2026-08-26. Run the offline evidence-status command before relying on this page for a new decision.
 
-This page tracks whether each curated source has been reviewed on schedule. Status describes maintenance only. It is not a model rating or an evidence-strength grade.
+This page tracks whether each curated source has been reviewed on schedule. **Status describes maintenance only. It is not a model rating or an evidence-strength grade.**
 
 ## Summary
 

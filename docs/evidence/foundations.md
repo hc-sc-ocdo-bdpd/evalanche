@@ -70,8 +70,9 @@ not to make the claim sound universal, but to make its valid scope clear.
   evaluation objective, relevant benchmark, statistical analysis, reported
   details, and qualified claims. AI 800-3 discusses statistical models and
   uncertainty assumptions for benchmark analysis.
-- **Important limit:** AI 800-2 is an initial public draft, not a final NIST
-  standard. Verify its publication status before citing it as current policy.
+- **Important limit:** **AI 800-2 is an initial public draft, not a final NIST
+  standard. Verify its publication status before citing it as current
+  policy.**
 
 ## Scope, validity, and benchmark choice
 
@@ -120,8 +121,8 @@ not to make the claim sound universal, but to make its valid scope clear.
   models expose new weaknesses?
 - **Core contribution:** Proposes dynamic, human-and-model-in-the-loop data
   creation and evaluation so failures can drive new rounds.
-- **Important limit:** Failure-driven challenge data should not be silently
-  mixed into an unchanged held-out claim. It measures a changing frontier and
+- **Important limit:** **Failure-driven challenge data should not be silently
+  mixed into an unchanged held-out claim.** It measures a changing frontier and
   requires careful versioning.
 
 ## Contamination, freshness, and changing systems
@@ -180,9 +181,9 @@ often the complete system rather than the base model.
   organic prompts under the arena protocol?
 - **Core contribution:** Uses blinded pairwise human preferences at scale and
   statistical ranking methods.
-- **Important limit:** Preference is not the same construct as factual
+- **Important limit:** **Preference is not the same construct as factual
   correctness, policy compliance, structured extraction, or executable task
-  success. The population and prompts also determine transfer.
+  success.** The population and prompts also determine transfer.
 
 ## Statistical interpretation
 

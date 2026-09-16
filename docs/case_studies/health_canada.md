@@ -1,8 +1,8 @@
 # Health Canada case studies
 
 These case studies show how Evalanche handles bilingual, structured,
-source-grounded evaluation on public Health Canada data. They are supporting
-examples, not a model recommendation for Health Canada generally.
+source-grounded evaluation on public Health Canada data. **They are supporting
+examples, not a model recommendation for Health Canada generally.**
 
 ## At a glance
 
@@ -12,8 +12,8 @@ examples, not a model recommendation for Health Canada generally.
 | Product Monograph evidence-window extraction 0.1.0 | Official text windows containing the required evidence | 80 | Descriptive |
 | Product Monograph full-PDF extraction 0.1.0 | Complete official English and French PDFs | 80 | Descriptive |
 
-Every result applies only to its exact dataset, input contract, prompt, scorer,
-model route, and recorded operating conditions.
+**Every result applies only to its exact dataset, input contract, prompt,
+scorer, model route, and recorded operating conditions.**
 
 ## Drug Product Database census
 
@@ -32,7 +32,8 @@ structured extraction and schema fidelity, not unstructured document reading.
 The reference values come directly from the frozen DPD source. The benchmark
 also includes product-family analysis, English and French slices, field-level
 diagnostics, paired disagreements, and a deterministic 105-case evidence
-audit. None of this turns the result into a universal model recommendation.
+audit. **None of this turns the result into a universal model
+recommendation.**
 
 Open the [release overview](../../reports/hc_dpd_census/0.2.0/README.md),
 [analysis and validation](../../reports/hc_dpd_census/0.2.0/analysis/README.md),
@@ -52,8 +53,8 @@ relevant evidence has already been located.
 | GPT-5.4 Mini | 0 / 80 | 0.00% | 0.00% | Unknown | Ineligible, generation failed |
 
 The 390 scored reference facts are traceable to exact source pages through
-automated evidence checks. Independent human sign-off is not claimed, so
-Evalanche reports the measurements without assigning an official rank.
+automated evidence checks. **Independent human sign-off is not claimed, so
+Evalanche reports the measurements without assigning an official rank.**
 
 ## Product Monograph full-PDF extraction
 
@@ -72,8 +73,8 @@ extraction problem.
 All four saved runs generated 80 of 80 responses. The compact result bundles
 retain bilingual slices, latency, cost, field diagnostics, and paired
 comparisons. As with the evidence-window condition, reference facts have
-complete automated source-page evidence but no independent human sign-off, so
-the results remain descriptive.
+**complete automated source-page evidence but no independent human sign-off, so
+the results remain descriptive.**
 
 Open the [Product Monograph benchmark card](../hc_benchmark/HC_PRODUCT_MONOGRAPH_BENCHMARK.md),
 [evidence-window results](../../reports/benchmarks/hc_product_monograph_structured_extraction/0.1.0/leaderboard.html), or
@@ -88,14 +89,14 @@ The two conditions deliberately answer different questions:
 - **Full PDF:** how well does the complete document-processing path work when
   the model must also find and interpret those facts in the full file?
 
-Their difference is diagnostically useful, but the scores should not be merged
-into one benchmark or treated as interchangeable samples.
+Their difference is diagnostically useful, but **the scores should not be merged
+into one benchmark or treated as interchangeable samples.**
 
 ## Interpretation boundaries
 
 - DPD results do not predict Product Monograph, summarization, RAG, coding,
   agent, safety, or clinical performance.
-- Product Monograph results do not establish a best model for Health Canada.
+- Product Monograph results do not establish a best model for Health Canada.*
 - A registry entry or recorded result does not establish current model access,
   approval, price, or availability.
 - Configured costs are benchmark estimates based on recorded usage and price

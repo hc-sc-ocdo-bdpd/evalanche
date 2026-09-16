@@ -60,8 +60,8 @@ Every result bundle records a SHA-256 compatibility fingerprint over:
 - scoring and canonicalization contract;
 - Evalanche evaluator compatibility version.
 
-A changed case, prompt, scorer, or dataset release cannot silently enter an
-existing leaderboard. The leaderboard build fails with the expected and
+**A changed case, prompt, scorer, or dataset release cannot silently enter an
+existing leaderboard.** The leaderboard build fails with the expected and
 observed compatibility hashes.
 
 The package release version is recorded separately for traceability. A package
@@ -82,11 +82,12 @@ reporting:
 `descriptive` requires a reason. Complete runs receive no numeric rank but keep
 their pass rate, field score, slices, cost, latency, reliability, and pairwise
 diagnostics. Incomplete or failed runs remain `ineligible`. Freezing inputs
-preserves reproducibility, it does not by itself establish that ranking is an
+preserves reproducibility; it does not by itself establish that ranking is an
 appropriate claim.
 
+## Running benchmarks
 
-## Plan models without calls
+### Plan models without calls
 
 Resolve every access-confirmed model that declares the required capabilities:
 
@@ -113,11 +114,11 @@ under ignored local run directories. It reports the exact case and model-call
 count. Planning also refuses a model that does not declare every capability
 required by the benchmark.
 
-`--all-compatible` without `--access-set` is rejected. A registered and
-compatible route is not proof that the user can access it. Repeated `--model`
+**`--all-compatible` without `--access-set` is rejected. A registered and
+compatible route is not proof that the user can access it.** Repeated `--model`
 arguments explicitly confirm access for that command.
 
-## Run a registered benchmark
+### Run a registered benchmark
 
 Only `ready` and `frozen` benchmarks can register results. Ranked benchmarks
 assign ranks to complete compatible runs, while descriptive benchmarks publish
@@ -134,7 +135,7 @@ The command generates responses, evaluates them, registers an immutable
 compact result bundle, rebuilds that benchmark's leaderboard, and refreshes
 the benchmark index. Existing models are not rerun.
 
-## Run a local experiment
+### Run a local experiment
 
 Use `--experiment` when the evidence is still exploratory or the benchmark is
 draft:
@@ -147,12 +148,12 @@ python -m evalanche.cli run-benchmark \
 ```
 
 The command performs generation and evaluation, then writes a generic local
-comparison. It never registers a result, rebuilds a leaderboard, or changes
-the benchmark's status. This is the only execution mode allowed for a draft
+comparison. **It never registers a result, rebuilds a leaderboard, or changes
+the benchmark's status.** This is the only execution mode allowed for a draft
 benchmark. `--all-compatible --access-set <path> --experiment` and repeated
 `--model` arguments are supported.
 
-## Run a cost-aware tier campaign
+### Run a cost-aware tier campaign
 
 An optional `tiers` mapping in the benchmark manifest defines cumulative
 cohorts without putting dataset or model names in the engine. A tier declares:
@@ -200,9 +201,9 @@ The full campaign is blocked before its first call when the aggregate
 projection exceeds the cap. During execution, Evalanche runs models
 sequentially, reserves conservative retry cost before starting work, uses the
 existing case and model checkpoint ledger, and refuses to start more work when
-the remaining local budget is insufficient. One provider call can still cost
+the remaining local budget is insufficient. **One provider call can still cost
 more than its local estimate, so this is a hard local start gate, not a cloud
-billing limit.
+billing limit.**
 
 After the screen completes, select models through manifest data rather than a
 fixed analysis list:
@@ -341,14 +342,16 @@ python -m evalanche.cli build-leaderboard --all
 Open `reports/benchmarks/index.html` in a browser. Each standalone HTML table
 is sortable and also has CSV, JSON, and Markdown equivalents.
 
-Rank is strict case pass rate among complete runs. A run with any generation
+**Rank is strict case pass rate among complete runs. A run with any generation
 failure or unscored case remains visible for diagnosis but is ineligible for
-rank and excluded from paired comparisons. Field score, arbitrary dataset
+rank and excluded from paired comparisons.** Field score, arbitrary dataset
 slices, generation reliability, cost, and latency remain separate. Evalanche
 does not collapse those dimensions into an unexplained universal
 recommendation.
 
-## Add another model
+## Extending the registry
+
+### Add another model
 
 1. Add one YAML file under `configs/models/`.
 2. Confirm and add the route to the relevant access set.
@@ -363,7 +366,7 @@ and pairwise output is rebuilt for the discovered set.
 Tests add a synthetic model through a manifest and register it without a
 Python edit to the engine.
 
-## Add another dataset and benchmark
+### Add another dataset and benchmark
 
 1. Freeze source and derived files with a dataset manifest.
 2. Create a case table with `case_id`, `input`, `expected_output`, and
