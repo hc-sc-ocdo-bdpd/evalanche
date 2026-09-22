@@ -35,9 +35,9 @@ Create a new dataset or benchmark version when a material part of the measured
 contract changes, including case membership, reference outputs, prompt, input
 representation, scorer, rubric, judge contract, or intended construct.
 
-Do not mix incompatible result fingerprints. A documentation or reporting-only
-software change can preserve evaluator compatibility when evaluation semantics
-are unchanged.
+**Do not mix incompatible result fingerprints.** A documentation or
+reporting-only software change can preserve evaluator compatibility when
+evaluation semantics are unchanged.
 
 `frozen` means the release contract is reproducible. It does not by itself say
 whether results should be ranked. Use `reporting.mode: descriptive` when the
@@ -83,11 +83,11 @@ scorer, limitations, and intended interpretation are documented.
 
 ## Security and failure handling
 
-Stop a run if credentials, restricted data, unexpected provider routing,
-excessive cost, or unexplained source drift is observed. Preserve only the
+**Stop a run if credentials, restricted data, unexpected provider routing,
+excessive cost, or unexplained source drift is observed.** Preserve only the
 sanitized logs and hashes needed for diagnosis. Rotate exposed credentials
 through the issuing platform.
 
-The repository does not assert a public open-source licence. Confirm the
+**The repository does not assert a public open-source licence.** Confirm the
 appropriate distribution terms before external release or outside
 contributions.

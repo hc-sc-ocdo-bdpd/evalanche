@@ -2,8 +2,8 @@
 
 Evalanche dataset manifests make benchmark inputs, sampling decisions, split
 assignments, and provenance inspectable and reproducible. The manifest is a
-frozen record of a dataset release. It is not a download script and it does not
-silently update when a source changes.
+frozen record of a dataset release. **It is not a download script and it does
+not silently update when a source changes.**
 
 The current manifest schema version is `1.0`.
 
@@ -28,13 +28,16 @@ Sampled benchmark releases also record their sampling and split decisions:
    development or held-out assignment. Split members cannot overlap.
 
 A `source_snapshot` cannot declare sampling or splits. A `benchmark` requires
-both. This lets the same contract freeze raw DPD inputs before a derived benchmark
-exists, without inventing meaningless split assignments for the full source.
+both. This lets the same contract freeze raw DPD inputs before a derived
+benchmark exists, without inventing meaningless split assignments for the
+full source.
 
 Unknown fields are rejected. This protects the release from misspelled fields
 that would otherwise look like valid metadata.
 
-## Working example
+## Example manifests
+
+### Working example
 
 The repository includes a complete manifest for the six synthetic example
 cases:
@@ -51,13 +54,13 @@ explicit and must load the same way in every environment.
 
 The repository's `.gitattributes` pins tracked files under `data/` to LF line
 endings. This prevents Windows Git settings from changing dataset bytes after
-their byte sizes and SHA-256 hashes have been recorded. Do not convert a
-frozen dataset file's line endings in place.
+their byte sizes and SHA-256 hashes have been recorded. **Do not convert a
+frozen dataset file's line endings in place.**
 
 ZIP, PDF, and Parquet files under `data/` are explicitly marked as binary so
 Git never applies line-ending conversion to their bytes.
 
-## Materialized Health Canada source example
+### Materialized Health Canada source example
 
 The first non-synthetic source release freezes the Health Canada DPD marketed
 and approved archives published on 2026-07-02:
@@ -72,7 +75,7 @@ The release is a `source_snapshot`, so it correctly omits sampling and splits.
 The manifest records the untouched archive hashes, while a hashed validation
 report records every ZIP member's structure and row count.
 
-## Materialized Health Canada benchmark example
+### Materialized Health Canada benchmark example
 
 The complete eligible-population DPD benchmark is frozen as:
 
@@ -156,8 +159,8 @@ verified, but page counting is not currently automatic.
 7. Run `verify-dataset` and retain the optional JSON verification report.
 8. Commit the manifest with the release metadata allowed by the source terms.
 
-If any source file or sampling decision changes, create a new dataset version.
-Do not edit a frozen release in place.
+**If any source file or sampling decision changes, create a new dataset
+version. Do not edit a frozen release in place.**
 
 ## Reproducibility boundaries
 

@@ -32,7 +32,8 @@ preferred over LiteLLM response-cost metadata when both are complete.
 
 The configured estimate, LiteLLM-reported value, selected cost, and selected
 source remain separate in the evidence. LiteLLM cost is a fallback when a
-configured estimate is unavailable. Missing evidence is never treated as zero.
+configured estimate is unavailable. **Missing evidence is never treated as
+zero.**
 
 Summary cost is reported only when every request in that summary has a known
 cost. `cost_coverage` shows the proportion of requests with cost metadata. For
@@ -52,8 +53,8 @@ Generation and judge requests have separate status and failure-rate fields.
   score of zero because the model did not produce an answer for the case.
 - A judge error is an evaluation-system failure. It remains unscored and is not
   counted as a candidate-model failure.
-- Any unscored judge row blocks a complete comparative conclusion until the
-  judge call is recovered or rerun.
+- **Any unscored judge row blocks a complete comparative conclusion until the
+  judge call is recovered or rerun.**
 
 Set `judge.continue_on_error: true` to preserve judge failures in combined run
 artifacts. With the default value of `false`, a judge error stops the run.

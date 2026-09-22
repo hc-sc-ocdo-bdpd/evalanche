@@ -6,8 +6,8 @@ never inferred from a deployment name.
 
 ## Pricing catalog
 
-Start from `configs/endpoint_pricing.example.yaml`, but replace every example
-value before using it in an evaluation decision.
+Start from `configs/endpoint_pricing.example.yaml`, but **replace every
+example value before using it in an evaluation decision.**
 
 ```yaml
 schema_version: "1.0"
@@ -25,7 +25,7 @@ endpoints:
     notes: replace zero placeholders before enabling this entry
 ```
 
-The zero values above are placeholders, not model prices. The schema rejects an
+**The zero values above are placeholders, not model prices.** The schema rejects an
 entry whose input and output rates are both zero. Use the rate for the actual
 provider, deployment type, region, billing arrangement, and effective date.
 Rates are expressed in US dollars per one million tokens because current
@@ -120,14 +120,14 @@ references. Old run metadata therefore retains the rates used even after the
 catalog changes.
 
 When a rate changes, update the catalog version, effective date, source, and
-rate together. Do not edit old run artifacts to apply a newer rate. Re-run or
+rate together. **Do not edit old run artifacts to apply a newer rate.** Re-run or
 explicitly re-price the evaluation in a future workflow if a decision needs to
 use current prices.
 
 ## Interpretation limits
 
-Configured values estimate token charges. They are not reconciled invoices and
-do not currently model non-token charges such as provisioned throughput,
+Configured values estimate token charges. **They are not reconciled invoices
+and do not currently model non-token charges** such as provisioned throughput,
 reserved capacity, web search, file search, tools, storage, images, audio, or
 currency conversion. A rate source may also exclude negotiated discounts or
 taxes. Use a catalog entry only when its scope matches the endpoint and workload
@@ -174,7 +174,7 @@ Run a preflight without model calls:
 python -m evalanche.cli generate --config configs/generate.yaml --preflight-only
 ```
 
-This remains a local estimate and start gate, not a provider billing hard
-stop. A request may cost more than its reserve, and provider calls without
+**This remains a local estimate and start gate, not a provider billing hard
+stop.** A request may cost more than its reserve, and provider calls without
 usage evidence, negotiated rates, taxes, foreign exchange, and non-token
 charges can differ from the configured calculation.

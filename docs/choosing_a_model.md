@@ -10,7 +10,7 @@ The central principle is simple:
 > benchmarks as scoped evidence. Run a local comparison only when it can
 > resolve an important unknown.
 
-The result may be one model deployment, a conditional shortlist, or a
+The result may be one chosen model, a shortlist of qualified candidates, or a
 well-documented tradeoff that the decision owner resolves. Forcing a single
 winner is not a requirement.
 
@@ -19,6 +19,8 @@ winner is not a requirement.
 - *Model:* the underlying model family or checkpoint. Example: GPT-5 or Llama 3.1.
 - *Model deployment:* the exact provider route, version, and config available to the user. Example: Azure GPT-5 in the approved production region.
 - *Candidate:* a model deployment that passes access and hard requirements. Example: a deployment that meets modality, privacy, and cost constraints for the task.
+- *Qualified candidate:* a candidate that also clears the evidence and evaluation bar set for the task, without necessarily being the one chosen. A qualified candidate is a model that has passed everything asked of it so far but has not yet been picked over the others. Also called an eligible or passing candidate. Example: two deployments that both meet the required quality threshold and cost ceiling and remain under active consideration.
+- *Chosen model:* the qualified candidate that a decision owner selects to use, when narrowing to a single option is appropriate.
 - *Benchmark:* a standardized evidence source or test suite. Example: a public benchmark for long-document extraction or classification.
 - *Evaluation:* any benchmark, rubric, or local comparison used to measure performance. Example: a local smoke test or a judge-based scoring run.
 
@@ -30,7 +32,7 @@ winner is not a requirement.
 | --- | --- | --- |
 | 1. Frame | What decision are we making? | Task and decision statement |
 | 2. Confirm access | Which exact model deployments can we use? | Access-confirmed candidate set |
-| 3. Filter | Which candidates meet every hard requirement? | Feasible candidates and exclusions |
+| 3. Filter | Which candidates meet every hard requirement? | Qualified candidates and exclusions |
 | 4. Gather | What public evidence is relevant? | Source notes, not one universal score |
 | 5. Assess | What does the evidence establish and leave unknown? | Evidence matrix and gap list |
 | 6. Test if needed | Could representative local cases resolve a gap? | Small comparison plan |
@@ -182,6 +184,11 @@ specialized language or domain.
 same as "fails." An unknown capability may require provider verification or a
 small test.
 
+Candidates that clear every hard requirement become qualified candidates (also
+called eligible or passing candidates). Reaching this state does not require
+narrowing to a single chosen model — several qualified candidates can remain
+side by side until a decision owner picks one or documents a tradeoff instead.
+
 ## 5. Find public evidence that matches the task
 
 Public evidence is useful when it helps answer a specific question. It is weak
@@ -189,7 +196,7 @@ when the evaluated construct, inputs, outputs, model version, or harness differ
 materially from the intended use.
 
 Start with the [research and evidence directory](evidence/README.md), which is
-organized by task and evidence type.
+organized by need and evidence type.
 
 ### A transfer checklist
 
@@ -310,7 +317,7 @@ Run a local comparison when:
 - model versions or provider routes differ from public results;
 - strict JSON, citations, or unacceptable error types matter;
 - tool schemas, repository environments, or retrieved evidence are specific;
-- two feasible candidates remain close enough that local failures, cost, or
+- two qualified candidates remain close enough that local failures, cost, or
   latency could change the choice;
 - the choice has material consequences;
 - public evidence is missing or conflicting.
@@ -470,10 +477,10 @@ A useful brief contains:
 - cost, latency, and reliability;
 - important unknowns and limitations;
 - tradeoffs;
-- selected option, if the owner chooses one;
+- chosen model, if the owner narrows the qualified candidates to one;
 - review trigger.
 
-Evalanche reports comparison evidence by default. A policy-selected model is
+Evalanche reports comparison evidence by default. A policy-chosen model is
 allowed only when a user explicitly enables a policy with access profiles,
 hard constraints, weights, and a minimum margin. The policy is a declared
 preference rule, not an empirical truth.
@@ -523,9 +530,9 @@ the cases creates a new benchmark release and may require comparable reruns.
 
 The decision owner confirms three available deployments. All support the input
 and output contract. Public broad reasoning scores are only weak evidence.
-A stratified local set with exact labels shows that two clear the required
-recall. The cheaper of those two is chosen because the quality threshold was
-defined before the run.
+A stratified local set with exact labels shows that two qualify for the
+required recall, making them qualified candidates. The cheaper of those two is
+chosen because the quality threshold was defined before the run.
 
 ### Repository coding assistant
 
@@ -540,8 +547,8 @@ attributes results to each complete agent setup, not only the model name.
 Public evidence does not represent the client's tone, omissions, and factual
 risk. A blinded human review defines correctness, coverage, and usefulness
 separately. An LLM judge is tested against the human-reviewed calibration set
-and used only to support triage. The brief retains a shortlist because the
-remaining difference is a preference tradeoff.
+and used only to support triage. The brief retains a shortlist of qualified
+candidates because the remaining difference is a preference tradeoff.
 
 ## Continue by depth
 
@@ -556,4 +563,4 @@ remaining difference is a preference tradeoff.
 - [Optional decision policy](model_selection.md)
 - [Health Canada case studies](case_studies/health_canada.md)
 
-Last substantive review: 2026-08-06.
+Last substantive review: 2026-09-16.

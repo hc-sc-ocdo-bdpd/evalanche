@@ -68,8 +68,8 @@ one evidence source in an Evalanche decision brief.
 - **Important checks:** Harness commit, task YAML and dataset revision, few-shot
   count, chat template, generation arguments, model revision, batching, and
   decontamination treatment.
-- **Important limit:** Community task availability does not prove that every
-  task is current, uncontaminated, or valid for a local decision. Review each
+- **Important limit:** **Community task availability does not prove that every
+  task is current, uncontaminated, or valid for a local decision.** Review each
   task definition.
 
 ## MTEB
@@ -100,8 +100,8 @@ one evidence source in an Evalanche decision brief.
   evaluation design.
 - **Important checks:** Repository commit, eval definition, model and endpoint,
   grader, prompt, sampling, retry behavior, and result artifacts.
-- **Important limit:** Using a framework does not validate a custom dataset,
-  rubric, or grader automatically.
+- **Important limit:** **Using a framework does not validate a custom dataset,
+  rubric, or grader automatically.**
 
 ## Evalanche
 

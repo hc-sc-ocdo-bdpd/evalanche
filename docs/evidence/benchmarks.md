@@ -1,10 +1,10 @@
 # Benchmarks and living evidence sources
 
-Use this directory to find public evidence that is relevant to a task. It is
-not a list of models Evalanche recommends and it is not proof that any model is
-available to a user.
+This directory gathers public evidence relevant to a task. **It is not a list
+of models Evalanche recommends, and it is not proof that any model is
+available to a user.**
 
-Open the live source before making a decision. Record the model version,
+**Open the live source before making a decision.** Record the model version,
 evaluation date, harness, settings, and score you actually used.
 
 Review dates, version scope, and current, stale, or superseded status are
@@ -36,6 +36,7 @@ tracked on the [evidence maintenance status page](status.md).
 
 ### HELM
 
+- **Status:** Research framework and maintained benchmark collection.
 - **Official sources:** [HELM site](https://crfm.stanford.edu/helm/),
   [paper](https://arxiv.org/abs/2211.09110), and
   [repository](https://github.com/stanford-crfm/helm).
@@ -47,12 +48,13 @@ tracked on the [evidence maintenance status page](status.md).
   measure.
 - **Setup to verify:** Exact scenario, model adapter, prompt, model version,
   token budget, and metric.
-- **Do not infer:** That a broad average proves performance on a local task or
-  that every listed model is accessible.
+- **Important limit:** **A broad average does not prove performance on a local
+  task, and it does not establish that every listed model is accessible.**
 - **Reviewed:** 2026-08-06.
 
 ### LiveBench
 
+- **Status:** Research benchmark and maintained benchmark suite.
 - **Official sources:** [Repository](https://github.com/LiveBench/LiveBench)
   and [paper](https://arxiv.org/abs/2406.19314).
 - **Helps answer:** How do current models compare on refreshed, objectively
@@ -64,12 +66,14 @@ tracked on the [evidence maintenance status page](status.md).
   for the primary score.
 - **Setup to verify:** Release date, category, question source, contamination
   policy, model version, prompt, and any reasoning or sampling configuration.
-- **Do not infer:** That category performance transfers to a specialized
-  document, agent, language, or output contract.
+- **Important limit:** **Freshness reduces one contamination risk, but category
+  performance still does not equal performance on a specialized document,
+  agent, language, or output contract.**
 - **Reviewed:** 2026-08-06.
 
 ### LM Arena
 
+- **Status:** Maintained public platform and ICML 2024 research paper.
 - **Official sources:** [Current site](https://lmarena.ai/),
   [how it works](https://lmarena.ai/how-it-works),
   [FAQ](https://lmarena.ai/faq), and
@@ -83,12 +87,14 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** Leaderboard category, date window, model alias and
   version, voting filters, style controls, and confidence or uncertainty
   presentation.
-- **Do not infer:** Factual correctness, structured-output reliability, policy
-  compliance, or task success in a specialized workflow.
+- **Important limit:** **Preference is not the same construct as factual
+  correctness, structured-output reliability, policy compliance, or task
+  success in a specialized workflow.**
 - **Reviewed:** 2026-08-06.
 
 ### Artificial Analysis
 
+- **Status:** Maintained comparison service with changing methodology.
 - **Official sources:** [Model comparison site](https://artificialanalysis.ai/),
   [intelligence methodology](https://artificialanalysis.ai/methodology/intelligence-benchmarking),
   and [performance methodology](https://artificialanalysis.ai/methodology/performance-benchmarking).
@@ -102,14 +108,16 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** Index version and weights, reasoning setting, provider
   route, price assumptions, cache assumptions, date, and geographic test
   conditions.
-- **Do not infer:** Local compliance, account availability, or quality on a
-  specialized task. Do not treat a composite index as the decision itself.
+- **Important limit:** **A composite index is not a decision itself. It does not
+  establish local compliance, account availability, or quality on a specialized
+  task.**
 - **Reviewed:** 2026-08-06.
 
 ## Coding and software work
 
 ### SWE-bench Verified
 
+- **Status:** Human-validated software benchmark subset with maintained harness.
 - **Official sources:** [Verified benchmark](https://www.swebench.com/verified.html),
   [main site](https://www.swebench.com/), and
   [repository](https://github.com/SWE-bench/SWE-bench).
@@ -122,12 +130,13 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** Agent harness, model version, tools, retrieval,
   trajectory budget, retry or sampling policy, container version, and
   submission status.
-- **Do not infer:** Raw base-model coding ability independent of the agent, or
-  performance on a different language and repository distribution.
+- **Important limit:** **A score reflects the agent system and repository
+  distribution, not raw base-model coding ability in a different environment.**
 - **Reviewed:** 2026-08-06.
 
 ### LiveCodeBench
 
+- **Status:** Continuously refreshed executable coding benchmark.
 - **Official sources:** [Official site](https://livecodebench.github.io/),
   [repository](https://github.com/LiveCodeBench/LiveCodeBench), and
   [paper](https://arxiv.org/abs/2403.07974).
@@ -138,14 +147,16 @@ tracked on the [evidence maintenance status page](status.md).
 - **Scoring:** Execution against tests, with task-specific metrics.
 - **Setup to verify:** Release cutoff, scenario, language, prompt, model date,
   sampling, and pass-at-k or other reported metric.
-- **Do not infer:** Repository navigation, long-horizon software engineering,
-  or effectiveness of a particular coding agent interface.
+- **Important limit:** **It does not cover repository navigation, long-horizon
+  software engineering, or a particular coding agent interface unless that is
+  explicitly part of the setup.**
 - **Reviewed:** 2026-08-06.
 
 ## Function calling and agents
 
 ### Berkeley Function Calling Leaderboard, BFCL
 
+- **Status:** Versioned function-calling benchmark and leaderboard.
 - **Official sources:** [Current leaderboard](https://gorilla.cs.berkeley.edu/leaderboard.html)
   and [BFCL paper](https://proceedings.mlr.press/v267/patil25a.html).
 - **Helps answer:** Can a model select and format function calls across simple,
@@ -156,12 +167,14 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** BFCL version, native function-calling interface,
   provider mode, prompt, model version, and whether results are official or
   self-submitted.
-- **Do not infer:** Reliability with the user's tool schemas, permissions,
-  side effects, recovery logic, or orchestration.
+- **Important limit:** **A function-calling score does not establish reliability
+  with the user's tool schemas, permissions, side effects, recovery logic, or
+  orchestration design.**
 - **Reviewed:** 2026-08-06.
 
 ### WebArena
 
+- **Status:** End-to-end agent benchmark in realistic simulated web environments.
 - **Official sources:** [WebArena site](https://webarena.dev/) and
   [paper](https://arxiv.org/abs/2307.13854).
 - **Helps answer:** Can an autonomous agent complete realistic web tasks in
@@ -172,12 +185,14 @@ tracked on the [evidence maintenance status page](status.md).
   and task-specific evaluators.
 - **Setup to verify:** Agent scaffolding, browser tools, model version,
   demonstrations, action budget, observation format, and environment version.
-- **Do not infer:** Base-model quality independent of the agent or safety on
-  live websites with real permissions.
+- **Important limit:** **Base-model quality is not the same as agent quality, and
+  the safety profile on a simulated site does not transfer to live websites with
+  real permissions.**
 - **Reviewed:** 2026-08-06.
 
 ### GAIA
 
+- **Status:** General-assistant benchmark with varying task difficulty and tracks.
 - **Official sources:** [Paper](https://arxiv.org/abs/2311.12983) and
   [official leaderboard](https://huggingface.co/spaces/gaia-benchmark/leaderboard).
 - **Helps answer:** Can a general assistant solve questions that require
@@ -187,12 +202,14 @@ tracked on the [evidence maintenance status page](status.md).
 - **Scoring:** Answer correctness under the benchmark protocol.
 - **Setup to verify:** Agent and tool stack, model version, access to web and
   files, action budget, submission track, and potential data exposure.
-- **Do not infer:** That the underlying model alone produced the result or that
-  a system is safe and authorized for a specific workflow.
+- **Important limit:** **The underlying model is not necessarily the sole source
+  of the result, and the benchmark does not prove the system is safe or
+  authorized for a specific workflow.**
 - **Reviewed:** 2026-08-06.
 
 ### tau-bench
 
+- **Status:** Tool-agent benchmark with domain policy and user-simulator tasks.
 - **Official sources:** [Current project site](https://taubench.com/),
   [repository](https://github.com/sierra-research/tau2-bench), and
   [original paper](https://arxiv.org/abs/2406.12045).
@@ -204,14 +221,15 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** Benchmark generation, domain, user simulator, agent
   prompt, tools, model versions for both agent and simulator, and pass-k
   treatment.
-- **Do not infer:** Production reliability with real users, unseen policies,
-  or irreversible tools.
+- **Important limit:** **A simulated benchmark does not prove production
+  reliability with real users, unseen policies, or irreversible tools.**
 - **Reviewed:** 2026-08-06.
 
 ## Long context
 
 ### LongBench v2
 
+- **Status:** Long-context multi-task benchmark with published protocol.
 - **Official sources:** [Official site](https://longbench2.github.io/) and
   [ACL 2025 paper](https://aclanthology.org/2025.acl-long.183/).
 - **Helps answer:** Can a model reason over long single documents,
@@ -223,14 +241,16 @@ tracked on the [evidence maintenance status page](status.md).
   paper.
 - **Setup to verify:** Direct or retrieval setting, context truncation,
   reasoning prompt, model context limit, and model version.
-- **Do not infer:** Reliable citation, complete PDF transport, custom
-  extraction, or performance at one exact production length.
+- **Important limit:** **A long-context score does not guarantee reliable
+  citation, complete PDF transport, custom extraction, or performance at one
+  exact production length.**
 - **Reviewed:** 2026-08-06.
 
 ## Documents and multimodal reasoning
 
 ### DocVQA
 
+- **Status:** Document visual question answering benchmark and challenge set.
 - **Official sources:** [DocVQA site](https://www.docvqa.org/) and
   [dataset paper](https://arxiv.org/abs/2007.00398).
 - **Helps answer:** Can a system answer questions from document images using
@@ -240,12 +260,14 @@ tracked on the [evidence maintenance status page](status.md).
 - **Scoring:** Answer matching using the challenge protocol and metrics.
 - **Setup to verify:** Task track, OCR policy, image resolution, prompt, model
   version, and any external text extraction.
-- **Do not infer:** Native multi-page PDF support, long-document retrieval,
-  complete field extraction, or a custom schema.
+- **Important limit:** **Document-image accuracy does not cover native multi-page
+  PDF support, long-document retrieval, complete field extraction, or a custom
+  schema.**
 - **Reviewed:** 2026-08-06.
 
 ### MMMU-Pro
 
+- **Status:** Challenging multimodal benchmark with multiple settings.
 - **Official sources:** [ACL 2025 paper](https://aclanthology.org/2025.acl-long.736/)
   and [official repository](https://github.com/MMMU-Benchmark/MMMU).
 - **Helps answer:** Can a multimodal model solve discipline-specific questions
@@ -256,14 +278,15 @@ tracked on the [evidence maintenance status page](status.md).
 - **Scoring:** Accuracy under the selected MMMU-Pro setting.
 - **Setup to verify:** Standard, vision-only, or other setting; prompt;
   response format; image preprocessing; and model version.
-- **Do not infer:** Operational document extraction, OCR completeness,
-  specialist image safety, or PDF API behavior.
+- **Important limit:** **It does not establish operational document extraction,
+  OCR completeness, specialist image safety, or PDF API behavior.**
 - **Reviewed:** 2026-08-06.
 
 ## Embeddings and retrieval
 
 ### MTEB and MMTEB
 
+- **Status:** Major benchmark collection for embedding and representation quality.
 - **Official sources:** [MTEB repository](https://github.com/embeddings-benchmark/mteb)
   and [MTEB paper](https://aclanthology.org/2023.eacl-main.148/).
 - **Helps answer:** How do embedding models compare for classification,
@@ -277,14 +300,15 @@ tracked on the [evidence maintenance status page](status.md).
 - **Setup to verify:** Task, dataset, language, query and document instruction,
   embedding dimensions, pooling, normalization, model revision, and use of a
   reranker.
-- **Do not infer:** End-to-end retrieval-augmented answer quality or a
-  generative model's reasoning ability.
+- **Important limit:** **Embedding quality does not equal end-to-end retrieval
+  quality or a generative model's reasoning ability.**
 - **Reviewed:** 2026-08-06.
 
 ## Retrieval-augmented generation and factuality
 
 ### ARES
 
+- **Status:** Research method for component-level retrieval-augmented evaluation.
 - **Official sources:** [NAACL 2024 paper](https://aclanthology.org/2024.naacl-long.20/)
   and [repository](https://github.com/stanford-futuredata/ARES).
 - **Helps answer:** How can a retrieval-augmented generation system be assessed
@@ -295,12 +319,13 @@ tracked on the [evidence maintenance status page](status.md).
   in the paper.
 - **Setup to verify:** Domain, generator, retriever, synthetic-data process,
   human label sample, judge model, and confidence procedure.
-- **Do not infer:** That its automated judges are calibrated for a new domain
-  without local validation.
+- **Important limit:** **Automated judges are not automatically calibrated for a
+  new domain, and local validation is still required.**
 - **Reviewed:** 2026-08-06.
 
 ### FACTS Grounding
 
+- **Status:** Grounded factuality benchmark for long-form answers.
 - **Official sources:** [Google DeepMind overview](https://deepmind.google/blog/facts-grounding-a-new-benchmark-for-evaluating-the-factuality-of-large-language-models/)
   and [paper](https://arxiv.org/abs/2501.03200).
 - **Helps answer:** Does a long-form response remain factually supported by a
@@ -311,12 +336,13 @@ tracked on the [evidence maintenance status page](status.md).
   eligibility and factuality assessment.
 - **Setup to verify:** Dataset version, judge ensemble or evaluator version,
   response eligibility rules, model version, and prompt.
-- **Do not infer:** Correctness without a source, retrieval quality, or
-  performance on a specialized regulated corpus.
+- **Important limit:** **Groundedness does not equal correctness without a source,
+  retrieval quality, or performance on a specialized regulated corpus.**
 - **Reviewed:** 2026-08-06.
 
 ### SimpleQA
 
+- **Status:** Short factuality benchmark with clear-answer questions.
 - **Official sources:** [OpenAI release](https://openai.com/index/introducing-simpleqa/)
   and [paper](https://arxiv.org/abs/2411.04368).
 - **Helps answer:** How often does a model answer short, fact-seeking questions
@@ -326,14 +352,15 @@ tracked on the [evidence maintenance status page](status.md).
   grader protocol.
 - **Setup to verify:** Grader, model version, prompt, browsing or tool access,
   and contamination concerns.
-- **Do not infer:** Long-form groundedness, domain expertise, or current facts
-  that postdate the dataset.
+- **Important limit:** **Short factuality scores do not cover long-form
+  groundedness, domain expertise, or current facts beyond the dataset.**
 - **Reviewed:** 2026-08-06.
 
 ## Multilingual evidence
 
 ### Global-MMLU
 
+- **Status:** Multilingual knowledge benchmark with language-sensitive design.
 - **Official source:** [Paper](https://arxiv.org/abs/2412.03304).
 - **Helps answer:** How do multilingual knowledge evaluations change when
   translation quality and culturally sensitive content are treated explicitly?
@@ -342,18 +369,20 @@ tracked on the [evidence maintenance status page](status.md).
 - **Scoring:** Multiple-choice accuracy, with language and content categories.
 - **Setup to verify:** Language, native or translated source, model version,
   prompt, and culturally sensitive subset.
-- **Do not infer:** Fluency, instruction following, local terminology, or task
-  performance in every language variety.
+- **Important limit:** **A multilingual average can hide the single language that
+  matters, and it does not prove fluency or local task performance in every
+  language variety.**
 - **Reviewed:** 2026-08-06.
 
 For multilingual retrieval and embeddings, also use MTEB or MMTEB. For any
-required language, inspect that language separately. A multilingual average
-can hide the only language that matters.
+required language, inspect that language separately. **A multilingual average can
+hide the only language that matters.**
 
 ## Safety and risk
 
 ### MLCommons AILuminate
 
+- **Status:** General-purpose AI safety benchmark with standardized hazard coverage.
 - **Official sources:** [AILuminate](https://mlcommons.org/ailuminate/) and
   [method paper](https://arxiv.org/abs/2503.05731).
 - **Helps answer:** How does a general-purpose AI system respond across a
@@ -363,9 +392,9 @@ can hide the only language that matters.
 - **Scoring:** Safety assessment protocol and grading defined by MLCommons.
 - **Setup to verify:** Benchmark version, model and system settings, hazard
   category, language, grader, and deployment mode.
-- **Do not infer:** Complete safety for a particular product, population,
-  regulatory setting, or tool-enabled system. Safety evaluation must be tied
-  to the actual risks and permissions.
+- **Important limit:** **Safety evaluation must be tied to the actual risks,
+  permissions, and deployment context; it does not prove complete safety for a
+  particular product, population, or regulatory setting.**
 - **Reviewed:** 2026-08-06.
 
 ## How to use a live leaderboard
@@ -381,7 +410,7 @@ For a decision record, capture:
 7. Why the source is relevant.
 8. Why it may not transfer.
 
-If any of these are unavailable, lower the evidence-strength label. Missing
-information is not a reason to invent precision.
+If any of these are unavailable, lower the evidence-strength label.
+**Missing information is not a reason to invent precision.**
 
 Last source review: 2026-08-06.
